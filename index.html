@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>하늘의문 중고등부</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Montserrat:wght@600;800&display=swap');
+:root{--sky:#4A90D9;--sky-light:#EBF4FF;--sky-dark:#2C5F8A;--gold:#F5A623;--gold-light:#FFF8EC;--mint:#5BBF8E;--mint-light:#EDFAF3;--coral:#E8614A;--purple:#7C3AED;--purple-light:#F3EEFF;--bg:#F7F9FC;--text:#1A2332;--text-sub:#6B7A8D;--border:#E4EAF2;--shadow:0 4px 20px rgba(74,144,217,0.10);--shadow-strong:0 8px 32px rgba(74,144,217,0.18);}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:430px;margin:0 auto;overflow-x:hidden;}
+.screen{display:none;min-height:100vh;padding-bottom:84px;}
+.screen.active{display:block;}
+#screen-login,#screen-register{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 24px;background:linear-gradient(160deg,#1a3a5c 0%,#2C5F8A 45%,#4A90D9 100%);padding-bottom:32px;}
+#screen-login.active,#screen-register.active{display:flex;}
+.login-logo{display:flex;flex-direction:column;align-items:center;margin-bottom:4px;}
+.login-logo .cross{width:54px;height:54px;background:rgba(255,255,255,0.15);border-radius:18px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;border:2px solid rgba(255,255,255,0.3);}
+.login-logo .cross svg{width:30px;height:30px;}
+.login-title{font-family:'Montserrat',sans-serif;font-weight:800;font-size:21px;color:white;letter-spacing:1px;}
+.login-subtitle{font-size:12px;color:rgba(255,255,255,0.65);margin-top:3px;letter-spacing:2px;}
+.login-card{width:100%;background:white;border-radius:24px;padding:28px 22px;margin-top:28px;box-shadow:0 20px 60px rgba(0,0,0,0.25);}
+.login-card h2{font-size:19px;font-weight:700;margin-bottom:3px;}
+.login-card p{font-size:12px;color:var(--text-sub);margin-bottom:20px;}
+.role-tabs{display:flex;background:var(--bg);border-radius:12px;padding:4px;margin-bottom:20px;gap:2px;}
+.role-tab{flex:1;padding:8px 4px;border:none;background:transparent;border-radius:9px;font-size:12px;font-weight:500;color:var(--text-sub);cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .2s;}
+.role-tab.active{background:white;color:var(--sky-dark);font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+.input-group{margin-bottom:12px;}
+.input-group label{font-size:11px;font-weight:600;color:var(--text-sub);margin-bottom:5px;display:block;}
+.input-group input,.input-group select{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;transition:border-color .2s;background:var(--bg);}
+.input-group input:focus,.input-group select:focus{border-color:var(--sky);background:white;}
+.input-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.btn-primary{width:100%;padding:14px;background:linear-gradient(135deg,var(--sky),var(--sky-dark));color:white;border:none;border-radius:14px;font-size:15px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;margin-top:6px;box-shadow:0 4px 16px rgba(74,144,217,0.35);transition:all .2s;}
+.btn-primary:active{transform:scale(0.98);}
+.btn-secondary{width:100%;padding:12px;background:var(--bg);color:var(--text-sub);border:1.5px solid var(--border);border-radius:14px;font-size:14px;font-weight:600;font-family:'Noto Sans KR',sans-serif;cursor:pointer;margin-top:8px;}
+.login-hint{text-align:center;font-size:11px;color:var(--text-sub);margin-top:14px;line-height:1.6;}
+/* 자녀 입력 */
+.child-input-row{display:flex;gap:7px;align-items:center;margin-bottom:7px;}
+.child-input-row input{flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;background:var(--bg);}
+.child-input-row input:focus{border-color:var(--sky);background:white;}
+.btn-remove-child{width:28px;height:28px;border-radius:50%;border:none;background:#FFF0EE;color:var(--coral);font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;line-height:1;}
+.btn-add-child{background:none;border:1.5px dashed var(--border);border-radius:10px;padding:8px;width:100%;font-size:12px;color:var(--text-sub);cursor:pointer;font-family:'Noto Sans KR',sans-serif;margin-bottom:12px;}
+/* 헤더 */
+.app-header{position:sticky;top:0;z-index:100;background:white;padding:14px 18px 11px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,0.05);}
+.header-logo{display:flex;align-items:center;gap:8px;}
+.header-logo .icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;}
+.header-logo .icon svg{width:17px;height:17px;}
+.header-logo span{font-size:14px;font-weight:700;color:var(--sky-dark);line-height:1.2;}
+.header-logo small{display:block;font-size:10px;font-weight:400;color:var(--text-sub);}
+.header-actions{display:flex;gap:7px;}
+.icon-btn{width:34px;height:34px;background:var(--bg);border:none;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;}
+.icon-btn svg{width:17px;height:17px;color:var(--text-sub);}
+.badge-dot{position:absolute;top:4px;right:4px;width:7px;height:7px;background:var(--coral);border-radius:50%;border:2px solid white;}
+/* 네비 */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:white;border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 20px rgba(0,0,0,0.06);}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:9px 0;border:none;background:transparent;cursor:pointer;gap:2px;position:relative;}
+.nav-item svg{width:21px;height:21px;color:var(--text-sub);}
+.nav-item span{font-size:9px;color:var(--text-sub);font-weight:500;font-family:'Noto Sans KR',sans-serif;}
+.nav-item .nav-dot{width:4px;height:4px;background:var(--sky);border-radius:50%;opacity:0;margin-top:-1px;}
+.nav-item.active svg{color:var(--sky);}
+.nav-item.active span{color:var(--sky);font-weight:700;}
+.nav-item.active .nav-dot{opacity:1;}
+.nav-alert{position:absolute;top:6px;right:8px;width:6px;height:6px;background:var(--coral);border-radius:50%;}
+/* 홈 */
+.stamp-card{margin:14px;background:linear-gradient(135deg,#1a3a5c 0%,#2C5F8A 50%,#4A90D9 100%);border-radius:22px;padding:22px 20px 18px;color:white;position:relative;overflow:hidden;box-shadow:var(--shadow-strong);}
+.stamp-card::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:rgba(255,255,255,0.06);border-radius:50%;}
+.stamp-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;}
+.stamp-card-label{font-size:10px;opacity:.65;letter-spacing:1.5px;font-weight:500;}
+.stamp-card-name{font-size:17px;font-weight:700;margin-top:2px;}
+.stamp-level{background:rgba(255,255,255,0.16);border:1px solid rgba(255,255,255,0.28);border-radius:20px;padding:3px 11px;font-size:11px;font-weight:600;}
+.stamp-progress-area{margin:14px 0 12px;}
+.stamp-progress-label{display:flex;justify-content:space-between;font-size:10px;opacity:.8;margin-bottom:7px;}
+.stamp-progress-bar{height:5px;background:rgba(255,255,255,0.2);border-radius:3px;overflow:hidden;}
+.stamp-progress-fill{height:100%;background:linear-gradient(90deg,#F5A623,#FFD166);border-radius:3px;}
+.stamp-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:12px 0;}
+.stamp-dot{aspect-ratio:1;border-radius:50%;border:2px solid rgba(255,255,255,0.28);display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.07);}
+.stamp-dot.filled{background:linear-gradient(135deg,#F5A623,#FFD166);border-color:#F5A623;box-shadow:0 0 10px rgba(245,166,35,0.4);}
+.stamp-dot svg{width:13px;height:13px;color:white;opacity:0;}
+.stamp-dot.filled svg{opacity:1;}
+.stamp-card-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid rgba(255,255,255,0.14);font-size:11px;opacity:.8;}
+.section{padding:0 14px;margin-bottom:22px;}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:11px;}
+.section-title{font-size:15px;font-weight:700;}
+.section-more{font-size:12px;color:var(--sky);font-weight:500;background:none;border:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+.week-card{background:white;border-radius:14px;padding:14px;box-shadow:var(--shadow);display:flex;align-items:center;gap:12px;margin-bottom:9px;border:1.5px solid var(--border);cursor:pointer;}
+.week-card-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.week-card-icon svg{width:20px;height:20px;}
+.week-card-body{flex:1;}
+.week-card-title{font-size:13px;font-weight:600;margin-bottom:2px;}
+.week-card-sub{font-size:11px;color:var(--text-sub);}
+.week-card-badge{padding:3px 9px;border-radius:18px;font-size:10px;font-weight:600;flex-shrink:0;}
+.reward-scroll{display:flex;gap:9px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
+.reward-scroll::-webkit-scrollbar{display:none;}
+.reward-item{flex-shrink:0;width:112px;background:white;border-radius:14px;padding:13px 11px;text-align:center;box-shadow:var(--shadow);border:1.5px solid var(--border);position:relative;}
+.reward-item.locked{opacity:.55;}
+.reward-emoji{font-size:26px;margin-bottom:7px;}
+.reward-name{font-size:11px;font-weight:600;margin-bottom:4px;line-height:1.3;}
+.reward-req{font-size:10px;color:var(--text-sub);background:var(--bg);border-radius:7px;padding:2px 7px;display:inline-block;}
+.reward-item.unlocked .reward-req{background:var(--gold-light);color:#B8760A;font-weight:600;}
+.reward-lock{position:absolute;top:7px;right:7px;font-size:11px;}
+.notice-preview{background:white;border-radius:14px;overflow:hidden;box-shadow:var(--shadow);border:1.5px solid var(--border);}
+.notice-item{display:flex;align-items:center;gap:11px;padding:13px 15px;border-bottom:1px solid var(--border);cursor:pointer;}
+.notice-item:last-child{border-bottom:none;}
+.notice-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.notice-item-body{flex:1;}
+.notice-item-title{font-size:13px;font-weight:500;margin-bottom:2px;}
+.notice-item-date{font-size:10px;color:var(--text-sub);}
+/* 출석 */
+.attendance-header{background:linear-gradient(135deg,var(--mint),#3DAB75);margin:14px;border-radius:18px;padding:18px;color:white;text-align:center;box-shadow:0 8px 24px rgba(91,191,142,0.3);}
+.attendance-header .big-num{font-family:'Montserrat',sans-serif;font-size:46px;font-weight:800;line-height:1;}
+.attendance-header .big-label{font-size:11px;opacity:.8;margin-top:3px;}
+.attendance-header .stats{display:flex;justify-content:center;gap:22px;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.2);}
+.attendance-header .stat-n{font-size:17px;font-weight:700;}
+.attendance-header .stat-l{font-size:10px;opacity:.75;margin-top:1px;}
+.qr-section{margin:0 14px 14px;background:white;border-radius:18px;padding:22px;text-align:center;box-shadow:var(--shadow);border:1.5px solid var(--border);}
+.qr-box{width:150px;height:150px;background:var(--bg);border-radius:14px;margin:0 auto 14px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed var(--border);gap:7px;}
+.qr-box svg{width:56px;height:56px;color:var(--sky);}
+.qr-box span{font-size:10px;color:var(--text-sub);}
+.btn-check{width:100%;padding:13px;background:linear-gradient(135deg,var(--mint),#3DAB75);color:white;border:none;border-radius:13px;font-size:14px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;}
+.month-grid{margin:0 14px 14px;}
+.month-title{font-size:13px;font-weight:700;margin-bottom:10px;}
+.week-row{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:7px;}
+.week-chip{background:white;border-radius:11px;padding:9px 5px;text-align:center;border:1.5px solid var(--border);box-shadow:var(--shadow);}
+.week-chip.attended{background:var(--mint-light);border-color:var(--mint);}
+.week-chip.missed{background:#FFF0EE;border-color:#FFBBB3;}
+.week-chip .wc-label{font-size:9px;color:var(--text-sub);margin-bottom:3px;}
+.week-chip .wc-icon{font-size:17px;}
+.week-chip.attended .wc-label{color:var(--mint);}
+/* 게시판 */
+.tab-bar{display:flex;background:white;padding:0 14px;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;}
+.tab-bar::-webkit-scrollbar{display:none;}
+.tab-btn{padding:11px 14px;border:none;background:transparent;font-size:12px;font-weight:500;color:var(--text-sub);cursor:pointer;border-bottom:2px solid transparent;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;}
+.tab-btn.active{color:var(--sky);font-weight:700;border-bottom-color:var(--sky);}
+.post-list{padding:11px 14px;}
+.post-card{background:white;border-radius:14px;padding:15px;margin-bottom:9px;box-shadow:var(--shadow);border:1.5px solid var(--border);cursor:pointer;}
+.post-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+.post-tags{display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
+.post-date{font-size:10px;color:var(--text-sub);flex-shrink:0;}
+.post-title{font-size:14px;font-weight:600;margin-bottom:5px;line-height:1.4;}
+.post-preview{font-size:11px;color:var(--text-sub);line-height:1.5;margin-bottom:9px;}
+.post-footer{display:flex;gap:10px;align-items:center;}
+.post-author{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-sub);}
+.avatar{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;flex-shrink:0;}
+.post-stats{display:flex;gap:8px;margin-left:auto;}
+.post-stat{font-size:10px;color:var(--text-sub);}
+.fab{position:fixed;bottom:92px;right:calc(50% - 215px + 14px);width:50px;height:50px;background:linear-gradient(135deg,var(--sky),var(--sky-dark));border:none;border-radius:15px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 20px rgba(74,144,217,0.45);z-index:90;}
+.fab svg{width:22px;height:22px;color:white;}
+/* 학년 chip */
+.chip{padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700;}
+.chip-blue{background:var(--sky-light);color:var(--sky-dark);}
+.chip-gold{background:var(--gold-light);color:#8B6200;}
+.chip-mint{background:var(--mint-light);color:#2E7D5A;}
+.chip-coral{background:#FFF0EE;color:#C0392B;}
+.chip-purple{background:var(--purple-light);color:#5B21B6;}
+.grade-chip-m1{background:#FFE8F5;color:#C0186A;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700;}
+.grade-chip-m2{background:#E8F4FF;color:#1A6AB5;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700;}
+.grade-chip-m3{background:#EDFAF3;color:#2E7D5A;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700;}
+.grade-chip-h{background:#FFF8EC;color:#8B6200;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700;}
+/* 모달 */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal-sheet{background:white;border-radius:24px 24px 0 0;padding:24px 20px 40px;width:100%;max-width:430px;}
+.modal-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.modal-title span{font-size:16px;font-weight:700;}
+.modal-close{background:var(--bg);border:none;border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;color:var(--text-sub);}
+/* 체크박스 학년 선택 */
+.grade-check-group{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.grade-check-item{display:flex;align-items:center;gap:7px;padding:10px 12px;border:1.5px solid var(--border);border-radius:11px;cursor:pointer;transition:all .15s;}
+.grade-check-item.checked-m1{border-color:#C0186A;background:#FFE8F5;}
+.grade-check-item.checked-m2{border-color:#1A6AB5;background:#E8F4FF;}
+.grade-check-item.checked-m3{border-color:#2E7D5A;background:#EDFAF3;}
+.grade-check-item.checked-h{border-color:#8B6200;background:#FFF8EC;}
+.grade-check-item.checked-all{border-color:var(--sky);background:var(--sky-light);}
+.grade-check-item input[type=checkbox]{width:15px;height:15px;accent-color:var(--sky);cursor:pointer;}
+.grade-check-item label{font-size:13px;font-weight:600;cursor:pointer;}
+/* 교사 자료실 */
+.teacher-comm-header{background:linear-gradient(135deg,#4C1D95,#7C3AED);margin:14px;border-radius:18px;padding:20px;color:white;}
+.year-tabs{display:flex;gap:8px;padding:12px 14px 0;overflow-x:auto;scrollbar-width:none;}
+.year-tabs::-webkit-scrollbar{display:none;}
+.year-tab{flex-shrink:0;padding:7px 16px;border-radius:20px;border:1.5px solid var(--border);background:white;font-size:12px;font-weight:600;color:var(--text-sub);cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+.year-tab.active{background:var(--purple);border-color:var(--purple);color:white;}
+.resource-list{padding:11px 14px;}
+.resource-card{background:white;border-radius:14px;padding:14px;margin-bottom:9px;box-shadow:var(--shadow);border:1.5px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:12px;}
+.resource-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.resource-body{flex:1;}
+.resource-title{font-size:13px;font-weight:600;margin-bottom:3px;}
+.resource-meta{font-size:11px;color:var(--text-sub);}
+/* 마이페이지 */
+.profile-hero{background:linear-gradient(135deg,#1a3a5c,var(--sky));padding:28px 18px 52px;color:white;text-align:center;}
+.profile-avatar{width:68px;height:68px;border-radius:50%;background:rgba(255,255,255,0.18);border:3px solid rgba(255,255,255,0.45);margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:26px;}
+.profile-name{font-size:19px;font-weight:700;}
+.profile-role{font-size:11px;opacity:.8;background:rgba(255,255,255,0.14);display:inline-block;padding:3px 11px;border-radius:18px;margin-top:7px;}
+.profile-stats{margin:-24px 14px 0;background:white;border-radius:18px;padding:16px;display:grid;grid-template-columns:repeat(3,1fr);box-shadow:var(--shadow-strong);border:1.5px solid var(--border);position:relative;z-index:2;}
+.profile-stat{text-align:center;}
+.profile-stat-n{font-size:20px;font-weight:800;color:var(--sky-dark);}
+.profile-stat-l{font-size:10px;color:var(--text-sub);margin-top:2px;}
+.profile-stat+.profile-stat{border-left:1px solid var(--border);}
+.menu-section{padding:18px 14px 0;}
+.menu-title{font-size:10px;font-weight:700;color:var(--text-sub);letter-spacing:1px;margin-bottom:7px;}
+.menu-card{background:white;border-radius:14px;overflow:hidden;box-shadow:var(--shadow);border:1.5px solid var(--border);margin-bottom:11px;}
+.menu-item{display:flex;align-items:center;gap:11px;padding:13px 14px;border-bottom:1px solid var(--border);cursor:pointer;}
+.menu-item:last-child{border-bottom:none;}
+.menu-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.menu-icon svg{width:17px;height:17px;}
+.menu-text{flex:1;}
+.menu-text strong{font-size:13px;font-weight:600;display:block;}
+.menu-text small{font-size:10px;color:var(--text-sub);}
+.menu-arrow{color:var(--text-sub);font-size:15px;}
+.menu-badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:9px;}
+/* 관리자 */
+.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:14px;}
+.admin-card{background:white;border-radius:14px;padding:16px 14px;box-shadow:var(--shadow);border:1.5px solid var(--border);cursor:pointer;}
+.admin-card-icon{font-size:24px;margin-bottom:9px;}
+.admin-card-title{font-size:12px;font-weight:700;margin-bottom:3px;}
+.admin-card-sub{font-size:10px;color:var(--text-sub);line-height:1.4;}
+.admin-card-badge{margin-top:7px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:7px;display:inline-block;}
+.admin-list{padding:0 14px 14px;}
+.admin-list-title{font-size:13px;font-weight:700;margin-bottom:9px;}
+.student-row{background:white;border-radius:13px;padding:11px 13px;margin-bottom:7px;display:flex;align-items:center;gap:11px;box-shadow:var(--shadow);border:1.5px solid var(--border);}
+.student-info{flex:1;}
+.student-name{font-size:13px;font-weight:600;}
+.student-detail{font-size:10px;color:var(--text-sub);margin-top:2px;}
+.attendance-toggle{width:42px;height:24px;border-radius:12px;border:none;cursor:pointer;position:relative;flex-shrink:0;}
+.attendance-toggle.on{background:var(--mint);}
+.attendance-toggle.off{background:var(--border);}
+.attendance-toggle::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:white;top:3px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,0.15);}
+.attendance-toggle.on::after{left:21px;}
+.attendance-toggle.off::after{left:3px;}
+.pending-card{background:white;border-radius:14px;padding:14px;margin-bottom:9px;box-shadow:var(--shadow);border:1.5px solid var(--border);}
+.pending-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.pending-name{font-size:14px;font-weight:700;}
+.pending-info{font-size:11px;color:var(--text-sub);line-height:1.8;}
+.pending-actions{display:flex;gap:8px;margin-top:10px;}
+.btn-approve{flex:1;padding:9px;background:linear-gradient(135deg,var(--mint),#3DAB75);color:white;border:none;border-radius:10px;font-size:12px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;}
+.btn-reject{flex:1;padding:9px;background:#FFF0EE;color:var(--coral);border:1.5px solid #FFBBB3;border-radius:10px;font-size:12px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;}
+/* 학년 수정 모달 내 */
+.grade-select-btn{padding:8px 14px;border-radius:10px;border:1.5px solid var(--border);background:white;font-size:13px;font-weight:600;font-family:'Noto Sans KR',sans-serif;cursor:pointer;margin-right:6px;margin-bottom:6px;}
+.grade-select-btn.active{border-color:var(--sky);background:var(--sky-light);color:var(--sky-dark);}
+/* 토스트 */
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:#1A2332;color:white;padding:11px 18px;border-radius:11px;font-size:12px;font-weight:500;font-family:'Noto Sans KR',sans-serif;opacity:0;transition:all .3s;z-index:400;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,0.25);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<!-- 로그인 -->
+<div id="screen-login" class="screen active">
+  <div class="login-logo">
+    <div class="cross"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="12" x2="21" y2="12"/></svg></div>
+    <div class="login-title">HEAVEN'S DOOR</div>
+    <div class="login-subtitle">중고등부</div>
+  </div>
+  <div class="login-card">
+    <h2>반갑습니다 👋</h2>
+    <p>역할을 선택하고 로그인해주세요</p>
+    <div class="role-tabs">
+      <button class="role-tab active" onclick="selectRole('student',this)">🎒 학생</button>
+      <button class="role-tab" onclick="selectRole('parent',this)">👨‍👩‍👧 부모</button>
+      <button class="role-tab" onclick="selectRole('teacher',this)">✝️ 교사</button>
+    </div>
+    <div class="input-group"><label>아이디</label><input type="text" id="login-id" placeholder="아이디를 입력하세요"></div>
+    <div class="input-group"><label>비밀번호</label><input type="password" id="login-pw" placeholder="비밀번호를 입력하세요"></div>
+    <button class="btn-primary" onclick="doLogin()">로그인</button>
+    <button class="btn-secondary" onclick="goRegister()">처음이신가요? 회원가입</button>
+    <div class="login-hint">💡 체험: student / parent / class(담당교사) / tadmin(교무) / principal(교감)</div>
+  </div>
+</div>
+
+<!-- 회원가입 -->
+<div id="screen-register" class="screen">
+  <div class="login-logo">
+    <div class="cross"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="12" x2="21" y2="12"/></svg></div>
+    <div class="login-title">HEAVEN'S DOOR</div>
+    <div class="login-subtitle">회원가입</div>
+  </div>
+  <div class="login-card">
+    <h2>회원가입 신청</h2>
+    <p>교사 승인 후 로그인 가능합니다 🙏</p>
+    <div class="role-tabs">
+      <button class="role-tab active" onclick="selectRegRole('student',this)">🎒 학생</button>
+      <button class="role-tab" onclick="selectRegRole('parent',this)">👨‍👩‍👧 부모</button>
+      <button class="role-tab" onclick="selectRegRole('teacher',this)">✝️ 교사</button>
+    </div>
+
+    <!-- 공통: 이름 + 세례명 -->
+    <div class="input-row">
+      <div class="input-group"><label>이름 *</label><input type="text" id="reg-name" placeholder="홍길동" oninput="updateActivityName()"></div>
+      <div class="input-group"><label>세례명 *</label><input type="text" id="reg-baptism" placeholder="베드로" oninput="updateActivityName()"></div>
+    </div>
+
+    <!-- 생년월일 (부모 제외) -->
+    <div class="input-group" id="reg-birth-wrap">
+      <label>생년월일 *</label><input type="date" id="reg-birth">
+    </div>
+
+    <!-- 학생 전용: 학년 -->
+    <div id="reg-student-extra">
+      <div class="input-row">
+        <div class="input-group">
+          <label>학교급 *</label>
+          <select id="reg-school" onchange="updateActivityName()">
+            <option value="">선택</option><option value="middle">중학교</option><option value="high">고등학교</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>학년 *</label>
+          <select id="reg-grade" onchange="updateActivityName()">
+            <option value="">선택</option><option>1학년</option><option>2학년</option><option>3학년</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- 부모 전용: 자녀 추가 -->
+    <div id="reg-parent-extra" style="display:none">
+      <div style="font-size:11px;font-weight:600;color:var(--text-sub);margin-bottom:7px">자녀 이름 * (여러 명 추가 가능)</div>
+      <div id="children-list">
+        <div class="child-input-row" id="child-row-0">
+          <input type="text" placeholder="자녀 이름" oninput="updateActivityName()">
+          <button class="btn-remove-child" onclick="removeChild(0)" style="display:none">×</button>
+        </div>
+      </div>
+      <button class="btn-add-child" onclick="addChild()">+ 자녀 추가</button>
+    </div>
+
+    <!-- 교사 전용: 담당학년 -->
+    <div id="reg-teacher-notice" style="display:none">
+      <div class="input-group">
+        <label>담당 학년 *</label>
+        <select id="reg-teacher-grade" onchange="updateActivityName()">
+          <option value="">선택</option>
+          <option value="중1">중1</option>
+          <option value="중2">중2</option>
+          <option value="중3">중3</option>
+          <option value="고등부">고등부</option>
+        </select>
+      </div>
+      <div style="background:var(--purple-light);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:11px;color:#5B21B6;line-height:1.6;">
+        ✝️ 활동명은 <strong>이름 세례명 (담당학년)</strong> 으로 자동 생성됩니다.<br>예) 이종화 + 스테파노 + 중2 → <strong>이스테파노 (중2)</strong>
+      </div>
+    </div>
+
+    <!-- 활동명 미리보기 -->
+    <div id="activity-name-preview" style="display:none;background:var(--sky-light);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--sky-dark);line-height:1.6;">
+      <span style="font-weight:600">활동명 미리보기: </span><span id="activity-name-text" style="font-weight:700"></span>
+    </div>
+
+    <!-- 계정 정보 -->
+    <div class="input-group"><label>아이디 *</label><input type="text" id="reg-id" placeholder="영문+숫자 조합"></div>
+    <div class="input-group"><label>비밀번호 * (6자 이상)</label><input type="password" id="reg-pw" placeholder="비밀번호"></div>
+    <div class="input-group"><label>연락처</label><input type="tel" id="reg-phone" placeholder="010-0000-0000"></div>
+
+    <button class="btn-primary" onclick="doRegister()">가입 신청하기</button>
+    <button class="btn-secondary" onclick="goBack()">← 로그인으로 돌아가기</button>
+  </div>
+</div>
+
+<!-- 홈 -->
+<div id="screen-home" class="screen">
+  <div class="app-header">
+    <div class="header-logo">
+      <div class="icon" style="background:linear-gradient(135deg,var(--sky),var(--sky-dark))"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="12" x2="21" y2="12"/></svg></div>
+      <span>하늘의문 중고등부<small id="header-role-badge">학생</small></span>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><div class="badge-dot"></div></button>
+      <button class="icon-btn" onclick="showToast('채팅 기능 준비 중!')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+    </div>
+  </div>
+  <!-- 학생 스탬프 -->
+  <div id="home-stamp-area">
+    <div class="stamp-card">
+      <div class="stamp-card-top">
+        <div><div class="stamp-card-label">ATTENDANCE STAMP</div><div class="stamp-card-name" id="card-name">김하늘</div></div>
+        <div class="stamp-level">⭐ 씨앗 레벨</div>
+      </div>
+      <div class="stamp-progress-area">
+        <div class="stamp-progress-label"><span>다음 보상까지</span><span>7 / 10회</span></div>
+        <div class="stamp-progress-bar"><div class="stamp-progress-fill" style="width:70%"></div></div>
+      </div>
+      <div class="stamp-grid" id="stamp-grid"></div>
+      <div class="stamp-card-bottom"><span>이번 달 출석</span><span style="font-weight:700">3회</span><span>누적 <span style="color:#FFD166;font-weight:700">7</span>회</span></div>
+    </div>
+  </div>
+  <!-- 교사 홈 -->
+  <div id="home-teacher-area" style="display:none">
+    <div style="margin:14px;background:linear-gradient(135deg,#4C1D95,#7C3AED);border-radius:20px;padding:22px;color:white;box-shadow:0 8px 32px rgba(124,58,237,0.25)">
+      <div style="font-size:11px;opacity:.7;margin-bottom:4px;letter-spacing:1px">HEAVEN'S DOOR · 교사</div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:6px" id="home-teacher-name">이스테파노 (중2) 교사님 ✝️</div>
+      <div style="font-size:12px;opacity:.85;line-height:1.7" id="home-teacher-desc">중2 담당 교사님, 오늘도 좋은 교리를 전해주세요 🙏<br>관리 패널에서 담당 학년 출석을 관리할 수 있어요.</div>
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button onclick="switchTab('admin')" style="flex:1;padding:9px;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);border-radius:10px;color:white;font-size:12px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer">📋 관리 패널</button>
+        <button onclick="switchTab('teacher')" style="flex:1;padding:9px;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.3);border-radius:10px;color:white;font-size:12px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer">📚 자료실</button>
+      </div>
+    </div>
+  </div>
+  <!-- 부모 홈 -->
+  <div id="home-parent-area" style="display:none">
+    <div style="margin:14px;background:linear-gradient(135deg,#1a3a5c,var(--sky));border-radius:20px;padding:22px;color:white;box-shadow:var(--shadow-strong)">
+      <div style="font-size:11px;opacity:.7;margin-bottom:4px">HEAVEN'S DOOR 중고등부</div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:6px">학부모님, 안녕하세요 👋</div>
+      <div style="font-size:12px;opacity:.85;line-height:1.6">공지사항과 게시물을 열람하실 수 있습니다.<br>자녀의 신앙 성장을 함께 응원해 주세요 🙏</div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-header"><span class="section-title">이번 주 일정</span><button class="section-more" onclick="switchTab('board')">전체 보기</button></div>
+    <div class="week-card" id="home-attend-card" onclick="switchTab('attend')">
+      <div class="week-card-icon" style="background:var(--mint-light)"><svg viewBox="0 0 24 24" fill="none" stroke="#5BBF8E" stroke-width="2" stroke-linecap="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+      <div class="week-card-body"><div class="week-card-title">주일 예배 출석</div><div class="week-card-sub">오늘 출석 체크하기</div></div>
+      <span class="week-card-badge chip chip-mint" id="attend-card-badge">미완료</span>
+    </div>
+    <div class="week-card" onclick="showToast('여름 수련회 신청!')">
+      <div class="week-card-icon" style="background:#FFF8EC"><svg viewBox="0 0 24 24" fill="none" stroke="#F5A623" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+      <div class="week-card-body"><div class="week-card-title">여름 수련회 신청</div><div class="week-card-sub">7월 25~27일 · 마감 D-5</div></div>
+      <span class="week-card-badge chip chip-gold">NEW</span>
+    </div>
+  </div>
+  <div class="section" id="home-reward-section">
+    <div class="section-header"><span class="section-title">🎁 출석 보상</span></div>
+    <div class="reward-scroll">
+      <div class="reward-item unlocked"><div class="reward-emoji">🌱</div><div class="reward-name">씨앗 배지</div><div class="reward-req">✅ 달성!</div></div>
+      <div class="reward-item unlocked"><div class="reward-emoji">🌿</div><div class="reward-name">새싹 배지</div><div class="reward-req">✅ 달성!</div></div>
+      <div class="reward-item"><div class="reward-lock">🔒</div><div class="reward-emoji" style="filter:grayscale(1)">🌸</div><div class="reward-name">꽃망울 배지</div><div class="reward-req">10회 출석</div></div>
+      <div class="reward-item locked"><div class="reward-lock">🔒</div><div class="reward-emoji" style="filter:grayscale(1)">☀️</div><div class="reward-name">햇살 배지</div><div class="reward-req">20회 출석</div></div>
+      <div class="reward-item locked"><div class="reward-lock">🔒</div><div class="reward-emoji" style="filter:grayscale(1)">👑</div><div class="reward-name">하늘의문 왕관</div><div class="reward-req">52회 출석</div></div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-header"><span class="section-title">📢 최근 공지</span><button class="section-more" onclick="switchTab('board')">더보기</button></div>
+    <div class="notice-preview">
+      <div class="notice-item" onclick="switchTab('board')"><div class="notice-dot" style="background:var(--coral)"></div><div class="notice-item-body"><div class="notice-item-title">2025 여름 수련회 안내</div><div class="notice-item-date">2025.06.28</div></div><span>›</span></div>
+      <div class="notice-item" onclick="switchTab('board')"><div class="notice-dot" style="background:var(--sky)"></div><div class="notice-item-body"><div class="notice-item-title">6월 30일 예배 찬양팀 모집</div><div class="notice-item-date">2025.06.25</div></div><span>›</span></div>
+      <div class="notice-item" onclick="switchTab('board')"><div class="notice-dot" style="background:var(--mint)"></div><div class="notice-item-body"><div class="notice-item-title">7월 성경 암송 대회 안내</div><div class="notice-item-date">2025.06.20</div></div><span>›</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- 출석 -->
+<div id="screen-attend" class="screen">
+  <div class="app-header">
+    <div class="header-logo">
+      <div class="icon" style="background:linear-gradient(135deg,var(--mint),#3DAB75)"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+      <span>출석 관리<small>2025년 6월</small></span>
+    </div>
+  </div>
+  <div class="attendance-header">
+    <div class="big-num">7</div><div class="big-label">누적 출석 횟수</div>
+    <div class="stats">
+      <div class="stat"><div class="stat-n">3</div><div class="stat-l">이번 달</div></div>
+      <div class="stat"><div class="stat-n">85%</div><div class="stat-l">출석률</div></div>
+      <div class="stat"><div class="stat-n">3</div><div class="stat-l">연속 출석</div></div>
+    </div>
+  </div>
+  <div class="qr-section">
+    <div style="font-size:14px;font-weight:700;margin-bottom:5px">오늘 출석 체크</div>
+    <div style="font-size:11px;color:var(--text-sub);margin-bottom:18px">QR코드를 스캔하거나 버튼을 눌러 출석하세요</div>
+    <div class="qr-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="5" y="5" width="3" height="3" fill="currentColor"/><rect x="16" y="5" width="3" height="3" fill="currentColor"/><rect x="5" y="16" width="3" height="3" fill="currentColor"/></svg><span>QR 스캔</span></div>
+    <button class="btn-check" id="btn-attend-check" onclick="doAttendance()">✅ 지금 출석하기</button>
+  </div>
+  <div class="month-grid">
+    <div class="month-title">6월 출석 현황</div>
+    <div class="week-row">
+      <div class="week-chip attended"><div class="wc-label">6/1</div><div class="wc-icon">✅</div></div>
+      <div class="week-chip attended"><div class="wc-label">6/8</div><div class="wc-icon">✅</div></div>
+      <div class="week-chip missed"><div class="wc-label">6/15</div><div class="wc-icon">❌</div></div>
+      <div class="week-chip attended"><div class="wc-label">6/22</div><div class="wc-icon">✅</div></div>
+      <div class="week-chip"><div class="wc-label">6/29</div><div class="wc-icon">⏳</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 게시판 -->
+<div id="screen-board" class="screen">
+  <div class="app-header">
+    <div class="header-logo">
+      <div class="icon" style="background:linear-gradient(135deg,#F5A623,#E8914A)"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+      <span>커뮤니티<small id="board-header-sub">게시판</small></span>
+    </div>
+  </div>
+  <!-- 교사만 보이는 학년 필터 탭 -->
+  <div id="board-grade-bar" style="display:none">
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="selectGradeTab(this,'all')">전체</button>
+      <button class="tab-btn" onclick="selectGradeTab(this,'m1')">중1</button>
+      <button class="tab-btn" onclick="selectGradeTab(this,'m2')">중2</button>
+      <button class="tab-btn" onclick="selectGradeTab(this,'m3')">중3</button>
+      <button class="tab-btn" onclick="selectGradeTab(this,'h')">고등부</button>
+    </div>
+  </div>
+  <!-- 카테고리 탭 -->
+  <div class="tab-bar" id="board-cat-bar">
+    <button class="tab-btn active" onclick="selectCatTab(this)">전체</button>
+    <button class="tab-btn" onclick="selectCatTab(this)">공지사항</button>
+    <button class="tab-btn" onclick="selectCatTab(this)">사진/영상</button>
+    <button class="tab-btn" onclick="selectCatTab(this)">이벤트</button>
+    <button class="tab-btn" onclick="selectCatTab(this)">자유</button>
+  </div>
+  <div class="post-list" id="post-list">
+    <!-- 전체 공통 게시물 -->
+    <div class="post-card" data-grade="all" onclick="showToast('게시물 상세!')">
+      <div class="post-card-top"><div class="post-tags"><span class="chip chip-coral">📢 공지</span></div><span class="post-date">2025.06.28</span></div>
+      <div class="post-title">2025 여름 수련회 안내 및 신청 방법</div>
+      <div class="post-preview">올해 여름 수련회는 7월 25일부터 27일까지 진행됩니다. 신청 마감은 7월 10일까지...</div>
+      <div class="post-footer"><div class="post-author"><div class="avatar" style="background:var(--sky)">이</div>이스테파노 교사</div><div class="post-stats"><span class="post-stat">👁 128</span><span class="post-stat">💬 12</span></div></div>
+    </div>
+    <div class="post-card" data-grade="all" onclick="showToast('게시물 상세!')">
+      <div class="post-card-top"><div class="post-tags"><span class="chip chip-mint">📸 사진</span></div><span class="post-date">2025.06.22</span></div>
+      <div class="post-title">6월 22일 주일 예배 사진 모음</div>
+      <div class="post-preview">지난 주일 예배 때 찍은 사진들을 공유합니다. 모두 너무 밝게 예배드렸어요 🙏</div>
+      <div class="post-footer"><div class="post-author"><div class="avatar" style="background:var(--mint)">박</div>박교사</div><div class="post-stats"><span class="post-stat">👁 97</span><span class="post-stat">❤️ 34</span></div></div>
+    </div>
+    <div class="post-card" data-grade="all" onclick="showToast('게시물 상세!')">
+      <div class="post-card-top"><div class="post-tags"><span class="chip chip-gold">🎉 이벤트</span></div><span class="post-date">2025.06.20</span></div>
+      <div class="post-title">7월 성경 암송 대회 — 참가자 모집!</div>
+      <div class="post-preview">출석 스탬프 보너스 3개 지급! 요한복음 3장 16절부터 시작하는 5구절 암송...</div>
+      <div class="post-footer"><div class="post-author"><div class="avatar" style="background:var(--gold)">김</div>김교사</div><div class="post-stats"><span class="post-stat">👁 76</span><span class="post-stat">💬 8</span></div></div>
+    </div>
+    <!-- 중1+중2 복수 게시물 -->
+    <div class="post-card" data-grade="m1,m2" id="student-free-post" onclick="showToast('게시물 상세!')">
+      <div class="post-card-top"><div class="post-tags"><span class="chip chip-blue">✍️ 자유</span><span class="grade-chip-m1">중1</span><span class="grade-chip-m2">중2</span></div><span class="post-date">2025.06.18</span></div>
+      <div class="post-title">중1·중2 합동 말씀 나눔</div>
+      <div class="post-preview">마가복음 4장 씨앗의 비유를 중1, 중2 친구들과 함께 나눠봐요...</div>
+      <div class="post-footer"><div class="post-author"><div class="avatar" style="background:var(--sky)">이</div>이스테파노 교사</div><div class="post-stats"><span class="post-stat">👁 54</span><span class="post-stat">💬 15</span></div></div>
+    </div>
+    <!-- 중1 게시물 -->
+    <div class="post-card" data-grade="m1" onclick="showToast('게시물 상세!')">
+      <div class="post-card-top"><div class="post-tags"><span class="chip chip-coral">📢 공지</span><span class="grade-chip-m1">중1</span></div><span class="post-date">2025.06.27</span></div>
+      <div class="post-title">중1 7월 교리 수업 일정 안내</div>
+      <div class="post-preview">다음 달 교리 수업은 매주 일요일 예배 후 별관 1호실에서 진행됩니다...</div>
+      <div class="post-footer"><div class="post-author"><div class="avatar" style="background:#C0186A">김</div>김교사 (중1)</div><div class="post-stats"><span class="post-stat">👁 23</span><span class="post-stat">💬 3</span></div></div>
+    </div>
+    <!-- 중2 게시물 -->
+    <div class="post-card" data-grade="m2" onclick="showToast('게시물 상세!')">
+      <div class="post-card-top"><div class="post-tags"><span class="chip chip-coral">📢 공지</span><span class="grade-chip-m2">중2</span></div><span class="post-date">2025.06.26</span></div>
+      <div class="post-title">중2 성경 암송 연습 자료 공유</div>
+      <div class="post-preview">이번 달 암송 구절은 요한복음 3장 16절입니다. 연습 자료 첨부했어요...</div>
+      <div class="post-footer"><div class="post-author"><div class="avatar" style="background:var(--sky)">이</div>이스테파노 (중2)</div><div class="post-stats"><span class="post-stat">👁 31</span><span class="post-stat">💬 5</span></div></div>
+    </div>
+    <!-- 중3 게시물 -->
+    <div class="post-card" data-grade="m3" onclick="showToast('게시물 상세!')">
+      <div class="post-card-top"><div class="post-tags"><span class="chip chip-mint">📸 사진</span><span class="grade-chip-m3">중3</span></div><span class="post-date">2025.06.23</span></div>
+      <div class="post-title">중3 봉사활동 사진 모음 🙏</div>
+      <div class="post-preview">지난 주 중3 친구들이 함께한 봉사활동 사진이에요. 모두 수고했어요!</div>
+      <div class="post-footer"><div class="post-author"><div class="avatar" style="background:var(--mint)">박</div>박교사 (중3)</div><div class="post-stats"><span class="post-stat">👁 58</span><span class="post-stat">❤️ 22</span></div></div>
+    </div>
+    <!-- 고등부 게시물 -->
+    <div class="post-card" data-grade="h" onclick="showToast('게시물 상세!')">
+      <div class="post-card-top"><div class="post-tags"><span class="chip chip-gold">🎉 이벤트</span><span class="grade-chip-h">고등부</span></div><span class="post-date">2025.06.21</span></div>
+      <div class="post-title">고등부 진로 기도 모임 안내</div>
+      <div class="post-preview">수능을 앞둔 고3 친구들을 위한 특별 기도 모임을 진행합니다. 매주 토요일 오후 3시...</div>
+      <div class="post-footer"><div class="post-author"><div class="avatar" style="background:var(--gold)">최</div>최교사 (고등부)</div><div class="post-stats"><span class="post-stat">👁 67</span><span class="post-stat">💬 9</span></div></div>
+    </div>
+    <!-- 중3+고등부 복수 게시물 -->
+    <div class="post-card" data-grade="m3,h" onclick="showToast('게시물 상세!')">
+      <div class="post-card-top"><div class="post-tags"><span class="chip chip-blue">✍️ 자유</span><span class="grade-chip-m3">중3</span><span class="grade-chip-h">고등부</span></div><span class="post-date">2025.06.19</span></div>
+      <div class="post-title">수능 100일 함께 기도해요 🙏</div>
+      <div class="post-preview">고3 친구들 파이팅! 100일 기도 챌린지 같이 해봐요. 매일 아침 짧은 기도 한마디씩...</div>
+      <div class="post-footer"><div class="post-author"><div class="avatar" style="background:var(--coral)">김</div>김믿음 (학생)</div><div class="post-stats"><span class="post-stat">👁 89</span><span class="post-stat">❤️ 41</span></div></div>
+    </div>
+  </div>
+  <button class="fab" id="fab-write" onclick="openWriteModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+</div>
+
+<!-- 교사 자료실 -->
+<div id="screen-teacher" class="screen">
+  <div class="app-header">
+    <div class="header-logo">
+      <div class="icon" style="background:linear-gradient(135deg,#7C3AED,#4C1D95)"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+      <span>교사 자료실<small>교사 전용</small></span>
+    </div>
+    <div class="header-actions"><button class="icon-btn" onclick="showToast('자료 업로드!')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+  </div>
+  <div class="teacher-comm-header">
+    <h3 style="font-size:17px;font-weight:700;margin-bottom:4px">📚 교사 자료실</h3>
+    <p style="font-size:11px;opacity:.8">교리 자료, 공과 내용, 행정 문서를 연도별로 보관하고 공유해요</p>
+  </div>
+  <div class="year-tabs">
+    <button class="year-tab active" onclick="selectYear(this)">2025년</button>
+    <button class="year-tab" onclick="selectYear(this)">2024년</button>
+    <button class="year-tab" onclick="selectYear(this)">2023년</button>
+    <button class="year-tab" onclick="selectYear(this)">2022년</button>
+  </div>
+  <div class="tab-bar" style="margin-top:10px">
+    <button class="tab-btn active" onclick="selectCatTab(this)">전체</button>
+    <button class="tab-btn" onclick="selectCatTab(this)">교리자료</button>
+    <button class="tab-btn" onclick="selectCatTab(this)">공과/설교</button>
+    <button class="tab-btn" onclick="selectCatTab(this)">행정</button>
+    <button class="tab-btn" onclick="selectCatTab(this)">교사채팅</button>
+  </div>
+  <div class="resource-list">
+    <div class="resource-card" onclick="showToast('자료 상세!')"><div class="resource-icon" style="background:var(--purple-light)">📖</div><div class="resource-body"><div class="resource-title">마가복음 4장 교리 자료 (씨앗의 비유)</div><div class="resource-meta"><span class="chip chip-purple" style="margin-right:4px">교리자료</span>이스테파노 · 2025.06.20</div></div></div>
+    <div class="resource-card" onclick="showToast('자료 상세!')"><div class="resource-icon" style="background:#FFF8EC">📝</div><div class="resource-body"><div class="resource-title">6월 4주차 공과 내용 및 설교 요약</div><div class="resource-meta"><span class="chip chip-gold" style="margin-right:4px">공과/설교</span>박교사 · 2025.06.25</div></div></div>
+    <div class="resource-card" onclick="showToast('자료 상세!')"><div class="resource-icon" style="background:var(--mint-light)">📋</div><div class="resource-body"><div class="resource-title">2025년 하반기 교육 계획서</div><div class="resource-meta"><span class="chip chip-mint" style="margin-right:4px">행정</span>김교사 · 2025.06.01</div></div></div>
+    <div class="resource-card" onclick="showToast('자료 상세!')"><div class="resource-icon" style="background:var(--sky-light)">🎬</div><div class="resource-body"><div class="resource-title">부활절 행사 영상 및 사진 모음</div><div class="resource-meta"><span class="chip chip-blue" style="margin-right:4px">미디어</span>이스테파노 · 2025.04.20</div></div></div>
+  </div>
+</div>
+
+<!-- 마이페이지 -->
+<div id="screen-my" class="screen">
+  <div class="profile-hero">
+    <div class="profile-avatar" id="profile-avatar">😊</div>
+    <div class="profile-name" id="profile-name-text">김하늘</div>
+    <div class="profile-role" id="profile-role-text">학생 · 중1</div>
+  </div>
+  <div class="profile-stats">
+    <div class="profile-stat"><div class="profile-stat-n">7</div><div class="profile-stat-l">누적 출석</div></div>
+    <div class="profile-stat"><div class="profile-stat-n">🌿</div><div class="profile-stat-l">현재 배지</div></div>
+    <div class="profile-stat"><div class="profile-stat-n">85%</div><div class="profile-stat-l">출석률</div></div>
+  </div>
+  <div class="menu-section">
+    <div class="menu-title">내 활동</div>
+    <div class="menu-card">
+      <div class="menu-item" id="my-attend-menu" onclick="switchTab('attend')">
+        <div class="menu-icon" style="background:var(--mint-light)"><svg viewBox="0 0 24 24" fill="none" stroke="#5BBF8E" stroke-width="2" stroke-linecap="round"><polyline points="9 11 12 14 22 4"/></svg></div>
+        <div class="menu-text"><strong>출석 현황</strong><small>이번 달 3회 출석</small></div><span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-item" onclick="showToast('배지 보관함!')">
+        <div class="menu-icon" style="background:var(--gold-light)"><svg viewBox="0 0 24 24" fill="none" stroke="#F5A623" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></div>
+        <div class="menu-text"><strong>내 배지</strong><small>🌱 씨앗, 🌿 새싹 달성</small></div>
+        <span class="menu-badge chip chip-gold">2개</span><span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-item" id="my-post-menu" onclick="showToast('내 게시물!')">
+        <div class="menu-icon" style="background:var(--sky-light)"><svg viewBox="0 0 24 24" fill="none" stroke="#4A90D9" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+        <div class="menu-text"><strong>내 게시물</strong><small>작성한 글 보기</small></div><span class="menu-arrow">›</span>
+      </div>
+    </div>
+    <div class="menu-title">설정</div>
+    <div class="menu-card">
+      <div class="menu-item" onclick="showToast('알림 설정!')">
+        <div class="menu-icon" style="background:#F0F0FF"><svg viewBox="0 0 24 24" fill="none" stroke="#7B7BFF" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+        <div class="menu-text"><strong>알림 설정</strong></div><span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-item" onclick="showToast('프로필 수정은 교사 승인 후 반영됩니다')">
+        <div class="menu-icon" style="background:#FFF0EE"><svg viewBox="0 0 24 24" fill="none" stroke="#E8614A" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        <div class="menu-text"><strong>프로필 수정</strong><small id="my-grade-info">학년 변경은 교사 승인 필요</small></div><span class="menu-arrow">›</span>
+      </div>
+      <div class="menu-item" onclick="doLogout()">
+        <div class="menu-icon" style="background:var(--bg)"><svg viewBox="0 0 24 24" fill="none" stroke="#6B7A8D" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>
+        <div class="menu-text"><strong>로그아웃</strong></div><span class="menu-arrow">›</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 활동 (성가대 / 전례부) -->
+<div id="screen-activity" class="screen">
+  <div class="app-header">
+    <div class="header-logo">
+      <div class="icon" style="background:linear-gradient(135deg,#E8614A,#C0392B)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      </div>
+      <span>부서활동<small id="activity-header-sub">성가대 · 전례부</small></span>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="activity-write-btn" onclick="openActivityWriteModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- 성가대 / 전례부 탭 -->
+  <div style="display:flex;padding:0;background:white;border-bottom:1px solid var(--border)">
+    <button class="activity-dept-tab active" id="dept-tab-choir" onclick="selectDept('choir',this)"
+      style="flex:1;padding:0;border:none;background:transparent;cursor:pointer;font-family:'Noto Sans KR',sans-serif">
+      <div style="padding:14px 8px;border-bottom:3px solid #E8614A;display:flex;flex-direction:column;align-items:center;gap:4px">
+        <span style="font-size:20px">🎵</span>
+        <span style="font-size:13px;font-weight:700;color:#E8614A">성가대</span>
+      </div>
+    </button>
+    <button class="activity-dept-tab" id="dept-tab-liturgy" onclick="selectDept('liturgy',this)"
+      style="flex:1;padding:0;border:none;background:transparent;cursor:pointer;font-family:'Noto Sans KR',sans-serif">
+      <div style="padding:14px 8px;border-bottom:3px solid transparent;display:flex;flex-direction:column;align-items:center;gap:4px">
+        <span style="font-size:20px">✝️</span>
+        <span style="font-size:13px;font-weight:700;color:var(--text-sub)">전례부</span>
+      </div>
+    </button>
+  </div>
+
+  <!-- 성가대 콘텐츠 -->
+  <div id="dept-choir">
+    <!-- 성가대 소개 배너 -->
+    <div style="margin:14px;background:linear-gradient(135deg,#C0392B,#E8614A);border-radius:18px;padding:18px 20px;color:white;box-shadow:0 8px 24px rgba(232,97,74,0.3)">
+      <div style="font-size:11px;opacity:.75;letter-spacing:1px;margin-bottom:3px">CHOIR</div>
+      <div style="font-size:17px;font-weight:700;margin-bottom:5px">🎵 성가대</div>
+      <div style="font-size:12px;opacity:.9;line-height:1.7">매주 토요일 오전 10시 연습<br>담당교사: 이스테파노 교사</div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <div style="background:rgba(255,255,255,0.18);border-radius:10px;padding:7px 12px;font-size:11px;font-weight:600">👥 단원 12명</div>
+        <div style="background:rgba(255,255,255,0.18);border-radius:10px;padding:7px 12px;font-size:11px;font-weight:600">📅 토요 연습</div>
+      </div>
+    </div>
+
+    <!-- 성가대 탭 -->
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="selectCatTab(this)">전체</button>
+      <button class="tab-btn" onclick="selectCatTab(this)">공지</button>
+      <button class="tab-btn" onclick="selectCatTab(this)">악보/자료</button>
+      <button class="tab-btn" onclick="selectCatTab(this)">연습일지</button>
+      <button class="tab-btn" onclick="selectCatTab(this)">사진</button>
+    </div>
+
+    <div class="post-list">
+      <div class="post-card" onclick="showToast('게시물 상세!')">
+        <div class="post-card-top"><div class="post-tags"><span class="chip chip-coral">📢 공지</span></div><span class="post-date">2025.06.28</span></div>
+        <div class="post-title">7월 성가 연습곡 안내 — Ave Maria 외 2곡</div>
+        <div class="post-preview">7월 한 달간 연습할 곡 목록입니다. 악보는 아래 첨부파일을 다운로드해 주세요...</div>
+        <div class="post-footer"><div class="post-author"><div class="avatar" style="background:#E8614A">이</div>이스테파노 교사</div><div class="post-stats"><span class="post-stat">👁 18</span><span class="post-stat">💬 4</span></div></div>
+      </div>
+      <div class="post-card" onclick="showToast('게시물 상세!')">
+        <div class="post-card-top"><div class="post-tags"><span class="chip" style="background:#FFF0EE;color:#C0392B">🎼 악보</span></div><span class="post-date">2025.06.25</span></div>
+        <div class="post-title">Ave Maria 악보 (소프라노/알토 파트)</div>
+        <div class="post-preview">이번 달 미사 봉헌곡 악보입니다. 파트별로 표시해 두었으니 자기 파트 확인해 주세요...</div>
+        <div class="post-footer"><div class="post-author"><div class="avatar" style="background:#E8614A">이</div>이스테파노 교사</div><div class="post-stats"><span class="post-stat">👁 22</span><span class="post-stat">💬 2</span></div></div>
+      </div>
+      <div class="post-card" onclick="showToast('게시물 상세!')">
+        <div class="post-card-top"><div class="post-tags"><span class="chip" style="background:#FFF0EE;color:#C0392B">📝 연습일지</span></div><span class="post-date">2025.06.21</span></div>
+        <div class="post-title">6월 21일 토요 연습 후기</div>
+        <div class="post-preview">오늘 연습은 화음 맞추기에 집중했어요. 다음 주까지 1절은 완벽하게 외워오기!</div>
+        <div class="post-footer"><div class="post-author"><div class="avatar" style="background:#9B59B6">박</div>박하늘 (학생)</div><div class="post-stats"><span class="post-stat">👁 14</span><span class="post-stat">❤️ 8</span></div></div>
+      </div>
+      <div class="post-card" onclick="showToast('게시물 상세!')">
+        <div class="post-card-top"><div class="post-tags"><span class="chip chip-mint">📸 사진</span></div><span class="post-date">2025.06.15</span></div>
+        <div class="post-title">6월 첫째 주 미사 성가 봉헌 사진</div>
+        <div class="post-preview">지난 주일 미사에서 성가를 봉헌했어요. 모두 너무 아름답게 불러줬어요 🙏</div>
+        <div class="post-footer"><div class="post-author"><div class="avatar" style="background:#E8614A">이</div>이스테파노 교사</div><div class="post-stats"><span class="post-stat">👁 31</span><span class="post-stat">❤️ 19</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 전례부 콘텐츠 -->
+  <div id="dept-liturgy" style="display:none">
+    <div style="margin:14px;background:linear-gradient(135deg,#2C5F8A,#4A90D9);border-radius:18px;padding:18px 20px;color:white;box-shadow:0 8px 24px rgba(74,144,217,0.3)">
+      <div style="font-size:11px;opacity:.75;letter-spacing:1px;margin-bottom:3px">LITURGY</div>
+      <div style="font-size:17px;font-weight:700;margin-bottom:5px">✝️ 전례부</div>
+      <div style="font-size:12px;opacity:.9;line-height:1.7">매주 일요일 예배 전 30분 준비<br>담당교사: 박안드레아 교사</div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <div style="background:rgba(255,255,255,0.18);border-radius:10px;padding:7px 12px;font-size:11px;font-weight:600">👥 단원 8명</div>
+        <div style="background:rgba(255,255,255,0.18);border-radius:10px;padding:7px 12px;font-size:11px;font-weight:600">📅 주일 준비</div>
+      </div>
+    </div>
+
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="selectCatTab(this)">전체</button>
+      <button class="tab-btn" onclick="selectCatTab(this)">공지</button>
+      <button class="tab-btn" onclick="selectCatTab(this)">전례자료</button>
+      <button class="tab-btn" onclick="selectCatTab(this)">봉사일지</button>
+      <button class="tab-btn" onclick="selectCatTab(this)">사진</button>
+    </div>
+
+    <div class="post-list">
+      <div class="post-card" onclick="showToast('게시물 상세!')">
+        <div class="post-card-top"><div class="post-tags"><span class="chip chip-coral">📢 공지</span></div><span class="post-date">2025.06.29</span></div>
+        <div class="post-title">7월 주일 전례 봉사 스케줄 안내</div>
+        <div class="post-preview">7월 전례 봉사 스케줄입니다. 본인 날짜 확인하고 변경 필요하면 미리 알려주세요...</div>
+        <div class="post-footer"><div class="post-author"><div class="avatar" style="background:var(--sky)">박</div>박안드레아 교사</div><div class="post-stats"><span class="post-stat">👁 15</span><span class="post-stat">💬 3</span></div></div>
+      </div>
+      <div class="post-card" onclick="showToast('게시물 상세!')">
+        <div class="post-card-top"><div class="post-tags"><span class="chip" style="background:#EBF4FF;color:#1A5276">📋 전례자료</span></div><span class="post-date">2025.06.22</span></div>
+        <div class="post-title">독서자 발음 교정 자료 — 고유명사 목록</div>
+        <div class="post-preview">성경 고유명사 발음 가이드입니다. 독서 봉사 전 꼭 한 번 읽어보세요...</div>
+        <div class="post-footer"><div class="post-author"><div class="avatar" style="background:var(--sky)">박</div>박안드레아 교사</div><div class="post-stats"><span class="post-stat">👁 20</span><span class="post-stat">💬 1</span></div></div>
+      </div>
+      <div class="post-card" onclick="showToast('게시물 상세!')">
+        <div class="post-card-top"><div class="post-tags"><span class="chip" style="background:#EBF4FF;color:#1A5276">📝 봉사일지</span></div><span class="post-date">2025.06.22</span></div>
+        <div class="post-title">6월 22일 주일 전례 봉사 후기</div>
+        <div class="post-preview">오늘 독서 봉사는 최소망, 김하늘이 담당했어요. 다음 주는 이은혜, 박믿음 차례입니다!</div>
+        <div class="post-footer"><div class="post-author"><div class="avatar" style="background:var(--mint)">최</div>최소망 (학생)</div><div class="post-stats"><span class="post-stat">👁 11</span><span class="post-stat">❤️ 6</span></div></div>
+      </div>
+      <div class="post-card" onclick="showToast('게시물 상세!')">
+        <div class="post-card-top"><div class="post-tags"><span class="chip chip-mint">📸 사진</span></div><span class="post-date">2025.06.01</span></div>
+        <div class="post-title">6월 전례부 단체 사진 📷</div>
+        <div class="post-preview">새 학기 전례부 단원들 단체 사진이에요. 다들 너무 잘해줘서 고마워요 🙏</div>
+        <div class="post-footer"><div class="post-author"><div class="avatar" style="background:var(--sky)">박</div>박안드레아 교사</div><div class="post-stats"><span class="post-stat">👁 28</span><span class="post-stat">❤️ 15</span></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 관리자 -->
+<div id="screen-admin" class="screen">
+  <div class="app-header">
+    <div class="header-logo">
+      <div class="icon" style="background:linear-gradient(135deg,#9B59B6,#6C3483)"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+      <span>관리자 패널<small>교사 전용</small></span>
+    </div>
+  </div>
+  <div style="padding:14px 14px 0">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
+      <span style="font-size:15px;font-weight:700">⏳ 가입 승인 대기</span>
+      <span style="background:var(--coral);color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px" id="pending-count">3명</span>
+    </div>
+    <div class="pending-card" id="pending-1">
+      <div class="pending-top"><span class="pending-name">홍길동 (Thomas)</span><span class="chip chip-blue">🎒 학생</span></div>
+      <div class="pending-info">생년월일: 2011.03.15 &nbsp;|&nbsp; 중학교 1학년<br>아이디: hong_gildong &nbsp;|&nbsp; 연락처: 010-1234-5678<br>신청일: 2025.06.29</div>
+      <div class="pending-actions"><button class="btn-approve" onclick="approveMember(this,'홍길동')">✅ 승인</button><button class="btn-reject" onclick="rejectMember(this,'홍길동')">❌ 거절</button></div>
+    </div>
+    <div class="pending-card" id="pending-2">
+      <div class="pending-top"><span class="pending-name">김영희 (마리아)</span><span class="chip chip-gold">👨‍👩‍👧 부모</span></div>
+      <div class="pending-info">세례명: 마리아 &nbsp;|&nbsp; 자녀: 김하늘, 김소망<br>활동명: 김마리아 (김하늘, 김소망) &nbsp;|&nbsp; 아이디: kim_mama<br>신청일: 2025.06.28</div>
+      <div class="pending-actions"><button class="btn-approve" onclick="approveMember(this,'김마리아')">✅ 승인</button><button class="btn-reject" onclick="rejectMember(this,'김마리아')">❌ 거절</button></div>
+    </div>
+    <div class="pending-card" id="pending-3">
+      <div class="pending-top"><span class="pending-name">박안드레아 (중3)</span><span class="chip chip-purple">✝️ 교사</span></div>
+      <div class="pending-info">생년월일: 1990.07.22 &nbsp;|&nbsp; 담당학년: 중3<br>활동명: 박안드레아 (중3) &nbsp;|&nbsp; 아이디: park_andrew<br>신청일: 2025.06.27</div>
+      <div class="pending-actions"><button class="btn-approve" onclick="approveMember(this,'박안드레아')">✅ 승인</button><button class="btn-reject" onclick="rejectMember(this,'박안드레아')">❌ 거절</button></div>
+    </div>
+  </div>
+  <div style="height:8px;background:var(--bg);margin:14px 0 0"></div>
+  <div class="admin-grid">
+    <div class="admin-card" onclick="showToast('출석 관리!')"><div class="admin-card-icon">📋</div><div class="admin-card-title">오늘 출석 관리</div><div class="admin-card-sub">학생별 출석 체크</div><div class="admin-card-badge" style="background:var(--mint-light);color:#2E7D5A">18/24명</div></div>
+    <div class="admin-card" onclick="showToast('공지 등록!')"><div class="admin-card-icon">📝</div><div class="admin-card-title">공지사항 등록</div><div class="admin-card-sub">공지, 사진, 영상</div><div class="admin-card-badge" style="background:var(--sky-light);color:var(--sky-dark)">글쓰기</div></div>
+    <div class="admin-card" onclick="openGradeEditModal()"><div class="admin-card-icon">🎓</div><div class="admin-card-title">학년 관리</div><div class="admin-card-sub">학생 학년 수정 및 반 배정</div><div class="admin-card-badge" style="background:#F0F0FF;color:#6C3483">24명</div></div>
+    <div class="admin-card" onclick="showToast('회원 관리!')"><div class="admin-card-icon">👥</div><div class="admin-card-title">회원 관리</div><div class="admin-card-sub">등록·권한·그룹</div><div class="admin-card-badge" style="background:#FFF0EE;color:#C0392B">총 24명</div></div>
+    <div class="admin-card" onclick="showToast('보상 설정!')"><div class="admin-card-icon">🏆</div><div class="admin-card-title">보상 설정</div><div class="admin-card-sub">배지 기준 지급</div><div class="admin-card-badge" style="background:#FFF0EE;color:#C0392B">대기 2건</div></div>
+    <div class="admin-card" onclick="showToast('통계!')"><div class="admin-card-icon">📊</div><div class="admin-card-title">출석 통계</div><div class="admin-card-sub">월별/학생별 리포트</div><div class="admin-card-badge" style="background:var(--mint-light);color:#2E7D5A">6월</div></div>
+  </div>
+  <!-- 출석 관리 영역 (직책별 동적 렌더링) -->
+  <div id="admin-attend-section" style="padding:0 14px 14px"></div>
+  <!-- 저조 학생 알림 -->
+  <div id="admin-low-section" style="padding:0 14px 24px"></div>
+</div>
+
+<!-- 바텀 네비 -->
+<nav class="bottom-nav" id="bottom-nav" style="display:none">
+  <button class="nav-item active" onclick="switchTab('home')" id="nav-home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>홈</span><div class="nav-dot"></div>
+  </button>
+  <button class="nav-item" onclick="switchTab('attend')" id="nav-attend">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    <span>출석</span><div class="nav-dot"></div>
+  </button>
+  <button class="nav-item" onclick="switchTab('board')" id="nav-board">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <span>커뮤니티</span><div class="nav-dot"></div>
+  </button>
+  <button class="nav-item" id="nav-activity" onclick="switchTab('activity')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+    <span>부서활동</span><div class="nav-dot"></div>
+  </button>
+  <button class="nav-item" id="nav-teacher" onclick="switchTab('teacher')" style="display:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+    <span>자료실</span><div class="nav-dot"></div>
+  </button>
+  <button class="nav-item" id="nav-admin" onclick="switchTab('admin')" style="display:none">
+    <div class="nav-alert"></div>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+    <span>관리</span><div class="nav-dot"></div>
+  </button>
+  <button class="nav-item" onclick="switchTab('my')" id="nav-my">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <span>MY</span><div class="nav-dot"></div>
+  </button>
+</nav>
+
+<!-- 게시물 작성 모달 -->
+<div class="modal-overlay" id="write-modal">
+  <div class="modal-sheet">
+    <div class="modal-title">
+      <span>✏️ 게시물 작성</span>
+      <button class="modal-close" onclick="closeModal('write-modal')">✕ 닫기</button>
+    </div>
+    <!-- 대상 학년 선택 (체크박스) -->
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;color:var(--text-sub);margin-bottom:8px">대상 학년 <span style="color:var(--coral)">*</span></div>
+      <div class="grade-check-group">
+        <div class="grade-check-item" id="check-all" onclick="toggleGradeCheck('all')">
+          <input type="checkbox" id="gc-all" onclick="event.stopPropagation()"><label for="gc-all">📢 전체 공통</label>
+        </div>
+        <div class="grade-check-item" id="check-m1" onclick="toggleGradeCheck('m1')">
+          <input type="checkbox" id="gc-m1" onclick="event.stopPropagation()"><label for="gc-m1" style="color:#C0186A">중1</label>
+        </div>
+        <div class="grade-check-item" id="check-m2" onclick="toggleGradeCheck('m2')">
+          <input type="checkbox" id="gc-m2" onclick="event.stopPropagation()"><label for="gc-m2" style="color:#1A6AB5">중2</label>
+        </div>
+        <div class="grade-check-item" id="check-m3" onclick="toggleGradeCheck('m3')">
+          <input type="checkbox" id="gc-m3" onclick="event.stopPropagation()"><label for="gc-m3" style="color:#2E7D5A">중3</label>
+        </div>
+        <div class="grade-check-item" id="check-h" onclick="toggleGradeCheck('h')">
+          <input type="checkbox" id="gc-h" onclick="event.stopPropagation()"><label for="gc-h" style="color:#8B6200">고등부</label>
+        </div>
+      </div>
+      <!-- 학생: 본인 학년 고정 안내 -->
+      <div id="write-student-grade-notice" style="display:none;font-size:11px;color:var(--text-sub);background:var(--bg);border-radius:8px;padding:8px 10px">
+        📌 내 학년(중1)에 자동 등록됩니다
+      </div>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:600;color:var(--text-sub);margin-bottom:6px">카테고리</div>
+      <select style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;background:var(--bg)">
+        <option>공지사항</option><option>사진/영상</option><option>이벤트</option><option>자유</option>
+      </select>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:600;color:var(--text-sub);margin-bottom:6px">제목</div>
+      <input type="text" placeholder="제목을 입력하세요" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;background:var(--bg)">
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:600;color:var(--text-sub);margin-bottom:6px">내용</div>
+      <textarea placeholder="내용을 입력하세요" rows="4" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;background:var(--bg);resize:none"></textarea>
+    </div>
+    <button onclick="submitPost()" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--sky),var(--sky-dark));color:white;border:none;border-radius:14px;font-size:15px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer">등록하기</button>
+  </div>
+</div>
+
+<!-- 학년 수정 모달 (교사용) -->
+<div class="modal-overlay" id="grade-edit-modal">
+  <div class="modal-sheet">
+    <div class="modal-title">
+      <span>🎓 학생 학년 관리</span>
+      <button class="modal-close" onclick="closeModal('grade-edit-modal')">✕ 닫기</button>
+    </div>
+    <div style="font-size:12px;color:var(--text-sub);margin-bottom:14px;background:var(--sky-light);border-radius:10px;padding:10px 12px;line-height:1.7">
+      💡 담당 학년 학생의 학년을 수정할 수 있습니다.<br>다른 학년 학생 수정은 해당 담당 교사에게 요청하세요.
+    </div>
+    <div id="grade-student-list">
+      <div class="student-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px;width:100%">
+          <div class="avatar" style="background:var(--sky);width:36px;height:36px;font-size:13px;flex-shrink:0">김하</div>
+          <div style="flex:1"><div style="font-size:13px;font-weight:600">김하늘</div><div style="font-size:10px;color:var(--text-sub)">현재: 중1</div></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;padding-left:46px">
+          <button class="grade-select-btn active" onclick="selectStudentGrade(this,'중1','김하늘')">중1</button>
+          <button class="grade-select-btn" onclick="selectStudentGrade(this,'중2','김하늘')">중2</button>
+          <button class="grade-select-btn" onclick="selectStudentGrade(this,'중3','김하늘')">중3</button>
+          <button class="grade-select-btn" onclick="selectStudentGrade(this,'고등부','김하늘')">고등부</button>
+        </div>
+      </div>
+      <div class="student-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px;width:100%">
+          <div class="avatar" style="background:var(--coral);width:36px;height:36px;font-size:13px;flex-shrink:0">박믿</div>
+          <div style="flex:1"><div style="font-size:13px;font-weight:600">박믿음</div><div style="font-size:10px;color:var(--text-sub)">현재: 중2</div></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;padding-left:46px">
+          <button class="grade-select-btn" onclick="selectStudentGrade(this,'중1','박믿음')">중1</button>
+          <button class="grade-select-btn active" onclick="selectStudentGrade(this,'중2','박믿음')">중2</button>
+          <button class="grade-select-btn" onclick="selectStudentGrade(this,'중3','박믿음')">중3</button>
+          <button class="grade-select-btn" onclick="selectStudentGrade(this,'고등부','박믿음')">고등부</button>
+        </div>
+      </div>
+      <div class="student-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px;width:100%">
+          <div class="avatar" style="background:#9B59B6;width:36px;height:36px;font-size:13px;flex-shrink:0">최소</div>
+          <div style="flex:1"><div style="font-size:13px;font-weight:600">최소망</div><div style="font-size:10px;color:var(--text-sub)">현재: 중3</div></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;padding-left:46px">
+          <button class="grade-select-btn" onclick="selectStudentGrade(this,'중1','최소망')">중1</button>
+          <button class="grade-select-btn" onclick="selectStudentGrade(this,'중2','최소망')">중2</button>
+          <button class="grade-select-btn active" onclick="selectStudentGrade(this,'중3','최소망')">중3</button>
+          <button class="grade-select-btn" onclick="selectStudentGrade(this,'고등부','최소망')">고등부</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let currentRole='student', attendanceDone=false, regRole='student', pendingLeft=3;
+let childCount=1;
+
+function initStamps(){
+  const g=document.getElementById('stamp-grid');if(!g)return;g.innerHTML='';
+  for(let i=0;i<10;i++){const d=document.createElement('div');d.className='stamp-dot'+(i<7?' filled':'');d.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';g.appendChild(d);}
+}
+initStamps();
+
+// ── 회원가입 ──
+function selectRole(role,btn){
+  currentRole=role;
+  document.querySelectorAll('#screen-login .role-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+}
+function selectRegRole(role,btn){
+  regRole=role;
+  document.querySelectorAll('#screen-register .role-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  safeSet('reg-birth-wrap','display',role==='parent'?'none':'block');
+  safeSet('reg-student-extra','display',role==='student'?'block':'none');
+  safeSet('reg-parent-extra','display',role==='parent'?'block':'none');
+  safeSet('reg-teacher-notice','display',role==='teacher'?'block':'none');
+  updateActivityName();
+}
+
+// 자녀 추가/삭제
+function addChild(){
+  const list=document.getElementById('children-list');
+  const row=document.createElement('div');
+  row.className='child-input-row';
+  row.id='child-row-'+childCount;
+  row.innerHTML=`<input type="text" placeholder="자녀 이름" oninput="updateActivityName()"><button class="btn-remove-child" onclick="removeChild(${childCount})">×</button>`;
+  list.appendChild(row);
+  // 첫 번째 삭제 버튼도 보이게
+  document.querySelector('#child-row-0 .btn-remove-child').style.display='flex';
+  childCount++;
+  updateActivityName();
+}
+function removeChild(idx){
+  const row=document.getElementById('child-row-'+idx);
+  if(row)row.remove();
+  const rows=document.querySelectorAll('#children-list .child-input-row');
+  if(rows.length===1) rows[0].querySelector('.btn-remove-child').style.display='none';
+  updateActivityName();
+}
+
+// 활동명 미리보기
+function updateActivityName(){
+  const name=document.getElementById('reg-name').value.trim();
+  const baptism=document.getElementById('reg-baptism').value.trim();
+  if(!name&&!baptism){safeSet('activity-name-preview','display','none');return;}
+  const lastName=name.charAt(0);
+  let actName='';
+  if(regRole==='student'){
+    const school=document.getElementById('reg-school').value;
+    const grade=document.getElementById('reg-grade').value;
+    const gradeNum=grade.replace('학년','');
+    // 고등학생은 '고등부'로 통일 표시
+    let gradeLabel='';
+    if(school==='middle'&&gradeNum) gradeLabel=` (중${gradeNum})`;
+    else if(school==='high') gradeLabel=' (고등부)';
+    actName=(name&&baptism)?`${lastName}${baptism}${gradeLabel}`:(name||(baptism?lastName+baptism:''));
+  } else if(regRole==='teacher'){
+    const tGrade=document.getElementById('reg-teacher-grade')?document.getElementById('reg-teacher-grade').value:'';
+    const gradeLabel=tGrade?` (${tGrade})`:'';
+    actName=baptism?(lastName+baptism+gradeLabel):(name?name+gradeLabel:'');
+  } else if(regRole==='parent'){
+    const children=[];
+    document.querySelectorAll('#children-list input').forEach(inp=>{if(inp.value.trim())children.push(inp.value.trim());});
+    const childStr=children.length?` (${children.join(', ')})`:'';
+    actName=(name&&baptism)?`${lastName}${baptism}${childStr}`:(name?name+childStr:'');
+  }
+  const _prev=document.getElementById('activity-name-preview');
+  const _nameEl=document.getElementById('activity-name-text');
+  if(!_prev||!_nameEl)return;
+  if(actName){
+    _prev.style.display='block';
+    _nameEl.textContent=actName;
+  } else {
+    _prev.style.display='none';
+  }
+}
+
+function goRegister(){
+  (document.getElementById('screen-login')||{classList:{add:()=>{},remove:()=>{},toggle:()=>{}}}).classList.remove('active');
+  (document.getElementById('screen-register')||{classList:{add:()=>{},remove:()=>{},toggle:()=>{}}}).classList.add('active');
+}
+function goBack(){
+  (document.getElementById('screen-register')||{classList:{add:()=>{},remove:()=>{},toggle:()=>{}}}).classList.remove('active');
+  (document.getElementById('screen-login')||{classList:{add:()=>{},remove:()=>{},toggle:()=>{}}}).classList.add('active');
+}
+function doRegister(){
+  const name=document.getElementById('reg-name').value.trim();
+  const baptism=document.getElementById('reg-baptism').value.trim();
+  if(!name||!baptism){showToast('이름과 세례명을 입력해주세요');return;}
+  const id=document.getElementById('reg-id').value.trim();
+  const pw=document.getElementById('reg-pw').value.trim();
+  if(!id||pw.length<6){showToast('아이디 입력 및 비밀번호 6자 이상');return;}
+  const preview=document.getElementById('activity-name-text').textContent;
+  showToast('신청 완료! 활동명: '+preview);
+  setTimeout(()=>goBack(),2200);
+}
+
+// ── 로그인 ──
+function doLogin(){
+  const id=document.getElementById('login-id').value.trim();
+  let role=currentRole;
+  let teacherType=''; // 'principal'(교감) | 'admin'(교무) | 'class'(담당교사)
+  if(id==='student')role='student';
+  else if(id==='parent')role='parent';
+  else if(id==='teacher'||id==='class'){role='teacher';teacherType='class';}
+  else if(id==='principal'){role='teacher';teacherType='principal';}
+  else if(id==='tadmin'){role='teacher';teacherType='admin';}
+  else if(id==='teacher'){role='teacher';teacherType='class';}
+  currentRole=role;
+  window.teacherType=teacherType;
+  window.myGrade='중2'; // 담당교사 기본 담당학년
+  const isT=role==='teacher', isP=role==='parent', isS=role==='student';
+  (document.getElementById('screen-login')||{classList:{add:()=>{},remove:()=>{},toggle:()=>{}}}).classList.remove('active');
+  safeSet('bottom-nav','display','flex');
+  safeSet('nav-admin','display',isT?'flex':'none');
+  safeSet('nav-teacher','display',isT?'flex':'none');
+  safeSet('nav-attend','display',isS?'flex':'none');
+  safeSet('header-role-badge','text',isT?'교사':isP?'부모':'학생');
+  safeSet('profile-name-text','text',isT?'이스테파노 교사':isP?'김마리아 (김하늘, 김소망)':'김하늘');
+  safeSet('profile-role-text','text',isT?'교사 · 전체 관리자':isP?'학부모 · 열람 전용':'학생 · 중1');
+  safeSet('profile-avatar','text',isT?'✝️':isP?'👨‍👩‍👧':'😊');
+  safeSet('home-stamp-area','display',isS?'block':'none');
+  safeSet('home-teacher-area','display',isT?'block':'none');
+  safeSet('home-parent-area','display',isP?'block':'none');
+  safeSet('home-reward-section','display',isS?'block':'none');
+  safeSet('home-attend-card','display',isS?'flex':'none');
+  safeSet('fab-write','display',isP?'none':'flex');
+  safeSet('my-attend-menu','display',isS?'flex':'none');
+  safeSet('my-post-menu','display',isP?'none':'flex');
+  safeSet('student-free-post','display',isP?'none':'block');
+  // 교사만 학년 필터 탭 표시
+  safeSet('board-grade-bar','display',isT?'block':'none');
+  // 학생: 게시판에서 본인 학년 + 전체 게시물만 자동 필터
+  if(isS) filterBoardForStudent('m1');
+  else showAllPosts();
+  // MY 학년 정보
+  safeSet('my-grade-info','text',isS?'현재 학년: 중1 (변경 신청 시 교사 승인 필요)':isP?'열람 전용 계정':'전체 학년 관리 권한');
+
+  // 부서활동 탭: 부모는 숨김
+  const navActivity = document.getElementById('nav-activity');
+  if (navActivity) navActivity.style.display = isP ? 'none' : 'flex';
+  // 활동 탭 글쓰기 버튼: 교사만 표시
+  const actWriteBtn = document.getElementById('activity-write-btn');
+  if (actWriteBtn) actWriteBtn.style.display = isT ? 'flex' : 'none';
+
+  // 교사 홈 카드 직책별 업데이트
+  if(isT){
+    if(teacherType==='principal'){
+      safeSet('home-teacher-name','text','김베드로 교감님 ✝️');
+      safeSet('home-teacher-desc','text','전체 학년 출석 및 운영을 총괄합니다. 관리 패널에서 전체 현황을 확인하세요.');
+    } else if(teacherType==='admin'){
+      safeSet('home-teacher-name','text','최요한 교무님 ✝️');
+      safeSet('home-teacher-desc','text','전체 학년 출석 및 행정을 관리합니다. 관리 패널에서 전체 현황을 확인하세요.');
+    } else {
+      safeSet('home-teacher-name','text','이스테파노 (중2) 교사님 ✝️');
+      safeSet('home-teacher-desc','text','중2 담당 교사님, 오늘도 좋은 교리를 전해주세요 🙏\n관리 패널에서 담당 학년 출석을 관리할 수 있어요.');
+    }
+  }
+
+  switchTab('home');
+  showToast(isT?'교사로 로그인되었습니다 ✝️':isP?'학부모님, 환영합니다 👋':'환영합니다! 김하늘 😊');
+}
+function doLogout(){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  safeSet('bottom-nav','display','none');
+  (document.getElementById('screen-login')||{classList:{add:()=>{},remove:()=>{},toggle:()=>{}}}).classList.add('active');
+  document.getElementById('login-id').value='';currentRole='student';
+  document.querySelectorAll('#screen-login .role-tab').forEach((t,i)=>t.classList.toggle('active',i===0));
+  showToast('로그아웃 되었습니다');
+}
+
+// ── 게시판 필터 ──
+function filterBoardForStudent(myGrade){
+  // 학생: 전체(all) + 본인 학년이 포함된 게시물만 표시
+  document.querySelectorAll('.post-card[data-grade]').forEach(card=>{
+    const grades=card.getAttribute('data-grade').split(',');
+    card.style.display=(grades.includes('all')||grades.includes(myGrade))?'block':'none';
+  });
+}
+function showAllPosts(){
+  document.querySelectorAll('.post-card[data-grade]').forEach(card=>card.style.display='block');
+}
+function selectGradeTab(btn,grade){
+  document.querySelectorAll('#board-grade-bar .tab-btn').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  if(grade==='all'){showAllPosts();safeSet('board-header-sub','text','전체 게시판');}
+  else{
+    const labels={m1:'중1',m2:'중2',m3:'중3',h:'고등부'};
+    document.querySelectorAll('.post-card[data-grade]').forEach(card=>{
+      const grades=card.getAttribute('data-grade').split(',');
+      card.style.display=(grades.includes('all')||grades.includes(grade))?'block':'none';
+    });
+    safeSet('board-header-sub','text',labels[grade]+' 게시판');
+  }
+}
+function selectCatTab(btn){
+  btn.closest('.tab-bar').querySelectorAll('.tab-btn').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  showToast(btn.textContent+' 목록');
+}
+
+// ── 게시물 작성 모달 ──
+function openWriteModal(){
+  const isT=currentRole==='teacher';
+  const isS=currentRole==='student';
+  // 교사: 체크박스 전체 활성, 학생: 본인 학년 고정
+  document.querySelectorAll('.grade-check-item').forEach(el=>{
+    el.style.display=isT?'flex':'none';
+    el.querySelector('input').checked=false;
+    el.className='grade-check-item';
+  });
+  safeSet('write-student-grade-notice','display',isS?'block':'none');
+  if(isT) document.querySelectorAll('.grade-check-item').forEach(el=>el.style.display='flex');
+  openModal('write-modal');
+}
+function toggleGradeCheck(grade){
+  const item=document.getElementById('check-'+grade);
+  const cb=document.getElementById('gc-'+grade);
+  cb.checked=!cb.checked;
+  if(cb.checked){item.classList.add('checked-'+grade);}
+  else{item.classList.remove('checked-'+grade);}
+}
+function submitPost(){
+  const checked=[];
+  ['all','m1','m2','m3','h'].forEach(g=>{
+    if(document.getElementById('gc-'+g)&&document.getElementById('gc-'+g).checked) checked.push(g);
+  });
+  const labels={all:'전체',m1:'중1',m2:'중2',m3:'중3',h:'고등부'};
+  if(currentRole==='teacher'&&checked.length===0){showToast('대상 학년을 하나 이상 선택해주세요');return;}
+  const target=currentRole==='student'?'내 학년(중1)':checked.map(g=>labels[g]).join(', ');
+  closeModal('write-modal');
+  showToast('✅ 게시물 등록 완료! 대상: '+target);
+}
+
+// ── 학년 수정 모달 (교사용) ──
+function openGradeEditModal(){openModal('grade-edit-modal');}
+function selectStudentGrade(btn,grade,name){
+  const row=btn.closest('.student-row');
+  row.querySelectorAll('.grade-select-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  row.querySelector('.student-detail').textContent='현재: '+grade;
+  showToast(name+' → '+grade+' 변경 완료');
+}
+
+// ── 출석 데이터 (프로토타입) ──
+const STUDENTS = [
+  {name:'김하늘', baptism:'세실리아', grade:'m1', gradeLabel:'중1', color:'#4A90D9', total:7,  rate:85, consecutive:0, absent3:false},
+  {name:'이소망', baptism:'루시아',   grade:'m1', gradeLabel:'중1', color:'#E8614A', total:4,  rate:48, consecutive:3, absent3:true },
+  {name:'박믿음', baptism:'안드레아', grade:'m2', gradeLabel:'중2', color:'#E8614A', total:12, rate:92, consecutive:0, absent3:false},
+  {name:'정은총', baptism:'가브리엘', grade:'m2', gradeLabel:'중2', color:'#3498DB', total:9,  rate:69, consecutive:0, absent3:false},
+  {name:'한사랑', baptism:'모니카',   grade:'m2', gradeLabel:'중2', color:'#27AE60', total:6,  rate:46, consecutive:2, absent3:false},
+  {name:'최소망', baptism:'테레사',   grade:'m3', gradeLabel:'중3', color:'#9B59B6', total:5,  rate:38, consecutive:3, absent3:true },
+  {name:'강기쁨', baptism:'막달레나', grade:'m3', gradeLabel:'중3', color:'#F39C12', total:10, rate:77, consecutive:0, absent3:false},
+  {name:'이은혜', baptism:'클라라',   grade:'h',  gradeLabel:'고등부', color:'#F5A623', total:18, rate:95, consecutive:0, absent3:false},
+  {name:'오평화', baptism:'스텔라',   grade:'h',  gradeLabel:'고등부', color:'#1ABC9C', total:3,  rate:29, consecutive:4, absent3:true },
+];
+
+const GRADE_CHIP = {
+  m1:'<span class="grade-chip-m1">중1</span>',
+  m2:'<span class="grade-chip-m2">중2</span>',
+  m3:'<span class="grade-chip-m3">중3</span>',
+  h:'<span class="grade-chip-h">고등부</span>',
+};
+
+function renderAdminAttend() {
+  const sec = document.getElementById('admin-attend-section');
+  const lowSec = document.getElementById('admin-low-section');
+  if (!sec) return;
+
+  const isFullAccess = (window.teacherType === 'principal' || window.teacherType === 'admin');
+  const myGrade = window.myGrade || '중2'; // 담당교사 기본값
+  const myGradeKey = {중1:'m1',중2:'m2',중3:'m3',고등부:'h'}[myGrade] || 'm2';
+
+  // 접근 가능한 학생 필터
+  const visibleStudents = isFullAccess ? STUDENTS : STUDENTS.filter(s => s.grade === myGradeKey);
+  const todayPresent = visibleStudents.filter((_, i) => i % 3 !== 2).length;
+
+  // ── 빠른 출석 체크 ──
+  const gradeLabel = isFullAccess ? '전체' : myGrade;
+  const scopeChip = isFullAccess
+    ? `<span style="font-size:11px;background:#FFF8EC;color:#8B6200;padding:3px 10px;border-radius:10px;font-weight:600">👑 전체 학년</span>`
+    : `<span style="font-size:11px;background:var(--purple-light);color:#5B21B6;padding:3px 10px;border-radius:10px;font-weight:600">담당: ${myGrade}</span>`;
+
+  let rows = visibleStudents.map((s, i) => `
+    <div class="student-row">
+      <div class="avatar" style="background:${s.color};width:36px;height:36px;font-size:12px">${s.name.slice(0,2)}</div>
+      <div class="student-info">
+        <div class="student-name">${s.name} ${GRADE_CHIP[s.grade]}</div>
+        <div class="student-detail">누적 ${s.total}회 · 출석률 ${s.rate}%</div>
+      </div>
+      <button class="attendance-toggle ${i%3!==2?'on':'off'}" onclick="toggleAttend(this)"></button>
+    </div>`).join('');
+
+  sec.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;margin-top:4px">
+      <span style="font-size:13px;font-weight:700">빠른 출석 체크</span>
+      ${scopeChip}
+    </div>
+    ${!isFullAccess ? `<div style="font-size:11px;color:var(--text-sub);background:var(--bg);border-radius:10px;padding:8px 12px;margin-bottom:10px">📌 담당 학년(${myGrade}) 학생만 표시됩니다.</div>` : ''}
+    ${rows}
+    <div style="margin-top:10px;padding:10px 14px;background:var(--bg);border-radius:10px;font-size:11px;color:var(--text-sub);display:flex;justify-content:space-between;align-items:center">
+      <span>${gradeLabel} <strong>${visibleStudents.length}명</strong> 중 오늘 <strong>${todayPresent}명</strong> 출석</span>
+      <button onclick="showToast('전체 출석 현황!')" style="background:none;border:none;color:var(--sky);font-size:11px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif">전체 보기 →</button>
+    </div>`;
+
+  // ── 출석 저조 학생 ──
+  const lowStudents = visibleStudents.filter(s => s.rate < 70 || s.absent3);
+  if (!lowSec || lowStudents.length === 0) return;
+
+  const lowRows = lowStudents.map(s => {
+    let badge = '';
+    let borderColor = '';
+    if (s.absent3) {
+      badge = `<span style="background:#FFF0EE;color:#C0392B;font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;margin-left:5px">🚨 ${s.consecutive}주 연속결석</span>`;
+      borderColor = 'border-color:#FFBBB3';
+    } else if (s.rate < 50) {
+      badge = `<span style="background:#FFF0EE;color:#C0392B;font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;margin-left:5px">🔴 위험</span>`;
+      borderColor = 'border-color:#FFBBB3';
+    } else {
+      badge = `<span style="background:#FFF8EC;color:#8B6200;font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;margin-left:5px">🟡 주의</span>`;
+      borderColor = 'border-color:#FFE5A0';
+    }
+    return `
+      <div class="student-row" style="${borderColor}">
+        <div class="avatar" style="background:${s.color};width:36px;height:36px;font-size:12px">${s.name.slice(0,2)}</div>
+        <div class="student-info">
+          <div class="student-name" style="display:flex;align-items:center;flex-wrap:wrap">${s.name} ${GRADE_CHIP[s.grade]}${badge}</div>
+          <div class="student-detail">출석률 ${s.rate}% · 누적 ${s.total}회</div>
+        </div>
+        <button onclick="showToast('${s.name} 연락 메모 화면!')" style="background:var(--sky-light);border:none;border-radius:9px;padding:6px 10px;font-size:10px;font-weight:700;color:var(--sky-dark);cursor:pointer;font-family:'Noto Sans KR',sans-serif;flex-shrink:0">연락</button>
+      </div>`;
+  }).join('');
+
+  lowSec.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
+      <span style="font-size:13px;font-weight:700">⚠️ 출석 저조 학생</span>
+      <span style="background:var(--coral);color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">${lowStudents.length}명</span>
+      ${scopeChip}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+      <div style="background:white;border-radius:12px;padding:11px;text-align:center;border:1.5px solid var(--border);box-shadow:var(--shadow)">
+        <div style="font-size:18px;font-weight:800;color:var(--coral)">${visibleStudents.filter(s=>s.rate<50).length}</div>
+        <div style="font-size:10px;color:var(--text-sub);margin-top:2px">🔴 위험<br>(50% 미만)</div>
+      </div>
+      <div style="background:white;border-radius:12px;padding:11px;text-align:center;border:1.5px solid var(--border);box-shadow:var(--shadow)">
+        <div style="font-size:18px;font-weight:800;color:#E67E22">${visibleStudents.filter(s=>s.rate>=50&&s.rate<70).length}</div>
+        <div style="font-size:10px;color:var(--text-sub);margin-top:2px">🟡 주의<br>(50~70%)</div>
+      </div>
+      <div style="background:white;border-radius:12px;padding:11px;text-align:center;border:1.5px solid var(--border);box-shadow:var(--shadow)">
+        <div style="font-size:18px;font-weight:800;color:#C0392B">${visibleStudents.filter(s=>s.absent3).length}</div>
+        <div style="font-size:10px;color:var(--text-sub);margin-top:2px">🚨 연속<br>결석</div>
+      </div>
+    </div>
+    ${lowRows}
+    <div style="margin-top:10px;padding:11px 14px;background:#FFF8EC;border-radius:12px;border:1.5px solid #FFE5A0;font-size:11px;color:#8B6200;line-height:1.7">
+      💡 <strong>연락</strong> 버튼으로 학생별 연락 여부와 메모를 기록할 수 있어요.<br>
+      연속 3주 결석 학생은 교감/교무에게 자동 알림이 전송됩니다.
+    </div>`;
+}
+
+
+let currentDept = 'choir';
+function selectDept(dept, btn) {
+  currentDept = dept;
+  // 탭 스타일 전환
+  const choirInner = document.getElementById('dept-tab-choir').querySelector('div');
+  const liturgyInner = document.getElementById('dept-tab-liturgy').querySelector('div');
+  if (dept === 'choir') {
+    choirInner.style.borderBottomColor = '#E8614A';
+    choirInner.querySelector('span:last-child').style.color = '#E8614A';
+    liturgyInner.style.borderBottomColor = 'transparent';
+    liturgyInner.querySelector('span:last-child').style.color = 'var(--text-sub)';
+    document.getElementById('dept-choir').style.display = 'block';
+    document.getElementById('dept-liturgy').style.display = 'none';
+    document.getElementById('activity-header-sub').textContent = '성가대';
+  } else {
+    liturgyInner.style.borderBottomColor = '#4A90D9';
+    liturgyInner.querySelector('span:last-child').style.color = '#4A90D9';
+    choirInner.style.borderBottomColor = 'transparent';
+    choirInner.querySelector('span:last-child').style.color = 'var(--text-sub)';
+    document.getElementById('dept-choir').style.display = 'none';
+    document.getElementById('dept-liturgy').style.display = 'block';
+    document.getElementById('activity-header-sub').textContent = '전례부';
+  }
+}
+function openActivityWriteModal() {
+  if (currentRole !== 'teacher') {
+    showToast('활동 게시물은 교사만 작성할 수 있어요');
+    return;
+  }
+  const dept = currentDept === 'choir' ? '성가대' : '전례부';
+  showToast(`${dept} 게시물 작성 화면`);
+}
+
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+// ── 기타 ──
+function switchTab(tab){
+  if(tab==='attend'&&currentRole!=='student'){showToast('출석 기능은 학생 전용이에요');return;}
+  if(tab==='activity'&&currentRole==='parent'){showToast('부모 계정은 부서활동을 이용할 수 없어요');return;}
+  if((tab==='admin'||tab==='teacher')&&currentRole!=='teacher'){showToast('교사 전용 메뉴입니다');return;}
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+tab).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const el=document.getElementById('nav-'+tab);if(el)el.classList.add('active');
+  // 관리자 탭 진입 시 출석 렌더링
+  if(tab==='admin') renderAdminAttend();
+}
+function selectYear(btn){
+  document.querySelectorAll('.year-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');showToast(btn.textContent+' 자료');
+}
+function doAttendance(){
+  if(attendanceDone){showToast('오늘 이미 출석했어요 ✅');return;}
+  attendanceDone=true;
+  const dots=document.querySelectorAll('.stamp-dot');
+  if(dots[7])setTimeout(()=>dots[7].classList.add('filled'),300);
+  safeSet('btn-attend-check','text','✅ 오늘 출석 완료!');
+  document.getElementById('btn-attend-check').style.background='linear-gradient(135deg,#95a5a6,#7f8c8d)';
+  safeSet('attend-card-badge','text','완료 ✅');
+  document.getElementById('attend-card-badge').className='week-card-badge chip chip-blue';
+  showToast('🎉 출석 완료! 스탬프 +1');
+}
+function toggleAttend(btn){
+  const on=btn.classList.contains('on');
+  btn.classList.toggle('on',!on);btn.classList.toggle('off',on);
+  showToast(on?'출석 취소':'✅ 출석 처리 완료');
+}
+function approveMember(btn,name){
+  const card=btn.closest('.pending-card');
+  card.style.opacity='0.4';card.style.pointerEvents='none';
+  pendingLeft--;
+  safeSet('pending-count','text',pendingLeft+'명');
+  if(pendingLeft===0)document.getElementById('pending-count').style.background='var(--mint)';
+  showToast('✅ '+name+' 가입 승인 완료');
+}
+function rejectMember(btn,name){
+  const card=btn.closest('.pending-card');
+  card.style.opacity='0.4';card.style.pointerEvents='none';
+  pendingLeft--;
+  safeSet('pending-count','text',pendingLeft+'명');
+  showToast('❌ '+name+' 가입 거절');
+}
+function safeSet(id, prop, val){
+  const el=document.getElementById(id);
+  if(!el)return;
+  if(prop==='text')el.textContent=val;
+  else if(prop==='display')el.style.display=val;
+  else if(prop==='html')el.innerHTML=val;
+}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+</script>
+</body>
+</html>
