@@ -2293,8 +2293,11 @@ function testNotif(){
   }catch(e){ line('· 오류: '+e.message); }
 }
 function openNotifSetting(){
+  var _isAdminT=(G.role==='teacher'&&(G.type==='principal'||G.type==='admin'||G.isAdmin));
   var rd=document.getElementById('notif-reset-devices');
-  if(rd)rd.style.display=(G.role==='teacher'&&(G.type==='principal'||G.type==='admin'||G.isAdmin))?'block':'none';
+  if(rd)rd.style.display=_isAdminT?'block':'none';
+  var tb=document.getElementById('notif-test-btn');if(tb)tb.style.display=_isAdminT?'':'none';
+  var tr=document.getElementById('notif-test-result');if(tr&&!_isAdminT)tr.style.display='none';
   var vb=document.getElementById('notif-vibrate-btn'),sl=document.getElementById('notif-silent-btn');
   if(vb)vb.classList.toggle('active',G.notifMode!=='silent');
   if(sl)sl.classList.toggle('active',G.notifMode==='silent');

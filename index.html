@@ -1935,7 +1935,7 @@
       <button id="notif-vibrate-btn" class="role-tab active" onclick="setNotifMode('vibrate')">📳 진동</button>
       <button id="notif-silent-btn" class="role-tab" onclick="setNotifMode('silent')">🔇 무음</button>
     </div>
-    <button class="btn btn-outline btn-sm" style="width:100%;margin-bottom:12px" onclick="testNotif()">🔔 알림 테스트</button>
+    <button id="notif-test-btn" class="btn btn-outline btn-sm" style="width:100%;margin-bottom:12px;display:none" onclick="testNotif()">🔔 알림 테스트</button>
     <div id="notif-test-result" style="display:none;font-size:11px;line-height:1.7;background:var(--bg);border-radius:9px;padding:10px 12px;margin-bottom:14px;color:var(--text-sub)"></div>
     <div id="notif-reset-devices" style="display:none;border-top:1px dashed var(--border-light);margin:14px 0 12px;padding-top:14px">
       <div style="font-size:11px;color:var(--text-light);line-height:1.6;margin-bottom:8px">같은 알림이 여러 번 오나요? 예전 기기의 알림 등록이 남아 있을 수 있어요. 아래를 누르면 <b>내 모든 알림 기기를 초기화하고 지금 이 기기만</b> 다시 등록해요.</div>
