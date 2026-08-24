@@ -599,7 +599,7 @@ function submitFindId(){
 }
 var WORKER_URL='https://heavensdoor-push.YOUR-SUBDOMAIN.workers.dev'; /* ← Cloudflare Worker 주소로 교체 */
 function _workerReady(){return !!(WORKER_URL&&WORKER_URL.indexOf('YOUR-')<0);}
-function openResetPw(){_fillBirthSelects();['rp-id','rp-name','rp-phone','rp-new','rp-new2','rpe-id','rpe-code','rpe-new','rpe-new2'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});var m=document.getElementById('rp-bmonth'),d=document.getElementById('rp-bday');if(m)m.selectedIndex=0;if(d)d.selectedIndex=0;show('rp-choose',true);show('rp-email-step',false);show('rp-verify-step',false);show('rp-newpw-step',false);show('rpe-before-code',true);show('rpe-after-code',false);_rpUser=null;openModal('reset-pw-modal');}
+function openResetPw(){_fillBirthSelects();['rp-id','rp-name','rp-phone','rp-new','rp-new2','rpe-id','rpe-code','rpe-new','rpe-new2'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});var m=document.getElementById('rp-bmonth'),d=document.getElementById('rp-bday');if(m)m.selectedIndex=0;if(d)d.selectedIndex=0;show('rp-choose',false);show('rp-email-step',false);show('rp-verify-step',true);show('rp-newpw-step',false);show('rpe-before-code',true);show('rpe-after-code',false);_rpUser=null;openModal('reset-pw-modal');}
 function rpChooseSelf(){show('rp-choose',false);show('rp-email-step',false);show('rp-verify-step',true);show('rp-newpw-step',false);}
 function rpChooseEmail(){if(!_workerReady()){showToast('이메일 재설정이 아직 설정되지 않았어요. 본인 확인으로 진행해주세요');rpChooseSelf();return;}show('rp-choose',false);show('rp-verify-step',false);show('rp-newpw-step',false);show('rp-email-step',true);show('rpe-before-code',true);show('rpe-after-code',false);}
 async function rpSendCode(){
