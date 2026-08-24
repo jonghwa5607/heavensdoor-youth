@@ -1113,13 +1113,9 @@
       <!-- 푸시 알림 (교감·교무·관리자) -->
       <div id="write-push-wrap" style="display:none;margin-bottom:14px">
         <div style="background:var(--primary-light);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--primary-dark);font-weight:600;line-height:1.6">📢 공지는 자동으로 <b>전체 알림 + 팝업</b>으로 안내돼요</div>
-        <label style="display:block;font-size:13px;font-weight:600;margin-top:12px">📌 팝업 표시 기간
-          <select class="form-select" id="write-popup-days" style="margin-top:6px">
-            <option value="3">3일</option>
-            <option value="7" selected>7일</option>
-            <option value="14">14일</option>
-            <option value="30">30일</option>
-          </select>
+        <label style="display:block;font-size:13px;font-weight:600;margin-top:12px">📌 팝업 표시 종료일
+          <input type="date" class="form-input" id="write-popup-until" style="margin-top:6px">
+          <span style="display:block;font-size:11px;color:var(--text-light);margin-top:5px;font-weight:400;line-height:1.5">이 날짜까지 앱 접속 시 팝업으로 표시돼요.</span>
         </label>
         <div id="write-sched-wrap" style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--border-light)">
           <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
@@ -1128,8 +1124,11 @@
           </label>
           <div id="write-sched-fields" style="display:none;margin-top:8px">
             <div style="display:flex;gap:8px">
-              <input type="date" class="form-input" id="write-sched-date" style="flex:1">
-              <input type="time" class="form-input" id="write-sched-time" style="flex:1">
+              <input type="date" class="form-input eq-h" id="write-sched-date" style="flex:1">
+              <div style="flex:1">
+                <button type="button" class="date-trigger eq-h" id="trg-write-sched-time" onclick="openWheel('write-sched-time')" style="width:100%;padding:14px 12px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:14px"><span class="dt-val ph">시간 선택</span></button>
+                <input type="hidden" id="write-sched-time"><input type="hidden" id="wst-ampm"><input type="hidden" id="wst-hour"><input type="hidden" id="wst-min">
+              </div>
             </div>
             <div style="font-size:11px;color:var(--text-light);margin-top:6px;line-height:1.6">지정한 시간에 자동으로 게시되고 알림이 발송돼요.</div>
           </div>
@@ -1554,13 +1553,9 @@
     <div style="font-size:11px;font-weight:700;color:var(--text-sub);margin-bottom:6px">미리보기</div>
     <div id="wn-preview" style="background:var(--bg);border-radius:var(--radius-sm);padding:13px 15px;font-size:13px;line-height:1.8;white-space:pre-wrap;color:var(--text);margin-bottom:14px;min-height:60px"></div>
     <div class="form-group" style="margin-bottom:12px">
-      <label class="form-label">🔔 팝업 표시 기간</label>
-      <select class="form-select" id="wn-popup-days">
-        <option value="3">3일</option>
-        <option value="7" selected>7일</option>
-        <option value="14">14일</option>
-      </select>
-      <div style="font-size:11px;color:var(--text-light);margin-top:6px;line-height:1.6">게시되면 전체에게 알림과 팝업이 발송돼요.</div>
+      <label class="form-label">🔔 팝업 표시 종료일</label>
+      <input type="date" class="form-input" id="wn-popup-until">
+      <div style="font-size:11px;color:var(--text-light);margin-top:6px;line-height:1.6">이 날짜까지 전체에게 팝업으로 표시돼요. (알림은 게시 즉시 발송)</div>
     </div>
     <div class="form-group" style="border-top:1px dashed var(--border-light);padding-top:12px">
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;cursor:pointer">
@@ -1568,8 +1563,11 @@
       </label>
       <div id="wn-sched-fields" style="display:none;margin-top:8px">
         <div style="display:flex;gap:8px">
-          <input type="date" class="form-input" id="wn-sched-date" style="flex:1">
-          <input type="time" class="form-input" id="wn-sched-time" style="flex:1">
+          <input type="date" class="form-input eq-h" id="wn-sched-date" style="flex:1">
+          <div style="flex:1">
+            <button type="button" class="date-trigger eq-h" id="trg-wn-sched-time" onclick="openWheel('wn-sched-time')" style="width:100%;padding:14px 12px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:14px"><span class="dt-val ph">시간 선택</span></button>
+            <input type="hidden" id="wn-sched-time"><input type="hidden" id="wnt-ampm"><input type="hidden" id="wnt-hour"><input type="hidden" id="wnt-min">
+          </div>
         </div>
         <div style="font-size:11px;color:var(--text-light);margin-top:6px;line-height:1.6">지정한 시간에 자동으로 게시되고 전체 알림이 발송돼요.</div>
       </div>
