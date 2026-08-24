@@ -399,7 +399,7 @@ function saveCouponNow(c){
 function redeemCoupon(cid){const c=coupons.find(c=>c.id===cid);if(!c)return;const input=document.getElementById('coupon-code-'+cid);const val=(input.value||'').trim();if(!val){showToast('인증번호를 입력해주세요');return;}if(val!==c.code){showToast('❌ 인증번호가 일치하지 않아요');return;}c.used=true;c.usedAt=new Date().toLocaleDateString('ko-KR');saveCouponNow(c);renderCouponList();try{renderAdminCouponList();}catch(e){}showToast('🎉 쿠폰이 사용되었습니다!');}
 function selCatTab(btn){btn.closest('.tab-bar').querySelectorAll('.tab-btn').forEach(t=>t.classList.remove('active'));btn.classList.add('active');}
 function showAttendTab(tab){try{if(typeof stopQRScan==='function')stopQRScan();}catch(e){}show('attend-scan-tab',tab==='scan');show('attend-history-tab',tab==='history');const bar=document.querySelector('#screen-attend .tab-bar');if(bar)bar.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.getAttribute('onclick').includes(`showAttendTab('${tab}')`)));if(tab==='history')renderAttendHistory();}
-function renderAttendHistory(){const weeks=(G.attendedWeeks||[]).slice().sort().reverse();const totalEl=document.getElementById('hist-total');if(totalEl)totalEl.textContent=G.attendTotal||0;const monthEl=document.getElementById('hist-month');if(monthEl)monthEl.textContent=monthAttendCount(G);const streakEl=document.getElementById('hist-streak');if(streakEl)streakEl.textContent=G.streak||0;const listEl=document.getElementById('attend-history-list');if(!listEl)return;if(!weeks.length){listEl.innerHTML='<div class="empty" style="padding:32px"><div class="empty-emoji" style="font-size:32px">📋</div><div class="empty-title" style="font-size:13px">출석 기록이 없어요</div></div>';return;}listEl.innerHTML=weeks.map(w=>`<div class="student-row"><div class="student-avatar" style="background:linear-gradient(135deg,var(--mint),#3DAB99)">✓</div><div class="student-info"><div class="student-name">${w}</div><div class="student-detail">토요일 출석</div></div></div>`).join('');}
+function renderAttendHistory(){const att=(G.attendedWeeks||[]);const half=(G.halfWeeks||[]);const scans=G.qrScanAt||{};const totalEl=document.getElementById('hist-total');if(totalEl)totalEl.textContent=G.attendTotal||0;const monthEl=document.getElementById('hist-month');if(monthEl)monthEl.textContent=monthAttendCount(G);const streakEl=document.getElementById('hist-streak');if(streakEl)streakEl.textContent=G.streak||0;const listEl=document.getElementById('attend-history-list');if(!listEl)return;const all=Array.from(new Set(att.concat(Object.keys(scans)))).sort().reverse();if(!all.length){listEl.innerHTML='<div class="empty" style="padding:32px"><div class="empty-emoji" style="font-size:32px">📋</div><div class="empty-title" style="font-size:13px">출석 기록이 없어요</div></div>';return;}listEl.innerHTML=all.map(function(w){var attended=att.indexOf(w)>=0,isHalf=half.indexOf(w)>=0,scan=scans[w];var av,bg,nm,dt;if(attended){av=isHalf?'◐':'✓';bg='linear-gradient(135deg,var(--mint),#3DAB99)';nm=w+(isHalf?' · 반일':'');dt=scan?('📱 내 QR 인식 '+scan):'토요일 출석';}else{av='✕';bg='var(--coral)';nm=w+' · 결석 처리';dt=scan?('📱 내 QR 인식 '+scan+' · 기록 보존됨'):'결석';}return '<div class="student-row"><div class="student-avatar" style="background:'+bg+'">'+av+'</div><div class="student-info"><div class="student-name">'+nm+'</div><div class="student-detail">'+dt+'</div></div></div>';}).join('');}
 function attendGuard(){if(gradGuard())return null;const sat=attendSat();if(isVacationDate(sat)){showToast('이번 주는 방학이라 출석체크를 진행하지 않아요');return null;}if(!qrState.code||qrState.week!==sat){showToast('아직 이번 주 QR이 생성되지 않았어요');return null;}G.attendedWeeks=G.attendedWeeks||[];if(G.attendedWeeks.includes(sat)){showToast('이미 이번 주 출석 처리되었어요');return null;}return sat;}
 function openAttendCodeModal(){if(attendGuard()===null)return;const inp=document.getElementById('attend-code-input');if(inp)inp.value='';openModal('attend-code-modal');setTimeout(()=>{if(inp)inp.focus();},250);}
 function submitAttendCode(){const inp=document.getElementById('attend-code-input');const v=(inp.value||'').trim();if(!v){showToast('인증코드를 입력해주세요');return;}if(v!==qrState.code){showToast('❌ 인증코드가 일치하지 않아요');return;}closeModal('attend-code-modal');doAttend();}
@@ -570,11 +570,105 @@ function doRegister(){
   else{const pos=document.getElementById('reg-position').value;if(!pos){showToast('담당 구분을 선택해주세요');return;}if(pos==='principal'||pos==='admin'){const holder=pendingList.find(x=>x.role==='teacher'&&x.approved&&!x.hidden&&x.teacherType===pos);if(holder){showToast('❌ '+(pos==='principal'?'교감':'교무')+'은 이미 있어요 ('+holder.name+' 선생님). 다른 담당을 선택해주세요');return;}}user.teacherType=pos;const POS={m1:'중1',m2:'중2',m3:'중3',h:'고등',principal:'교감',admin:'교무',etc:'기타'};user.gradeLabel=POS[pos]||pos;}
   hashPw(id,pw).then(function(h){user.pwh=h;});
   pendingList.push(user);
+  var _regEmail=(document.getElementById('reg-email')?(document.getElementById('reg-email').value||''):'').trim();
+  if(_regEmail){try{if(window.FB&&FB.enabled()&&FB.save)FB.save('memberEmails',id,{id:id,email:_regEmail});}catch(e){}}
   notifications.unshift({pushed:false,id:'nt'+Date.now()+'rg',text:'⏳ 새 가입 신청: <b>'+name+' '+baptism+'</b> ('+(user.role==='student'?'학생 · '+(user.gradeLabel||''):user.role==='parent'?'학부모':'교사 · '+(user.gradeLabel||''))+') · 승인이 필요해요.',time:'방금',ts:Date.now(),readBy:[],forTeacher:true,tap:{type:'pending'}});updateNotifDot();
   showToast('신청 완료! 교사 승인 후 로그인할 수 있어요 😊');
   setTimeout(()=>goScreen('intro'),2200);
 }
 
+/* ── 아이디·비밀번호 찾기 (본인 확인형 · pendingList 기반, 서버 불필요) ── */
+function _digitsOnly(s){return String(s||'').replace(/\D/g,'');}
+var _findFails=0,_rpUser=null;
+function _findLocked(){try{var until=parseInt(localStorage.getItem('hd-find-lock')||'0',10);if(until&&Date.now()<until){showToast('시도가 많아요. 잠시 후 다시 시도해주세요');return true;}}catch(e){}return false;}
+function _findFail(){_findFails++;if(_findFails>=5){try{localStorage.setItem('hd-find-lock',String(Date.now()+5*60*1000));}catch(e){}_findFails=0;}}
+function _fillBirthSelects(){var m=document.getElementById('rp-bmonth'),d=document.getElementById('rp-bday');if(m&&m.options.length<=1){var h='<option value="0">월</option>';for(var i=1;i<=12;i++)h+='<option value="'+i+'">'+i+'월</option>';m.innerHTML=h;}if(d&&d.options.length<=1){var h2='<option value="0">일</option>';for(var j=1;j<=31;j++)h2+='<option value="'+j+'">'+j+'일</option>';d.innerHTML=h2;}}
+function openFindId(){['fi-name','fi-phone'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});var r=document.getElementById('fi-result');if(r)r.innerHTML='';openModal('find-id-modal');}
+function submitFindId(){
+  if(_findLocked())return;
+  if(!window._membersLoaded){showToast('잠시 후 다시 시도해주세요');return;}
+  var name=(document.getElementById('fi-name').value||'').trim();
+  var phone=_digitsOnly(document.getElementById('fi-phone').value);
+  if(!name||!phone){showToast('이름과 연락처를 입력해주세요');return;}
+  var hits=(pendingList||[]).filter(function(u){return u&&u.approved&&!u.hidden&&u.id&&u.id!==ADMIN.id&&u.name===name&&_digitsOnly(u.phone)===phone;});
+  var r=document.getElementById('fi-result');if(!r)return;
+  if(!hits.length){_findFail();r.innerHTML='<div style="background:var(--coral-light);color:#D95F50;border-radius:10px;padding:12px;font-size:13px;line-height:1.6">일치하는 계정을 찾지 못했어요.<br>가입 정보가 다르면 교사에게 문의해주세요.</div>';return;}
+  _findFails=0;
+  r.innerHTML='<div style="background:var(--primary-light);border-radius:10px;padding:12px;font-size:13px;color:var(--text);line-height:1.9">회원님의 아이디예요<br>'+hits.map(function(u){return '<b style="font-size:15px;color:var(--primary-dark)">'+_esc(u.id)+'</b>'+(u.role==='parent'?' (학부모)':u.role==='teacher'?' (교사)':' (학생)');}).join('<br>')+'</div>';
+}
+var WORKER_URL='https://heavensdoor-push.YOUR-SUBDOMAIN.workers.dev'; /* ← Cloudflare Worker 주소로 교체 */
+function _workerReady(){return !!(WORKER_URL&&WORKER_URL.indexOf('YOUR-')<0);}
+function openResetPw(){_fillBirthSelects();['rp-id','rp-name','rp-phone','rp-new','rp-new2','rpe-id','rpe-code','rpe-new','rpe-new2'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});var m=document.getElementById('rp-bmonth'),d=document.getElementById('rp-bday');if(m)m.selectedIndex=0;if(d)d.selectedIndex=0;show('rp-choose',true);show('rp-email-step',false);show('rp-verify-step',false);show('rp-newpw-step',false);show('rpe-before-code',true);show('rpe-after-code',false);_rpUser=null;openModal('reset-pw-modal');}
+function rpChooseSelf(){show('rp-choose',false);show('rp-email-step',false);show('rp-verify-step',true);show('rp-newpw-step',false);}
+function rpChooseEmail(){if(!_workerReady()){showToast('이메일 재설정이 아직 설정되지 않았어요. 본인 확인으로 진행해주세요');rpChooseSelf();return;}show('rp-choose',false);show('rp-verify-step',false);show('rp-newpw-step',false);show('rp-email-step',true);show('rpe-before-code',true);show('rpe-after-code',false);}
+async function rpSendCode(){
+  if(!_workerReady()){rpChooseSelf();return;}
+  var id=(document.getElementById('rpe-id').value||'').trim();
+  if(!id){showToast('아이디를 입력해주세요');return;}
+  showToast('코드를 보내는 중…');
+  try{
+    var r=await fetch(WORKER_URL.replace(/\/$/,'')+'/reset-send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})});
+    var j=await r.json();
+    if(j&&j.noEmail){showToast('등록된 이메일이 없어요. 본인 확인으로 진행해주세요');rpChooseSelf();var rn=document.getElementById('rp-id');if(rn)rn.value=id;return;}
+    if(!j||!j.ok){showToast('코드 발송에 실패했어요. 잠시 후 다시 시도해주세요');return;}
+    var msg=document.getElementById('rpe-sent-msg');if(msg)msg.textContent='📧 '+(j.masked||'이메일')+' 로 인증코드를 보냈어요. 15분 안에 입력해주세요.';
+    show('rpe-before-code',false);show('rpe-after-code',true);
+  }catch(e){showToast('네트워크 오류예요. 잠시 후 다시 시도해주세요');}
+}
+async function rpConfirmCode(){
+  if(!_workerReady())return;
+  var id=(document.getElementById('rpe-id').value||'').trim();
+  var code=(document.getElementById('rpe-code').value||'').trim();
+  var n1=(document.getElementById('rpe-new').value||'').trim();
+  var n2=(document.getElementById('rpe-new2').value||'').trim();
+  if(code.length!==6){showToast('인증코드 6자리를 입력해주세요');return;}
+  if(n1.length<6){showToast('새 비밀번호는 6자 이상이어야 해요');return;}
+  if(n1!==n2){showToast('새 비밀번호가 서로 달라요');return;}
+  try{
+    var r=await fetch(WORKER_URL.replace(/\/$/,'')+'/reset-confirm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,code:code,newPw:n1})});
+    var j=await r.json();
+    if(!j||!j.ok){var mm={'wrong-code':'인증코드가 올바르지 않아요','expired':'코드가 만료됐어요. 다시 받아주세요','too-many':'시도가 많아요. 다시 받아주세요','no-code':'먼저 코드를 받아주세요','no-member':'계정을 찾을 수 없어요'};showToast((j&&mm[j.error])||'재설정에 실패했어요');return;}
+    closeModal('reset-pw-modal');
+    var idEl=document.getElementById('login-id');if(idEl)idEl.value=id;
+    var pwEl=document.getElementById('login-pw');if(pwEl)pwEl.value='';
+    showToast('비밀번호가 재설정되었어요. 새 비밀번호로 로그인해주세요');
+  }catch(e){showToast('네트워크 오류예요. 잠시 후 다시 시도해주세요');}
+}
+function verifyResetPw(){
+  if(_findLocked())return;
+  if(!window._membersLoaded){showToast('잠시 후 다시 시도해주세요');return;}
+  var id=(document.getElementById('rp-id').value||'').trim();
+  var name=(document.getElementById('rp-name').value||'').trim();
+  var phone=_digitsOnly(document.getElementById('rp-phone').value);
+  var bm=parseInt(document.getElementById('rp-bmonth').value||'0',10);
+  var bd=parseInt(document.getElementById('rp-bday').value||'0',10);
+  if(!id||!name||!phone||!bm||!bd){showToast('모든 항목을 입력해주세요');return;}
+  if(id===ADMIN.id){showToast('관리자 계정은 이 방법으로 재설정할 수 없어요');return;}
+  var u=(pendingList||[]).find(function(x){return x&&x.approved&&!x.hidden&&x.id===id;});
+  var ok=u&&u.name===name&&_digitsOnly(u.phone)===phone&&(+u.birthMonth)===bm&&(+u.birthDay)===bd;
+  if(!ok){_findFail();showToast('입력한 정보가 일치하지 않아요');return;}
+  _findFails=0;_rpUser=u;show('rp-verify-step',false);show('rp-newpw-step',true);
+}
+async function submitResetPw(){
+  if(!_rpUser){show('rp-verify-step',true);show('rp-newpw-step',false);return;}
+  var n1=(document.getElementById('rp-new').value||'').trim();
+  var n2=(document.getElementById('rp-new2').value||'').trim();
+  if(n1.length<6){showToast('새 비밀번호는 6자 이상이어야 해요');return;}
+  if(n1!==n2){showToast('새 비밀번호가 서로 달라요');return;}
+  var u=_rpUser;
+  try{
+    u.pwh=await hashPw(u.id,n1);
+    delete u.pw;delete u.mustChangePw;
+    u.pwv=Number(u.pwv||0)+1;
+    try{if(window.FB&&FB.enabled()&&FB.save)FB.save('members',u.id,u);}catch(e){}
+    try{if(window.flushSync)window.flushSync();}catch(e){}
+  }catch(e){showToast('재설정 중 오류가 발생했어요');return;}
+  var uid=u.id;_rpUser=null;
+  closeModal('reset-pw-modal');
+  var idEl=document.getElementById('login-id');if(idEl)idEl.value=uid;
+  var pwEl=document.getElementById('login-pw');if(pwEl)pwEl.value='';
+  showToast('비밀번호가 재설정되었어요. 새 비밀번호로 로그인해주세요');
+}
 async function doLogin(){
   const id=(document.getElementById('login-id').value||'').trim();
   const pw=(document.getElementById('login-pw').value||'').trim();
@@ -621,7 +715,7 @@ function startSession(u){
   G.isAdmin=u.isAdmin||false;G.isJabumo=u.isJabumo||false;G.isJabumoPresident=u.isJabumoPresident||false;G.graduated=u.graduated||false;
   G.birthMonth=u.birthMonth||0;G.birthDay=u.birthDay||0;
   G.feastMonth=u.feastMonth||0;G.feastDay=u.feastDay||0;
-  G.attendTotal=u.attendTotal||0;G.streak=u.streak||0;G.history=u.history||[];G.attendedWeeks=u.attendedWeeks||[];
+  G.attendTotal=u.attendTotal||0;G.streak=u.streak||0;G.history=u.history||[];G.attendedWeeks=u.attendedWeeks||[];G.halfWeeks=u.halfWeeks||[];G.qrScanAt=u.qrScanAt||{};
   document.getElementById('bottom-nav').style.display='flex';
   const isS=G.role==='student',isP=G.role==='parent',isT=G.role==='teacher';
   const isFull=isT&&(G.type==='principal'||G.type==='admin'||G.isAdmin);
@@ -2895,6 +2989,7 @@ function setAttendOn(uid,dateStr,st){
   u.attendedWeeks.sort();
   u.attendTotal=calcAttendTotal(u);
   u.streak=computeStreak(u);
+  if(G.id===u.id){G.attendTotal=u.attendTotal;G.streak=u.streak;G.attendedWeeks=u.attendedWeeks;G.halfWeeks=u.halfWeeks;}
   try{saveMemberNow(u);}catch(e){}
   try{renderAttendList();}catch(e){}
   try{renderAttendStats();}catch(e){}
