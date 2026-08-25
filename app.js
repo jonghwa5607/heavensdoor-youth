@@ -4046,16 +4046,31 @@ function renderHomeMiniCal(){
     var evs=(calEvents||[]).filter(function(e){return e.date===ds&&(e.isRecurring||e.visibility!=='private'||e.authorId===G.id);});
     var hasRem=(reminderData||[]).some(function(r){return r.date===ds&&!r.done&&(r.shared||!r.ownerId||r.ownerId===G.id);});
     var bf=(typeof bdayOn==='function')?bdayOn(ds):null;
-    var col=(first+d-1)%7;var isSun=col===0,isSat=col===6;var isToday=(d===td);
+    var col=(first+d-1)%7;var isSun=col===0,isSat=col===6;var isToday=(d===td);var isSel=(window._miniSel===ds);
     var dots='';
     if(evs.length)dots+='<span style="width:4px;height:4px;border-radius:50%;background:var(--mint)"></span>';
     if(hasRem)dots+='<span style="width:4px;height:4px;border-radius:50%;background:#F5A623"></span>';
-    if(bf)dots+='<span style="width:4px;height:4px;border-radius:50%;background:#E5806B"></span>';
-    cells+='<div onclick="_openCalDay(\''+ds+'\')" style="height:34px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border-radius:8px;'+(isToday?'background:var(--primary)':'')+'"><span style="font-size:12px;font-weight:'+(isToday?'800':'500')+';color:'+(isToday?'#fff':isSun?'#E5806B':isSat?'#5B8DEF':'var(--text)')+'">'+d+'</span><span style="display:flex;gap:2px;height:5px;margin-top:1px">'+dots+'</span></div>';
+    if(bf&&(bf.birth.length||bf.feast.length))dots+='<span style="width:4px;height:4px;border-radius:50%;background:#E5806B"></span>';
+    cells+='<div onclick="_openCalDay(\''+ds+'\')" style="height:34px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border-radius:8px;'+(isToday?'background:var(--primary)':isSel?'background:var(--primary-light)':'')+'"><span style="font-size:12px;font-weight:'+(isToday?'800':'500')+';color:'+(isToday?'#fff':isSun?'#E5806B':isSat?'#5B8DEF':'var(--text)')+'">'+d+'</span><span style="display:flex;gap:2px;height:5px;margin-top:1px">'+dots+'</span></div>';
   }
   el.innerHTML='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;margin-bottom:3px">'+head+'</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px">'+cells+'</div>';
 }
-function _openCalDay(ds){try{var q=ds.split('-');calYear=+q[0];calMonth=+q[1]-1;selectedCalDate=ds;}catch(e){}switchTab('calendar');try{renderCalendar();}catch(e){}}
+function _openCalDay(ds){
+  window._miniSel=ds;try{renderHomeMiniCal();}catch(e){}
+  var el=document.getElementById('home-cal-preview');if(!el)return;
+  var evs=(calEvents||[]).filter(function(e){return e.date===ds&&(e.isRecurring||e.visibility!=='private'||e.authorId===G.id);});
+  var rems=(reminderData||[]).filter(function(r){return r.date===ds&&!r.done&&(r.shared||!r.ownerId||r.ownerId===G.id);});
+  var bf=(typeof bdayOn==='function')?bdayOn(ds):{birth:[],feast:[]};
+  var q=ds.split('-');var dow=['일','월','화','수','목','금','토'][new Date(ds+'T12:00:00').getDay()];
+  function row(color,txt){return '<div style="font-size:12px;padding:3px 0;display:flex;gap:7px;align-items:flex-start"><span style="width:5px;height:5px;border-radius:50%;background:'+color+';margin-top:6px;flex-shrink:0"></span><span style="line-height:1.5">'+txt+'</span></div>';}
+  var rows='';
+  evs.forEach(function(e){rows+=row('var(--mint)',_esc(e.title)+(e.time?' <span style="color:var(--text-light)">'+_esc(e.time)+'</span>':''));});
+  rems.forEach(function(r){rows+=row('#F5A623',_esc(r.content));});
+  (bf.birth||[]).forEach(function(u){rows+=row('#E5806B','🎂 '+_esc(u.name+' '+u.baptism)+' 생일');});
+  (bf.feast||[]).forEach(function(u){rows+=row('#E5806B',_esc(u.name+' '+u.baptism)+' 축일');});
+  if(!rows)rows='<div style="font-size:12px;color:var(--text-light);padding:3px 0">일정이 없어요</div>';
+  el.innerHTML='<div style="border-top:1px solid var(--border-light);margin-top:10px;padding-top:8px"><div style="font-size:12px;font-weight:800;margin-bottom:5px">'+(+q[1])+'월 '+(+q[2])+'일 <span style="color:var(--text-light);font-weight:600">('+dow+')</span></div>'+rows+'</div>';
+}
 function renderHomeSchedule(){const el=document.getElementById('teacher-schedule');if(!el)return;ensureWeeklyEvents();const n=new Date();const t0=n.getFullYear()+'-'+pad2(n.getMonth()+1)+'-'+pad2(n.getDate());const sat=currentSaturday();const end=sat>=t0?sat:t0;const evs=calEvents.filter(e=>e.date>=t0&&e.date<=end&&(e.isRecurring||e.visibility!=='private'||e.authorId===G.id)).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);if(!evs.length){el.innerHTML='<div class="empty" style="padding:20px"><div class="empty-emoji" style="font-size:28px">📅</div><div class="empty-title" style="font-size:13px">이번 주 일정이 없어요</div></div>';return;}el.innerHTML=evs.map(e=>{const[y,m,d]=e.date.split('-');const dow=['일','월','화','수','목','금','토'][new Date(e.date+'T12:00:00').getDay()];return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border-light);cursor:pointer" onclick="switchTab('calendar');selectedCalDate='${e.date}';renderCalendar()"><span class="chip ${e.isRecurring?'chip-mint':'chip-blue'}" style="flex-shrink:0">${parseInt(m)}/${parseInt(d)} (${dow})</span><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.title}</div>${(e.time||e.place)?`<div style="font-size:11px;color:var(--text-light)">${e.time||''}${e.place?' · '+e.place:''}</div>`:''}</div></div>`;}).join('');}
 function ensureWeeklyEvents(){if(!window._evReady)return;const sats=getUpcomingSaturdays(12);sats.forEach(d=>{if(!calEvents.some(e=>e.date===d&&e.isRecurring)){calEvents.push({id:'ce-week-'+d,title:'📌 주일학교',date:d,time:'',place:'',content:'매주 토요일 주일학교 모임입니다.',isRecurring:true,responses:{}});}});}
 function getApprovedTeachers(){return pendingList.filter(u=>u.approved&&u.role==='teacher');}
