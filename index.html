@@ -58,7 +58,7 @@
     <div class="form-group"><label class="form-label">비밀번호</label><input class="form-input" type="password" id="login-pw" placeholder="비밀번호를 입력하세요" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <button class="btn btn-primary" onclick="doLogin()">로그인</button>
     <div class="text-link"><button onclick="goScreen('register')">아직 회원이 아니신가요? <strong>회원가입</strong></button></div>
-    <div class="text-link" style="margin-top:2px"><button onclick="openFindId()">아이디 찾기</button> <span style="color:var(--text-light)">·</span> <button onclick="openResetPw()">비밀번호 재설정</button></div>
+    <div class="text-link" style="margin-top:2px"><button onclick="openResetPw()">비밀번호를 잊으셨나요?</button></div>
   </div>
 </div>
 
@@ -96,6 +96,7 @@
       <div class="form-group"><label class="form-label">아이디</label><input class="form-input" type="text" id="rp-id" placeholder="아이디"></div>
       <div class="form-group"><label class="form-label">이름</label><input class="form-input" type="text" id="rp-name" placeholder="이름"></div>
       <div class="form-group"><label class="form-label">연락처</label><input class="form-input" type="tel" id="rp-phone" placeholder="010-0000-0000"></div>
+      <div class="form-group"><label class="form-label">이메일</label><input class="form-input" type="email" id="rp-email" placeholder="가입 시 입력한 이메일"></div>
       <div class="form-group"><label class="form-label">생일</label><div style="display:flex;gap:8px"><select class="form-select" id="rp-bmonth" style="flex:1"><option value="0">월</option></select><select class="form-select" id="rp-bday" style="flex:1"><option value="0">일</option></select></div></div>
       <button class="btn btn-primary" onclick="verifyResetPw()">본인 확인</button>
     </div>
@@ -127,7 +128,7 @@
     <div class="form-group"><label class="form-label">이름 *</label><input class="form-input" type="text" id="reg-name" placeholder="이름" oninput="updatePreview()"></div>
     <div class="form-group"><label class="form-label">세례명 *</label><input class="form-input" type="text" id="reg-baptism" placeholder="세례명" oninput="updatePreview()"></div>
     <div class="form-group"><label class="form-label">연락처 *</label><input class="form-input" type="tel" id="reg-phone" placeholder="010-0000-0000"></div>
-    <div class="form-group" style="display:none"><label class="form-label">이메일 (선택)</label><input class="form-input" type="email" id="reg-email" placeholder="비밀번호 재설정에 사용돼요"><div style="font-size:11px;color:var(--text-light);margin-top:5px;line-height:1.5">비밀번호를 잊었을 때 인증코드를 받는 용도로만 쓰여요. 입력하지 않으면 본인 확인(이름·연락처·생일)으로 재설정할 수 있어요.</div></div>
+    <div class="form-group"><label class="form-label">이메일 *</label><input class="form-input" type="email" id="reg-email" placeholder="example@email.com"><div style="font-size:11px;color:var(--text-light);margin-top:5px;line-height:1.5">비밀번호를 잊었을 때 본인 확인에 사용돼요. (실제 발송은 하지 않아요)</div></div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">아이디 *</label><input class="form-input" type="text" id="reg-id" placeholder="영문·숫자 4~20자" autocomplete="username" autocapitalize="off" spellcheck="false" inputmode="latin" maxlength="20" oninput="onlyAsciiId(this)"></div>
       <div class="form-group"><label class="form-label">비밀번호 *</label><input class="form-input" type="password" id="reg-pw" placeholder="6자 이상"></div>
@@ -280,13 +281,23 @@
       </div>
     </div>
     <div class="section">
-      <div class="section-header"><span class="section-title">📝 회의록</span><button class="section-more" onclick="openMinutesHub()">전체 보기</button></div>
+      <div class="section-header"><span class="section-title"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg> 회의록</span><button class="section-more" onclick="openMinutesHub()">전체 보기</button></div>
       <div id="home-minutes-alert"></div>
       <div id="home-minutes-list"></div>
     </div>
     <div class="section">
-      <div class="section-header"><span class="section-title">📅 이번 주</span><button class="section-more" onclick="switchTab('calendar')">전체 보기</button></div>
+      <div class="section-header"><span class="section-title"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> 이번 주</span><button class="section-more" onclick="switchTab('calendar')">전체 보기</button></div>
       <div class="week-box" id="teacher-week"></div>
+    </div>
+    <div class="section">
+      <div class="section-header"><span class="section-title"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> 이번 달</span><button class="section-more" onclick="switchTab('calendar')">전체 보기</button></div>
+      <div class="card" style="padding:12px"><div id="home-mini-cal"></div>
+        <div style="display:flex;gap:12px;justify-content:center;margin-top:10px;font-size:10px;color:var(--text-light)">
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:var(--mint)"></span>일정</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:#F5A623"></span>리마인더</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:#E5806B"></span>생일</span>
+        </div>
+      </div>
     </div>
     <div id="teacher-schedule" style="display:none"></div>
     <div id="home-reminder-list" style="display:none"></div>
@@ -300,7 +311,7 @@
       <div class="banner-sub">자녀의 신앙 성장을 함께 응원해 주세요 🙏</div>
     </div>
     <div class="section">
-      <div class="section-header"><span class="section-title">👶 자녀 출석 현황</span></div>
+      <div class="section-header"><span class="section-title"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg> 자녀 출석 현황</span></div>
       <div id="parent-child-cards">
         <div class="card" style="font-size:13px;color:var(--text-light);text-align:center;padding:18px">연동된 자녀 정보가 없어요</div>
       </div>
@@ -309,7 +320,7 @@
 
   <!-- ③ 오늘의 말씀 -->
   <div class="section" style="margin-top:6px">
-    <div class="section-header"><span class="section-title">✝️ 오늘의 말씀</span></div>
+    <div class="section-header"><span class="section-title"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 2v20"/><path d="M7 8h10"/></svg> 오늘의 말씀</span></div>
     <div class="card" id="verse-card" style="background:linear-gradient(135deg,var(--lavender-light),var(--primary-light));border:1px solid rgba(155,143,212,0.2)">
       <div style="font-size:10px;font-weight:700;color:var(--lavender);margin-bottom:6px;letter-spacing:.5px" id="today-date"></div>
       <div style="font-size:14px;font-weight:600;color:var(--text);line-height:1.7;font-style:italic" id="weekly-verse">"하느님은 사랑이십니다."<br><span style="font-size:11px;font-weight:400;color:var(--text-sub)">— 1요한 4,8</span></div>
@@ -318,7 +329,7 @@
 
   <!-- ④ 이벤트 배너 (학생·교사) -->
     <div class="section" id="event-banner-section" style="display:none">
-    <div class="section-header"><span class="section-title">🎉 진행 중인 이벤트</span><button class="section-more" onclick="goToBoardCat('event')">더보기</button></div>
+    <div class="section-header"><span class="section-title"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 2l2.4 6.9H22l-6 4.6 2.3 7L12 16.9 5.7 20.5 8 13.5 2 8.9h7.6z"/></svg> 진행 중인 이벤트</span><button class="section-more" onclick="goToBoardCat('event')">더보기</button></div>
     <div class="event-banner-wrap">
       <div class="event-slides" id="event-slides">
         <div style="color:var(--text-light);font-size:13px;padding:20px;text-align:center;width:100%">진행 중인 이벤트가 없어요</div>
@@ -330,7 +341,7 @@
 
   <!-- ⑤ 공지사항 -->
   <div class="section">
-    <div class="section-header"><span class="section-title">📢 공지사항</span><button class="section-more" onclick="goToBoardCat('notice')">더보기</button></div>
+    <div class="section-header"><span class="section-title"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M3 11l14-6v14L3 13z"/><path d="M17 9a3 3 0 0 1 0 6"/><path d="M7 13v3a2 2 0 0 0 2 2h1"/></svg> 공지사항</span><button class="section-more" onclick="goToBoardCat('notice')">더보기</button></div>
     <div class="notice-list" id="home-notices">
       <div class="empty" style="padding:24px"><div class="empty-emoji" style="font-size:28px">📋</div><div class="empty-title" style="font-size:13px">아직 공지사항이 없어요</div></div>
     </div>
@@ -357,7 +368,7 @@
 
   <!-- 보상 섹션 (학생) -->
   <div class="section" id="reward-section" style="display:none">
-    <div class="section-header"><span class="section-title">🎁 출석 보상</span></div>
+    <div class="section-header"><span class="section-title"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M5 12v9h14v-9"/><path d="M12 8S12 2 9 2a2.5 2.5 0 0 0 0 5h3zM12 8s0-6 3-6a2.5 2.5 0 0 1 0 5h-3z"/></svg> 출석 보상</span></div>
     <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none" id="reward-tiers">
       <div style="flex-shrink:0;width:90px;background:white;border-radius:var(--radius);padding:12px;text-align:center;box-shadow:var(--shadow-sm);border:1px solid var(--border-light)" id="reward-tier-1"><div style="font-size:22px;margin-bottom:5px" id="reward-icon-1">🌱</div><div style="font-size:11px;font-weight:700;margin-bottom:4px">씨앗</div><div style="font-size:10px;background:var(--yellow-light);color:#9A7200;border-radius:6px;padding:2px 6px" id="reward-badge-1">✅ 달성!</div></div>
       <div style="flex-shrink:0;width:90px;background:white;border-radius:var(--radius);padding:12px;text-align:center;box-shadow:var(--shadow-sm);border:1px solid var(--border-light);opacity:.6" id="reward-tier-5"><div style="font-size:22px;margin-bottom:5px;filter:grayscale(1)" id="reward-icon-5">🌿</div><div style="font-size:11px;font-weight:700;margin-bottom:4px">새싹</div><div style="font-size:10px;background:var(--bg);color:var(--text-light);border-radius:6px;padding:2px 6px" id="reward-badge-5">5회</div></div>
@@ -539,14 +550,14 @@
     </button>
   </div>
   <div class="tab-bar">
-    <button class="tab-btn active" onclick="selCatTab(this);showAdminTab('main')">홈</button>
-    <button class="tab-btn" onclick="selCatTab(this);showAdminTab('members')">회원관리</button>
-    <button class="tab-btn" onclick="selCatTab(this);showAdminTab('coupons')">쿠폰관리</button>
-    <button class="tab-btn" onclick="selCatTab(this);showAdminTab('attend')">출석관리</button>
-    <button class="tab-btn" onclick="selCatTab(this);showAdminTab('stats')">출석통계</button>
-    <button class="tab-btn" onclick="selCatTab(this);showAdminTab('diary')">다이어리</button>
-    <button class="tab-btn" onclick="selCatTab(this);showAdminTab('students')">학생카드</button>
-    <button class="tab-btn" id="admin-settings-tabbtn" style="display:none" onclick="selCatTab(this);showAdminTab('settings')">앱설정</button>
+    <button class="tab-btn active" onclick="selCatTab(this);showAdminTab('main')"><svg width="15" height="15" viewBox="0 0 24 24" fill="#2E9E8F" style="vertical-align:-2px;margin-right:1px"><path d="M11.3 2.3a1 1 0 0 1 1.4 0l8 7.6c.2.2.3.4.3.7V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.4c0-.3.1-.5.3-.7z"/></svg>홈</button>
+    <button class="tab-btn" onclick="selCatTab(this);showAdminTab('members')"><svg width="15" height="15" viewBox="0 0 24 24" fill="#5B8DEF" style="vertical-align:-2px;margin-right:1px"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0 1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1z"/><circle cx="17" cy="8.5" r="2.6"/><path d="M16 13.2a4.8 4.8 0 0 1 5 4.8 1 1 0 0 1-1 1h-3.2c.1-.3.2-.7.2-1a6.4 6.4 0 0 0-1.6-4.2z"/></svg>회원관리</button>
+    <button class="tab-btn" onclick="selCatTab(this);showAdminTab('coupons')"><svg width="15" height="15" viewBox="0 0 24 24" fill="#E5806B" style="vertical-align:-2px;margin-right:1px"><path d="M3 8.5A1.5 1.5 0 0 1 4.5 7h15A1.5 1.5 0 0 1 21 8.5v1.7a1.8 1.8 0 0 0 0 3.6v1.7A1.5 1.5 0 0 1 19.5 17h-15A1.5 1.5 0 0 1 3 15.5v-1.7a1.8 1.8 0 0 0 0-3.6z"/><path d="M13 7v10" stroke="#fff" stroke-width="1.6" stroke-dasharray="2 2"/></svg>쿠폰관리</button>
+    <button class="tab-btn" onclick="selCatTab(this);showAdminTab('attend')"><svg width="15" height="15" viewBox="0 0 24 24" fill="#37B39B" style="vertical-align:-2px;margin-right:1px"><path d="M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 12.5l2.5 2.5L16 9" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>출석관리</button>
+    <button class="tab-btn" onclick="selCatTab(this);showAdminTab('stats')"><svg width="15" height="15" viewBox="0 0 24 24" fill="#7C6FF0" style="vertical-align:-2px;margin-right:1px"><rect x="4" y="11" width="4" height="9" rx="1"/><rect x="10" y="4" width="4" height="16" rx="1"/><rect x="16" y="8" width="4" height="12" rx="1"/></svg>출석통계</button>
+    <button class="tab-btn" onclick="selCatTab(this);showAdminTab('diary')"><svg width="15" height="15" viewBox="0 0 24 24" fill="#EBA23B" style="vertical-align:-2px;margin-right:1px"><path d="M5 3.5A1.5 1.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v15H6.5a1.5 1.5 0 0 0 0 3H20a1 1 0 0 1-1 1H6.5A2.5 2.5 0 0 1 4 19.5v-16z"/></svg>다이어리</button>
+    <button class="tab-btn" onclick="selCatTab(this);showAdminTab('students')"><svg width="15" height="15" viewBox="0 0 24 24" fill="#5BB0A0" style="vertical-align:-2px;margin-right:1px"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.3" fill="#fff"/><path d="M5.5 16.5c.3-1.6 1.8-2.4 3.5-2.4s3.2.8 3.5 2.4z" fill="#fff"/><path d="M14 9.5h4M14 12.5h4M14 15h2.5" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>학생카드</button>
+    <button class="tab-btn" id="admin-settings-tabbtn" style="display:none" onclick="selCatTab(this);showAdminTab('settings')"><svg width="15" height="15" viewBox="0 0 24 24" fill="#8A94A6" style="vertical-align:-2px;margin-right:1px"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm9 3.5c0-.6-.1-1.2-.2-1.7l1.7-1.3-1.8-3.1-2 .8a7.5 7.5 0 0 0-1.5-.9L16.8 3H8.2l-.4 2.1c-.5.2-1 .5-1.5.9l-2-.8L2.5 8.3l1.7 1.3a7.7 7.7 0 0 0 0 3.4L2.5 14.3l1.8 3.1 2-.8c.5.4 1 .7 1.5.9l.4 2.1h8.6l.4-2.1c.5-.2 1-.5 1.5-.9l2 .8 1.8-3.1-1.7-1.3c.1-.5.2-1.1.2-1.7z"/></svg>앱설정</button>
   </div>
 
   <!-- 관리 홈 -->
@@ -1112,8 +1123,7 @@
       </div>
       <!-- 푸시 알림 (교감·교무·관리자) -->
       <div id="write-push-wrap" style="display:none;margin-bottom:14px">
-        <div style="background:var(--primary-light);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--primary-dark);font-weight:600;line-height:1.6">📢 공지는 자동으로 <b>전체 알림 + 팝업</b>으로 안내돼요</div>
-        <label style="display:block;font-size:13px;font-weight:600;margin-top:12px">📌 팝업 표시 종료일
+        <label style="display:block;font-size:13px;font-weight:600;margin-top:2px">📌 팝업 표시 종료일
           <input type="date" class="form-input" id="write-popup-until" style="margin-top:6px">
           <span style="display:block;font-size:11px;color:var(--text-light);margin-top:5px;font-weight:400;line-height:1.5">이 날짜까지 앱 접속 시 팝업으로 표시돼요.</span>
         </label>
@@ -1153,8 +1163,8 @@
     <div class="attach-section">
       <div class="attach-label">첨부파일</div>
       <div class="attach-btn-row">
-        <button class="attach-file-btn" onclick="document.getElementById('write-img-input').click()">📷 사진 추가<br><span style="font-size:10px;opacity:.7">최대 10장</span></button>
-        <button class="attach-file-btn" onclick="document.getElementById('write-doc-input').click()">📎 문서 추가<br><span style="font-size:10px;opacity:.7">최대 5개</span></button>
+        <button class="attach-file-btn" onclick="document.getElementById('write-img-input').click()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> 사진 추가<br><span style="font-size:10px;opacity:.7">최대 10장</span></button>
+        <button class="attach-file-btn" onclick="document.getElementById('write-doc-input').click()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3 3 0 0 1 4.24 4.24l-9.2 9.19a1 1 0 0 1-1.41-1.41l8.49-8.49"/></svg> 문서 추가<br><span style="font-size:10px;opacity:.7">최대 5개</span></button>
       </div>
       <input type="file" id="write-img-input" accept="image/*" multiple style="display:none" onchange="addAttachImgs(this,'write')">
       <input type="file" id="write-doc-input" accept="*/*" multiple style="display:none" onchange="addAttachDocs(this,'write')">
@@ -1181,8 +1191,8 @@
     <div class="attach-section">
       <div class="attach-label">첨부파일</div>
       <div class="attach-btn-row">
-        <button class="attach-file-btn" onclick="document.getElementById('aw-img-input').click()">📷 사진</button>
-        <button class="attach-file-btn" onclick="document.getElementById('aw-doc-input').click()">📎 문서</button>
+        <button class="attach-file-btn" onclick="document.getElementById('aw-img-input').click()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> 사진</button>
+        <button class="attach-file-btn" onclick="document.getElementById('aw-doc-input').click()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3 3 0 0 1 4.24 4.24l-9.2 9.19a1 1 0 0 1-1.41-1.41l8.49-8.49"/></svg> 문서</button>
       </div>
       <input type="file" id="aw-img-input" accept="image/*" multiple style="display:none" onchange="addAttachImgs(this,'aw')">
       <input type="file" id="aw-doc-input" accept="*/*" multiple style="display:none" onchange="addAttachDocs(this,'aw')">
@@ -1354,8 +1364,8 @@
       <div class="attach-section">
         <div class="attach-label">첨부파일</div>
         <div class="attach-btn-row">
-          <button class="attach-file-btn" onclick="document.getElementById('rw-img-input').click()">📷 사진</button>
-          <button class="attach-file-btn" onclick="document.getElementById('rw-doc-input').click()">📎 문서</button>
+          <button class="attach-file-btn" onclick="document.getElementById('rw-img-input').click()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> 사진</button>
+          <button class="attach-file-btn" onclick="document.getElementById('rw-doc-input').click()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3 3 0 0 1 4.24 4.24l-9.2 9.19a1 1 0 0 1-1.41-1.41l8.49-8.49"/></svg> 문서</button>
         </div>
         <input type="file" id="rw-img-input" accept="image/*" multiple style="display:none" onchange="addAttachImgs(this,'rw')">
         <input type="file" id="rw-doc-input" accept="*/*" multiple style="display:none" onchange="addAttachDocs(this,'rw')">
@@ -1546,7 +1556,7 @@
       <input class="form-input" id="wn-time" style="margin-top:7px" oninput="wnPreview()" placeholder="교리 18:00 | 부서활동 18:40 | 미사 19:30">
     </div>
     <div class="form-group">
-      <button class="attach-file-btn" style="width:100%" onclick="document.getElementById('wn-img-input').click()">📷 사진 추가<br><span style="font-size:10px;opacity:.7">최대 10장</span></button>
+      <button class="attach-file-btn" style="width:100%" onclick="document.getElementById('wn-img-input').click()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> 사진 추가<br><span style="font-size:10px;opacity:.7">최대 10장</span></button>
       <input type="file" id="wn-img-input" accept="image/*" multiple style="display:none" onchange="addAttachImgs(this,'wn')">
       <div class="attach-preview-row" id="wn-img-preview"></div>
     </div>
@@ -2117,7 +2127,7 @@
     <div class="form-group">
       <label class="form-label">사진 * (여러 장 선택 가능, 최대 10장)</label>
       <div id="gallery-img-preview" style="margin-bottom:8px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none"></div>
-      <button class="attach-file-btn" style="width:100%" onclick="document.getElementById('gallery-img-input').click()">📷 사진 선택</button>
+      <button class="attach-file-btn" style="width:100%" onclick="document.getElementById('gallery-img-input').click()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> 사진 선택</button>
       <input type="file" id="gallery-img-input" accept="image/*" multiple style="display:none" onchange="addAttachImgs(this,'gallery')">
     </div>
     <div class="form-group"><label class="form-label">제목</label><input class="form-input" type="text" id="gallery-title" placeholder="제목을 입력하세요"></div>
@@ -2142,7 +2152,7 @@
     <div class="form-group">
       <label class="form-label">대표 사진 *</label>
       <div id="event-img-preview" style="margin-bottom:8px"></div>
-      <button class="attach-file-btn" style="width:100%" onclick="document.getElementById('event-img-input').click()">📷 사진 선택</button>
+      <button class="attach-file-btn" style="width:100%" onclick="document.getElementById('event-img-input').click()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> 사진 선택</button>
       <input type="file" id="event-img-input" accept="image/*" style="display:none" onchange="addAttachImgs(this,'event')">
     </div>
     <div class="form-group"><label class="form-label">제목 *</label><input class="form-input" type="text" id="event-title" placeholder="이벤트 제목을 입력하세요"></div>
