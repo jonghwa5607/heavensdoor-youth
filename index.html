@@ -120,9 +120,9 @@
     <div class="auth-title">처음 오셨나요? ✝️</div>
     <div class="auth-desc">역할을 선택하고 가입 정보를 입력해주세요</div>
     <div class="role-tabs">
-      <button class="role-tab active" onclick="selRegRole('student',this)"><span class="tab-emoji">🎒</span>학생</button>
-      <button class="role-tab" onclick="selRegRole('parent',this)"><span class="tab-emoji">👨‍👩‍👧</span>학부모</button>
-      <button class="role-tab" onclick="selRegRole('teacher',this)"><span class="tab-emoji">✝️</span>교사</button>
+      <button class="role-tab active" onclick="selRegRole('student',this)"><span class="tab-emoji"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-5"/></svg></span>학생</button>
+      <button class="role-tab" onclick="selRegRole('parent',this)"><span class="tab-emoji"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg></span>학부모</button>
+      <button class="role-tab" onclick="selRegRole('teacher',this)"><span class="tab-emoji"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 2v20"/><path d="M7 8h10"/></svg></span>교사</button>
     </div>
     <div class="form-group"><label class="form-label">이름 *</label><input class="form-input" type="text" id="reg-name" placeholder="이름" oninput="updatePreview()"></div>
     <div class="form-group"><label class="form-label">세례명 *</label><input class="form-input" type="text" id="reg-baptism" placeholder="세례명" oninput="updatePreview()"></div>
@@ -781,9 +781,9 @@
       <div style="font-size:13px;font-weight:800;margin-bottom:4px">🔍 화면 미리보기</div>
       <div style="font-size:11px;color:var(--text-light);margin-bottom:12px">학생·학부모·교사 화면을 그대로 체험해볼 수 있어요</div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-        <button class="btn btn-outline btn-sm" style="width:100%" onclick="startPreview('student')">🎒 학생</button>
-        <button class="btn btn-outline btn-sm" style="width:100%" onclick="startPreview('parent')">👨‍👩‍👧 학부모</button>
-        <button class="btn btn-outline btn-sm" style="width:100%" onclick="startPreview('teacher')">✝️ 교사</button>
+        <button class="btn btn-outline btn-sm" style="width:100%" onclick="startPreview('student')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-5"/></svg> 학생</button>
+        <button class="btn btn-outline btn-sm" style="width:100%" onclick="startPreview('parent')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg> 학부모</button>
+        <button class="btn btn-outline btn-sm" style="width:100%" onclick="startPreview('teacher')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 2v20"/><path d="M7 8h10"/></svg> 교사</button>
       </div>
     </div>
   </div>
@@ -1109,7 +1109,7 @@
     <div id="write-teacher-cats" style="display:none">
       <div class="form-group" id="write-top-wrap"><label class="form-label">중간 카테고리 *</label>
         <select class="form-select" id="write-top" onchange="onWriteTopChange()">
-          <option value="">선택</option><option value="all">📢 전체</option><option value="student">🎒 학생</option><option value="parent">👨‍👩‍👧 학부모</option>
+          <option value="">선택</option><option value="all">전체</option><option value="student">학생</option><option value="parent">학부모</option>
         </select>
       </div>
       <div class="form-group" id="write-mid-wrap" style="display:none"><label class="form-label">하위 카테고리 *</label>
@@ -1213,7 +1213,7 @@
         </label>
         <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:2px solid var(--border-light);border-radius:var(--radius-sm);cursor:pointer">
           <input type="radio" name="diary-scope" value="teacher" onchange="onScopeChange()" style="accent-color:var(--lavender);width:16px;height:16px">
-          <div><div style="font-size:13px;font-weight:700">👨‍🏫 학년 교사와 공유</div><div style="font-size:11px;color:var(--text-light);margin-top:1px">담당 학년 교사 전원에게 알림</div></div>
+          <div><div style="font-size:13px;font-weight:700"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 2v20"/><path d="M7 8h10"/></svg> 학년 교사와 공유</div><div style="font-size:11px;color:var(--text-light);margin-top:1px">담당 학년 교사 전원에게 알림</div></div>
         </label>
         <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:2px solid var(--border-light);border-radius:var(--radius-sm);cursor:pointer">
           <input type="radio" name="diary-scope" value="specific" onchange="onScopeChange()" style="accent-color:var(--lavender);width:16px;height:16px">
@@ -2127,7 +2127,7 @@
     <div class="form-group"><label class="form-label">제목</label><input class="form-input" type="text" id="gallery-title" placeholder="제목을 입력하세요"></div>
     <div class="form-group"><label class="form-label">중간 카테고리 *</label>
       <select class="form-select" id="gallery-top" onchange="onGalleryTopChange()">
-        <option value="all">📢 전체</option><option value="student">🎒 학생</option><option value="parent">👨‍👩‍👧 학부모</option>
+        <option value="all">전체</option><option value="student">학생</option><option value="parent">학부모</option>
       </select>
     </div>
     <div class="form-group" id="gallery-mid-wrap" style="display:none"><label class="form-label">하위 카테고리 *</label>
@@ -2209,7 +2209,7 @@
     <div class="modal-title-row"><span class="modal-title">🖨️ 기록 인쇄 설정</span><button class="modal-close" onclick="closeModal('print-opts-modal')">✕</button></div>
     <div id="po-student" style="font-size:12px;color:var(--text-sub);background:var(--bg);border-radius:var(--radius-sm);padding:9px 12px;margin-bottom:14px;line-height:1.6"></div>
     <div style="font-size:12px;font-weight:800;margin-bottom:6px">📖 포함할 신앙 다이어리</div>
-    <label style="display:flex;align-items:center;gap:10px;padding:8px 2px;cursor:pointer"><input type="checkbox" id="po-diary-teacher" style="width:17px;height:17px;accent-color:var(--primary)"><span style="font-size:13px">👨‍🏫 학년 교사 공유</span></label>
+    <label style="display:flex;align-items:center;gap:10px;padding:8px 2px;cursor:pointer"><input type="checkbox" id="po-diary-teacher" style="width:17px;height:17px;accent-color:var(--primary)"><span style="font-size:13px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 2v20"/><path d="M7 8h10"/></svg> 학년 교사 공유</span></label>
     <label style="display:flex;align-items:center;gap:10px;padding:8px 2px;cursor:pointer"><input type="checkbox" id="po-diary-specific" style="width:17px;height:17px;accent-color:var(--primary)"><span style="font-size:13px">✝️ 특정 교사 공유</span></label>
     <label style="display:flex;align-items:center;gap:10px;padding:8px 2px;cursor:pointer"><input type="checkbox" id="po-diary-private" style="width:17px;height:17px;accent-color:var(--primary)"><span style="font-size:13px">🔒 나만 보기(비공개)</span></label>
     <div style="font-size:11px;color:var(--text-light);margin:2px 0 10px;line-height:1.6">🔒 나만 보기·✝️ 특정 교사 공유는 학생의 사적인 기록이에요. 꼭 필요한 경우에만 포함해주세요.</div>
