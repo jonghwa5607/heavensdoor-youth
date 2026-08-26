@@ -451,7 +451,9 @@
   <div class="tab-bar">
     <button class="tab-btn active" onclick="selCatTab(this);showAttendTab('scan')">QR 스캔</button>
     <button class="tab-btn" onclick="selCatTab(this);showAttendTab('history')">출석 내역</button>
+    <button class="tab-btn" onclick="selCatTab(this);showAttendTab('rank')">출석 순위</button>
   </div>
+  <div id="attend-rank-tab" style="display:none;padding:14px"><div id="attend-rank-list"></div></div>
   <!-- QR 스캔 탭 -->
   <div id="attend-scan-tab" style="padding:32px 20px;text-align:center">
     <div style="font-size:14px;font-weight:700;color:var(--text-sub);margin-bottom:24px">교사가 보여주는 QR 코드를 카메라로 찍어주세요</div>
