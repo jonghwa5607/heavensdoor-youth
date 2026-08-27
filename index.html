@@ -120,9 +120,9 @@
     <div class="auth-title">처음 오셨나요? ✝️</div>
     <div class="auth-desc">역할을 선택하고 가입 정보를 입력해주세요</div>
     <div class="role-tabs">
-      <button class="role-tab active" onclick="selRegRole('student',this)"><span class="tab-emoji"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-5"/></svg></span>학생</button>
-      <button class="role-tab" onclick="selRegRole('parent',this)"><span class="tab-emoji"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg></span>학부모</button>
-      <button class="role-tab" onclick="selRegRole('teacher',this)"><span class="tab-emoji"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 2v20"/><path d="M7 8h10"/></svg></span>교사</button>
+      <button class="role-tab active" onclick="selRegRole('student',this)"><span class="tab-emoji"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2E9E8F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-5"/><path d="M22 10v5" stroke="#EBA23B"/></svg></span>학생</button>
+      <button class="role-tab" onclick="selRegRole('parent',this)"><span class="tab-emoji"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#37B39B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><circle cx="9" cy="8" r="3.2" stroke="#E8709A"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17.5" cy="9" r="2.4" stroke="#5B8DEF"/><path d="M16 13.5a5 5 0 0 1 5.5 4.5" stroke="#5B8DEF"/></svg></span>학부모</button>
+      <button class="role-tab" onclick="selRegRole('teacher',this)"><span class="tab-emoji"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C6FF0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 2v20" stroke="#7C6FF0"/><path d="M7 8h10" stroke="#EBA23B"/></svg></span>교사</button>
     </div>
     <div class="form-group"><label class="form-label">이름 *</label><input class="form-input" type="text" id="reg-name" placeholder="이름" oninput="updatePreview()"></div>
     <div class="form-group"><label class="form-label">세례명 *</label><input class="form-input" type="text" id="reg-baptism" placeholder="세례명" oninput="updatePreview()"></div>
@@ -310,7 +310,7 @@
       <div class="banner-sub">자녀의 신앙 성장을 함께 응원해 주세요 🙏</div>
     </div>
     <div class="section">
-      <div class="section-header"><span class="section-title"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg> 자녀 출석 현황</span></div>
+      <div class="section-header"><span class="section-title"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#5B8DEF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg> 자녀 출석 현황</span></div>
       <div id="parent-child-cards">
         <div class="card" style="font-size:13px;color:var(--text-light);text-align:center;padding:18px">연동된 자녀 정보가 없어요</div>
       </div>
@@ -319,7 +319,7 @@
 
   <!-- ③ 오늘의 말씀 -->
   <div class="section" style="margin-top:6px">
-    <div class="section-header"><span class="section-title"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 2v20"/><path d="M7 8h10"/></svg> 오늘의 말씀</span></div>
+    <div class="section-header"><span class="section-title"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#E5806B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 2v20"/><path d="M7 8h10"/></svg> 오늘의 말씀</span></div>
     <div class="card" id="verse-card" style="background:linear-gradient(135deg,var(--lavender-light),var(--primary-light));border:1px solid rgba(155,143,212,0.2)">
       <div style="font-size:10px;font-weight:700;color:var(--lavender);margin-bottom:6px;letter-spacing:.5px" id="today-date"></div>
       <div style="font-size:14px;font-weight:600;color:var(--text);line-height:1.7;font-style:italic" id="weekly-verse">"하느님은 사랑이십니다."<br><span style="font-size:11px;font-weight:400;color:var(--text-sub)">— 1요한 4,8</span></div>
@@ -783,9 +783,9 @@
       <div style="font-size:13px;font-weight:800;margin-bottom:4px">🔍 화면 미리보기</div>
       <div style="font-size:11px;color:var(--text-light);margin-bottom:12px">학생·학부모·교사 화면을 그대로 체험해볼 수 있어요</div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-        <button class="btn btn-outline btn-sm" style="width:100%" onclick="startPreview('student')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-5"/></svg> 학생</button>
-        <button class="btn btn-outline btn-sm" style="width:100%" onclick="startPreview('parent')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg> 학부모</button>
-        <button class="btn btn-outline btn-sm" style="width:100%" onclick="startPreview('teacher')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 2v20"/><path d="M7 8h10"/></svg> 교사</button>
+        <button class="btn btn-outline btn-sm" style="width:100%" onclick="startPreview('student')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2E9E8F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-5"/><path d="M22 10v5" stroke="#EBA23B"/></svg> 학생</button>
+        <button class="btn btn-outline btn-sm" style="width:100%" onclick="startPreview('parent')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#37B39B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><circle cx="9" cy="8" r="3.2" stroke="#E8709A"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17.5" cy="9" r="2.4" stroke="#5B8DEF"/><path d="M16 13.5a5 5 0 0 1 5.5 4.5" stroke="#5B8DEF"/></svg> 학부모</button>
+        <button class="btn btn-outline btn-sm" style="width:100%" onclick="startPreview('teacher')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C6FF0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 2v20" stroke="#7C6FF0"/><path d="M7 8h10" stroke="#EBA23B"/></svg> 교사</button>
       </div>
     </div>
   </div>
@@ -993,7 +993,7 @@
         <div class="menu-right"><span class="menu-arrow">›</span></div>
       </div>
       <div class="menu-item" id="menu-jabumo-roster" style="display:none" onclick="openJabumoRoster()">
-        <div class="menu-icon-wrap" style="background:var(--yellow-light)"><svg viewBox="0 0 24 24" fill="none" stroke="#9A7200" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div class="menu-icon-wrap" style="background:var(--yellow-light)"><svg viewBox="0 0 24 24" fill="none" stroke="#5B8DEF" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
         <div class="menu-info"><strong>자부모회 명단</strong><small>회원 연락처 확인</small></div>
         <div class="menu-right"><span class="menu-arrow">›</span></div>
       </div>
@@ -1085,7 +1085,7 @@
   <!-- 교사 전용 -->
   <button class="nav-item" onclick="switchTab('activity')" id="nav-activity" style="display:none">
     <svg id="nav-activity-icon-dept" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-    <svg id="nav-activity-icon-grad" style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/><path d="M22 10v6"/></svg>
+    <svg id="nav-activity-icon-grad" style="display:none" viewBox="0 0 24 24" fill="none" stroke="#2E9E8F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/><path d="M22 10v6"/></svg>
     <span class="nav-label" id="nav-activity-label">부서활동</span><div class="nav-pip"></div>
   </button>
   <button class="nav-item" onclick="switchTab('teacher')" id="nav-teacher" style="display:none">
@@ -1215,7 +1215,7 @@
         </label>
         <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:2px solid var(--border-light);border-radius:var(--radius-sm);cursor:pointer">
           <input type="radio" name="diary-scope" value="teacher" onchange="onScopeChange()" style="accent-color:var(--lavender);width:16px;height:16px">
-          <div><div style="font-size:13px;font-weight:700"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 2v20"/><path d="M7 8h10"/></svg> 학년 교사와 공유</div><div style="font-size:11px;color:var(--text-light);margin-top:1px">담당 학년 교사 전원에게 알림</div></div>
+          <div><div style="font-size:13px;font-weight:700"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C6FF0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 2v20" stroke="#7C6FF0"/><path d="M7 8h10" stroke="#EBA23B"/></svg> 학년 교사와 공유</div><div style="font-size:11px;color:var(--text-light);margin-top:1px">담당 학년 교사 전원에게 알림</div></div>
         </label>
         <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:2px solid var(--border-light);border-radius:var(--radius-sm);cursor:pointer">
           <input type="radio" name="diary-scope" value="specific" onchange="onScopeChange()" style="accent-color:var(--lavender);width:16px;height:16px">
@@ -2211,7 +2211,7 @@
     <div class="modal-title-row"><span class="modal-title">🖨️ 기록 인쇄 설정</span><button class="modal-close" onclick="closeModal('print-opts-modal')">✕</button></div>
     <div id="po-student" style="font-size:12px;color:var(--text-sub);background:var(--bg);border-radius:var(--radius-sm);padding:9px 12px;margin-bottom:14px;line-height:1.6"></div>
     <div style="font-size:12px;font-weight:800;margin-bottom:6px">📖 포함할 신앙 다이어리</div>
-    <label style="display:flex;align-items:center;gap:10px;padding:8px 2px;cursor:pointer"><input type="checkbox" id="po-diary-teacher" style="width:17px;height:17px;accent-color:var(--primary)"><span style="font-size:13px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 2v20"/><path d="M7 8h10"/></svg> 학년 교사 공유</span></label>
+    <label style="display:flex;align-items:center;gap:10px;padding:8px 2px;cursor:pointer"><input type="checkbox" id="po-diary-teacher" style="width:17px;height:17px;accent-color:var(--primary)"><span style="font-size:13px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C6FF0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 2v20" stroke="#7C6FF0"/><path d="M7 8h10" stroke="#EBA23B"/></svg> 학년 교사 공유</span></label>
     <label style="display:flex;align-items:center;gap:10px;padding:8px 2px;cursor:pointer"><input type="checkbox" id="po-diary-specific" style="width:17px;height:17px;accent-color:var(--primary)"><span style="font-size:13px">✝️ 특정 교사 공유</span></label>
     <label style="display:flex;align-items:center;gap:10px;padding:8px 2px;cursor:pointer"><input type="checkbox" id="po-diary-private" style="width:17px;height:17px;accent-color:var(--primary)"><span style="font-size:13px">🔒 나만 보기(비공개)</span></label>
     <div style="font-size:11px;color:var(--text-light);margin:2px 0 10px;line-height:1.6">🔒 나만 보기·✝️ 특정 교사 공유는 학생의 사적인 기록이에요. 꼭 필요한 경우에만 포함해주세요.</div>
