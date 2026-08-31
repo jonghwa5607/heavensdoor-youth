@@ -578,16 +578,8 @@
 
   <!-- 출석 관리 -->
   <div id="admin-attend-tab" style="display:none;padding:14px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <span style="font-size:14px;font-weight:800">✅ 이번 주 출석 체크</span>
-      <span id="attend-scope-badge" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;background:var(--lavender-light);color:var(--lavender)"></span>
-    </div>
-    <div id="attend-week-info" style="font-size:11px;color:var(--text-light);margin-bottom:10px"></div>
-    <div id="vacation-hint" style="display:none;background:var(--yellow-light);border-radius:var(--radius-sm);padding:9px 14px;margin-bottom:14px;font-size:11px;color:#9A6A00;font-weight:600;cursor:pointer" onclick="switchTab('calendar')">🏖️ 방학 지정·해제는 <u>일정(캘린더)</u>에서 토요일을 선택해 할 수 있어요</div>
-    <div id="attend-student-list"></div>
-    <!-- QR 관리: 생성·초기화는 교감·교무·관리자, 나머지 교사는 공유 열람 -->
-    <div id="qr-manage-section" style="display:none;margin-top:20px;padding-top:16px;border-top:1px solid var(--border-light)">
-      <div style="font-size:13px;font-weight:800;margin-bottom:10px">📋 출석 QR 관리</div>
+    <div id="qr-manage-section" style="display:none">
+      <div style="font-size:13px;font-weight:800;margin-bottom:10px">📋 출석 QR (학생 스캔용)</div>
       <div class="card" style="text-align:center;padding:20px">
         <div id="qr-status-text" style="font-size:13px;color:var(--text-sub);margin-bottom:14px">금요일~토요일에 QR을 생성할 수 있어요</div>
         <div id="qr-code-display" style="display:none;margin-bottom:14px">
@@ -599,6 +591,16 @@
         <button id="qr-view-btn" class="btn btn-outline btn-sm" style="display:none;margin:0 auto 8px" onclick="openModal('qr-fullscreen-modal')">크게 보기</button>
         <button id="qr-reset-btn" style="display:none;background:none;border:none;color:var(--coral);font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;padding:12px 20px;margin-top:2px" onclick="resetQR()">⚠️ QR 초기화</button>
       </div>
+    </div>
+    <button id="attend-check-toggle" class="btn btn-outline" style="width:100%;margin-top:16px" onclick="toggleAttendCheck()">✅ 이번 주 출석 체크하기</button>
+    <div id="attend-check-wrap" style="display:none;margin-top:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <span style="font-size:14px;font-weight:800">✅ 이번 주 출석 체크</span>
+        <span id="attend-scope-badge" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;background:var(--lavender-light);color:var(--lavender)"></span>
+      </div>
+      <div id="attend-week-info" style="font-size:11px;color:var(--text-light);margin-bottom:10px"></div>
+      <div id="vacation-hint" style="display:none;background:var(--yellow-light);border-radius:var(--radius-sm);padding:9px 14px;margin-bottom:14px;font-size:11px;color:#9A6A00;font-weight:600;cursor:pointer" onclick="switchTab('calendar')">🏖️ 방학 지정·해제는 <u>일정(캘린더)</u>에서 토요일을 선택해 할 수 있어요</div>
+      <div id="attend-student-list"></div>
     </div>
   </div>
 
