@@ -3687,7 +3687,7 @@ function downloadHymnImage(){
     var h=hymnFor(ds)||{items:{},label:'',note:''};
     var d=ds.split('-');
     ctx.fillStyle='#1E7D70'; ctx.font='bold 13px '+F;
-    ctx.fillText(h.label||'', colX(i)+CW/2, Y0+HR1/2);
+    ctx.fillText(_dayLabel(ds)||h.label||'', colX(i)+CW/2, Y0+HR1/2);
     ctx.fillStyle='#5A6A8A'; ctx.font='12px '+F;
     ctx.fillText((+d[1])+'월 '+(+d[2])+'일', colX(i)+CW/2, Y0+HR1+HR2/2);
   });
