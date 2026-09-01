@@ -770,7 +770,7 @@ function paintTeacherHome(){
     if(thd)thd.textContent=isFull?(G.grade?G.grade+' 담당 · 전체 관리 권한이 있어요.':'전체 학년을 총괄합니다. 관리 탭에서 확인하세요.'):(G.grade||'담당')+' 담당 선생님, 오늘도 좋은 교리를 전해주세요 🙏';
   }catch(e){}
 }
-function setMyProfile(){try{updateVerseEditUI();}catch(e){}const AVT={student:'😊',parent:'👨‍👩‍👧',teacher:'✝️'};const POS={m1:'중1 담당',m2:'중2 담당',m3:'중3 담당',h:'고등 담당',principal:'교감',admin:'교무',etc:'기타 교사'};const roleLabel=G.role==='student'?(G.graduated?'🎓 졸업생':(G.grade||{m1:'중1',m2:'중2',m3:'중3',h:'고등부'}[G.gradeKey]||'')):G.role==='parent'?'':(POS[G.type]||'교사')+(G.isAdmin?' · 관리자':'');document.getElementById('my-avatar').textContent=AVT[G.role]||'😊';document.getElementById('my-name').textContent=G.displayName;document.getElementById('my-role').textContent=roleLabel;show('my-role',G.role!=='parent');show('menu-position',G.role==='teacher');const badgeEl=document.getElementById('my-name-badge');if(G.isJabumoPresident){if(badgeEl){badgeEl.textContent='자부모회장';badgeEl.style.color='var(--yellow)';}show('my-name-badge',true);}else if(G.role==='student'&&crownCount(G)>0){if(badgeEl){const c=crownCount(G);badgeEl.textContent='👑'.repeat(Math.min(c,5))+' 명예 왕관';badgeEl.style.color='var(--yellow)';}show('my-name-badge',true);}else{show('my-name-badge',false);}const mgh=document.getElementById('my-grade-hint');if(mgh)mgh.textContent=G.role==='student'?'학년·이름·세례명 변경은 교사 승인 필요':'이름·세례명 변경은 승인 필요';}
+function setMyProfile(){try{updateVerseEditUI();}catch(e){}const AVT={student:'😊',parent:'👨‍👩‍👧',teacher:'✝️'};const POS={m1:'중1 담당',m2:'중2 담당',m3:'중3 담당',h:'고등 담당',principal:'교감',admin:'교무',etc:'기타 교사'};const roleLabel=G.role==='student'?(G.graduated?'🎓 졸업생':(G.grade||{m1:'중1',m2:'중2',m3:'중3',h:'고등부'}[G.gradeKey]||'')):G.role==='parent'?'':(POS[G.type]||'교사')+(G.isAdmin?' · 관리자':'');var _ma=document.getElementById('my-avatar');if(_ma){if(G.avatar){_ma.style.backgroundImage='url('+G.avatar+')';_ma.style.backgroundSize='cover';_ma.style.backgroundPosition='center';_ma.textContent='';}else{_ma.style.backgroundImage='';_ma.textContent=AVT[G.role]||'😊';}}var _ms=document.getElementById('my-status');if(_ms)_ms.textContent=G.statusMsg||'';document.getElementById('my-name').textContent=G.displayName;document.getElementById('my-role').textContent=roleLabel;show('my-role',G.role!=='parent');show('menu-position',G.role==='teacher');const badgeEl=document.getElementById('my-name-badge');if(G.isJabumoPresident){if(badgeEl){badgeEl.textContent='자부모회장';badgeEl.style.color='var(--yellow)';}show('my-name-badge',true);}else if(G.role==='student'&&crownCount(G)>0){if(badgeEl){const c=crownCount(G);badgeEl.textContent='👑'.repeat(Math.min(c,5))+' 명예 왕관';badgeEl.style.color='var(--yellow)';}show('my-name-badge',true);}else{show('my-name-badge',false);}const mgh=document.getElementById('my-grade-hint');if(mgh)mgh.textContent=G.role==='student'?'학년·이름·세례명 변경은 교사 승인 필요':'이름·세례명 변경은 승인 필요';}
 /* ── 본인 비밀번호 변경 ── */
 let _pwForce=false;
 function openPwChange(force){
@@ -1586,7 +1586,7 @@ function postAttachHTML(p){let h='';const imgs=[];
 if(imgs.length)h+=`<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">${imgs.map((s,i)=>`<img src="${s}" onclick="openImgFull('${p.id}',${i})" style="width:100%;height:auto;max-height:420px;object-fit:contain;border-radius:var(--radius-sm);background:var(--bg);cursor:pointer">`).join('')}</div>`;
 if(p.docs&&p.docs.length)h+=`<div class="attach-label" style="margin-bottom:6px">📎 첨부파일 ${p.docs.length}개</div>`+p.docs.map((d,ix)=>`<div class="attach-file-item" style="flex-direction:column;align-items:stretch;gap:8px"><div style="display:flex;align-items:center;gap:6px"><span>${_docIcon(d)}</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:var(--text)">${d.name}</span>${_docSizeLabel(d)?`<span style="color:var(--text-light);font-size:10px">${_docSizeLabel(d)}</span>`:''}</div>${_docBtns('Post',p.id,ix,d)}</div>`).join('');
 return h;}
-function renderPdComments(p){const cm=document.getElementById('pd-comments');if(!cm)return;const cs=p.comments||[];const canAdmin=G.role==='teacher'&&(G.type==='principal'||G.type==='admin'||G.isAdmin);const BT=(fn,ic)=>`<button onclick="${fn}" style="background:none;border:none;cursor:pointer;font-size:11px;padding:0 3px">${ic}</button>`;cm.innerHTML=`<div class="attach-label" style="border-top:1px solid var(--border-light);padding-top:12px;margin-bottom:8px">💬 댓글 ${cs.length}</div>`+cs.map((c,i)=>{const own=c.authorId===G.id;const btns=(own?BT(`editPostComment(${i})`,'✏️'):'')+((own||canAdmin)?BT(`deletePostComment(${i})`,'🗑️'):'');return `<div style="font-size:12px;margin-bottom:8px"><b>${c.author}</b> <span style="color:var(--text-light)">${c.time||''}${c.edited?' (수정됨)':''}</span>${btns}<div style="margin-top:2px;color:var(--text-sub);white-space:pre-wrap">${c.text}</div></div>`;}).join('')+`<div style="display:flex;gap:6px;margin-top:8px"><input class="form-input" type="text" id="pd-comment-input" placeholder="댓글을 남겨보세요..." style="flex:1;padding:9px 10px;font-size:12px" onkeydown="if(event.key==='Enter')submitPostComment()"><button class="btn btn-sm" style="background:var(--primary);color:white;width:auto;flex-shrink:0" onclick="submitPostComment()">등록</button></div>`;}
+function renderPdComments(p){const cm=document.getElementById('pd-comments');if(!cm)return;const cs=p.comments||[];const canAdmin=G.role==='teacher'&&(G.type==='principal'||G.type==='admin'||G.isAdmin);const BT=(fn,ic)=>`<button onclick="${fn}" style="background:none;border:none;cursor:pointer;font-size:11px;padding:0 3px">${ic}</button>`;cm.innerHTML=`<div class="attach-label" style="border-top:1px solid var(--border-light);padding-top:12px;margin-bottom:8px">💬 댓글 ${cs.length}</div>`+cs.map((c,i)=>{const own=c.authorId===G.id;const btns=(own?BT(`editPostComment(${i})`,'✏️'):'')+((own||canAdmin)?BT(`deletePostComment(${i})`,'🗑️'):'');return `<div style="font-size:12px;margin-bottom:8px"><b onclick="openProfileView('${c.authorId}')" style="cursor:pointer;color:var(--primary-dark)">${c.author}</b> <span style="color:var(--text-light)">${c.time||''}${c.edited?' (수정됨)':''}</span>${btns}<div style="margin-top:2px;color:var(--text-sub);white-space:pre-wrap">${c.text}</div></div>`;}).join('')+`<div style="display:flex;gap:6px;margin-top:8px"><input class="form-input" type="text" id="pd-comment-input" placeholder="댓글을 남겨보세요..." style="flex:1;padding:9px 10px;font-size:12px" onkeydown="if(event.key==='Enter')submitPostComment()"><button class="btn btn-sm" style="background:var(--primary);color:white;width:auto;flex-shrink:0" onclick="submitPostComment()">등록</button></div>`;}
 function submitPostComment(){const p=posts.find(x=>x.id===currentPostId);if(!p)return;const inp=document.getElementById('pd-comment-input');const text=(inp.value||'').trim();if(!text)return;(p.comments=p.comments||[]).push({author:G.displayName,authorId:G.id,text,time:'방금'});renderPdComments(p);showToast('댓글을 남겼어요');}
 function editPostComment(i){const p=posts.find(x=>x.id===currentPostId);if(!p||!p.comments||!p.comments[i])return;const t=prompt('댓글 수정',p.comments[i].text);if(t===null)return;const v=t.trim();if(!v)return;p.comments[i].text=v;p.comments[i].edited=true;renderPdComments(p);}
 function deletePostComment(i){const p=posts.find(x=>x.id===currentPostId);if(!p||!p.comments)return;if(!confirm('이 댓글을 삭제할까요?'))return;p.comments.splice(i,1);renderPdComments(p);}
@@ -2549,36 +2549,48 @@ function setNotifMode(mode){
     showToast('🔇 무음 모드로 설정했어요');
   }
 }
+var _peAvatar=null;
+function _avatarHTML(u,sz){sz=sz||40;var a=u&&u.avatar;if(a)return '<div class="student-avatar" style="width:'+sz+'px;height:'+sz+'px;background-image:url('+a+');background-size:cover;background-position:center"></div>';return '<div class="student-avatar" style="width:'+sz+'px;height:'+sz+'px;background:linear-gradient(135deg,var(--primary),var(--lavender))">'+(((u&&u.name)||'?').charAt(0))+'</div>';}
+function _avatarById(id,name,sz){var u=(pendingList||[]).find(function(x){return x.id===id;})||(id===G.id?G:null);return _avatarHTML({avatar:u&&u.avatar,name:(u&&u.name)||name},sz);}
+function _resizeImg(file,cb){var r=new FileReader();r.onload=function(){var img=new Image();img.onload=function(){var mx=220,w=img.width,h=img.height;if(w>h){if(w>mx){h=Math.round(h*mx/w);w=mx;}}else{if(h>mx){w=Math.round(w*mx/h);h=mx;}}var c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);cb(c.toDataURL('image/jpeg',0.8));};img.src=r.result;};r.readAsDataURL(file);}
+function onPickAvatar(inp){var f=inp.files&&inp.files[0];if(!f)return;_resizeImg(f,function(d){_peAvatar=d;var pv=document.getElementById('pe-avatar-preview');if(pv){pv.style.backgroundImage='url('+d+')';pv.textContent='';}});}
+function clearAvatar(){_peAvatar='';var pv=document.getElementById('pe-avatar-preview');if(pv){pv.style.backgroundImage='';pv.textContent=(((_meRec()||G).name)||'?').charAt(0);}}
+function openProfileView(uid){var u=(pendingList||[]).find(function(x){return x.id===uid;})||(uid===G.id?(_meRec()||G):null);if(!u)return;var av=document.getElementById('pv-avatar');if(av){if(u.avatar){av.style.backgroundImage='url('+u.avatar+')';av.textContent='';}else{av.style.backgroundImage='';av.textContent=((u.name)||'?').charAt(0);}}document.getElementById('pv-name').textContent=((u.name)||'')+' '+((u.baptism)||'');document.getElementById('pv-role').textContent=(u.role==='student'?((u.gradeLabel)||'학생'):u.role==='parent'?'학부모':'교사');document.getElementById('pv-status').textContent=(u.statusMsg)||'';openModal('profile-view-modal');}
 function openProfileEdit(){
   const me=_meRec()||G;
   const g=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v||'';};
-  g('pe-name',me.name); g('pe-baptism',me.baptism);
+  g('pe-name',me.name); g('pe-baptism',me.baptism); g('pe-status',me.statusMsg);
   g('pe-pw-cur',''); g('pe-pw-new',''); g('pe-pw-confirm','');
+  _peAvatar=null;
+  var pv=document.getElementById('pe-avatar-preview');
+  if(pv){if(me.avatar){pv.style.backgroundImage='url('+me.avatar+')';pv.textContent='';}else{pv.style.backgroundImage='';pv.textContent=((me.name)||'?').charAt(0);}}
   openModal('profile-edit-modal');
 }
 async function submitProfileEdit(){
   const me=_meRec();
-  if(!me){showToast('회원 정보를 찾을 수 없어요');return;}
+  if(!me){showToast('내 정보를 찾을 수 없어요');return;}
+  var stEl=document.getElementById('pe-status');
+  if(stEl){me.statusMsg=(stEl.value||'').trim();G.statusMsg=me.statusMsg;}
+  if(_peAvatar!==null){ if(_peAvatar===''){delete me.avatar;delete G.avatar;} else {me.avatar=_peAvatar;G.avatar=_peAvatar;} }
   const cur=(document.getElementById('pe-pw-cur').value||'').trim();
   const n1=(document.getElementById('pe-pw-new').value||'').trim();
   const n2=(document.getElementById('pe-pw-confirm').value||'').trim();
-
-  if(!(n1||n2||cur)){showToast('변경할 비밀번호를 입력해주세요');return;}
-  if(!cur){showToast('현재 비밀번호를 입력해주세요');return;}
-  const hc=await hashPw(G.id,cur);
-  const ok=(me.pwh&&me.pwh===hc)||(!me.pwh&&me.pw&&me.pw===cur);
-  if(!ok){showToast('현재 비밀번호가 올바르지 않아요');return;}
-  if(n1.length<6){showToast('새 비밀번호는 6자 이상이어야 해요');return;}
-  if(n1!==n2){showToast('새 비밀번호가 서로 달라요');return;}
-
-  me.pwh=await hashPw(G.id,n1);
-  delete me.pw; delete me.mustChangePw;
-  me.pwv=Number(me.pwv||0)+1;                 /* 다른 기기 자동 로그아웃 */
-  try{localStorage.setItem('hd-session-pwv',String(me.pwv));}catch(e){}  /* 이 기기는 유지 */
+  if(n1||n2||cur){
+    if(!cur){showToast('현재 비밀번호를 입력해주세요');return;}
+    const hc=await hashPw(G.id,cur);
+    const ok=(me.pwh&&me.pwh===hc)||(!me.pwh&&me.pw&&me.pw===cur);
+    if(!ok){showToast('현재 비밀번호가 일치하지 않아요');return;}
+    if(n1.length<6){showToast('새 비밀번호는 6자 이상이어야 해요');return;}
+    if(n1!==n2){showToast('새 비밀번호가 서로 달라요');return;}
+    me.pwh=await hashPw(G.id,n1);delete me.pw;delete me.mustChangePw;me.pwv=Number(me.pwv||0)+1;
+    try{localStorage.setItem('hd-session-pwv',String(me.pwv));}catch(e){}
+  }
   try{if(window.FB&&FB.enabled()&&FB.save)FB.save('members',me.id,me);}catch(e){}
   try{if(window.flushSync)window.flushSync();}catch(e){}
+  try{setMyProfile();}catch(e){}
+  _peAvatar=null;
   closeModal('profile-edit-modal');
-  showToast('비밀번호를 변경했어요 🔑');
+  showToast('저장되었어요')
 }
 
 function adminRec(){return pendingList.find(function(x){return x.id===ADMIN.id;})||null;}

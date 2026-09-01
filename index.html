@@ -943,8 +943,9 @@
 <!-- ══ MY ══ -->
 <div id="screen-my" class="screen">
   <div class="my-hero">
-    <div class="my-avatar" id="my-avatar">😊</div>
+    <div class="my-avatar" id="my-avatar" onclick="openProfileView(G.id)" style="cursor:pointer;background-size:cover;background-position:center">😊</div>
     <div style="display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;max-width:100%;padding:0 16px;box-sizing:border-box"><div class="my-name" id="my-name" style="word-break:keep-all"></div><span id="my-name-badge" style="display:none;font-size:10px;font-weight:700;color:var(--yellow);background:rgba(255,255,255,0.25);padding:2px 8px;border-radius:8px;white-space:nowrap;flex-shrink:0">자부모회장</span></div>
+    <div id="my-status" style="font-size:12px;color:rgba(255,255,255,0.9);margin-top:4px;padding:0 16px;min-height:16px"></div>
     <div class="my-role" id="my-role"></div>
   </div>
   <div class="my-stats" id="my-stats-student" style="display:none">
@@ -2031,6 +2032,12 @@
     <div id="pe-info-banner" style="background:var(--yellow-light);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:16px;font-size:12px;color:#9A6A00;font-weight:600;line-height:1.6">
       ℹ️ 이름·세례명은 직접 바꿀 수 없어요. 변경이 필요하면 <b>담당 선생님께 문의</b>해주세요.
     </div>
+    <div style="text-align:center;margin-bottom:14px">
+      <div id="pe-avatar-preview" style="width:88px;height:88px;border-radius:50%;margin:0 auto 8px;background:linear-gradient(135deg,var(--primary),var(--lavender));display:flex;align-items:center;justify-content:center;color:#fff;font-size:34px;font-weight:800;overflow:hidden;background-size:cover;background-position:center"></div>
+      <label style="display:inline-block;font-size:12px;font-weight:700;color:var(--primary);cursor:pointer">📷 사진 변경<input type="file" accept="image/*" style="display:none" onchange="onPickAvatar(this)"></label>
+      <button type="button" onclick="clearAvatar()" style="background:none;border:none;color:var(--text-light);font-size:11px;cursor:pointer;margin-left:10px">사진 삭제</button>
+    </div>
+    <div class="form-group"><label class="form-label">상태 메시지</label><input class="form-input" type="text" id="pe-status" maxlength="40" placeholder="상태 메시지 (40자 이내)"></div>
     <div class="form-group"><label class="form-label">이름</label><input class="form-input" type="text" id="pe-name" disabled style="background:var(--bg);color:var(--text-light)"></div>
     <div class="form-group"><label class="form-label">세례명</label><input class="form-input" type="text" id="pe-baptism" disabled style="background:var(--bg);color:var(--text-light)"></div>
     <div style="border-top:1px dashed var(--border-light);margin:16px 0 12px;padding-top:14px;font-size:12px;font-weight:700;color:var(--text-sub)">🔑 비밀번호 변경 <span style="font-weight:500;color:var(--text-light)">(안 바꾸려면 비워두세요)</span></div>
@@ -2038,6 +2045,16 @@
     <div class="form-group"><label class="form-label">새 비밀번호</label><input class="form-input" type="password" id="pe-pw-new" placeholder="새 비밀번호 (6자 이상)"></div>
     <div class="form-group"><label class="form-label">새 비밀번호 확인</label><input class="form-input" type="password" id="pe-pw-confirm" placeholder="새 비밀번호 재입력"></div>
     <button class="btn btn-primary" onclick="submitProfileEdit()">저장</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="profile-view-modal">
+  <div class="modal" style="text-align:center">
+    <div class="modal-title-row"><span class="modal-title">프로필</span><button class="modal-close" onclick="closeModal('profile-view-modal')">✕</button></div>
+    <div id="pv-avatar" style="width:110px;height:110px;border-radius:50%;margin:6px auto 12px;background:linear-gradient(135deg,var(--primary),var(--lavender));display:flex;align-items:center;justify-content:center;color:#fff;font-size:44px;font-weight:800;overflow:hidden;background-size:cover;background-position:center"></div>
+    <div id="pv-name" style="font-size:18px;font-weight:800"></div>
+    <div id="pv-role" style="font-size:12px;color:var(--text-light);margin-top:3px"></div>
+    <div id="pv-status" style="font-size:13px;color:var(--text-sub);margin-top:12px;line-height:1.5;white-space:pre-wrap"></div>
   </div>
 </div>
 
