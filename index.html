@@ -246,8 +246,10 @@
     <div class="stamp-banner home-banner">
       <div class="stamp-row">
         <div><div class="banner-label">ATTENDANCE STAMP</div><div class="banner-name" id="stamp-name"></div></div>
-        <div class="stamp-level" id="stamp-level" onclick="openBadgeInfo()" style="cursor:pointer">🌱 씨앗</div>
-        <div id="stamp-rank" onclick="switchTab('attend');showAttendTab('rank')" style="display:none;cursor:pointer;margin-top:6px;font-size:11px;font-weight:800;color:#fff;background:rgba(255,255,255,0.24);padding:4px 11px;border-radius:11px;text-align:center"></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+          <div class="stamp-level" id="stamp-level" onclick="openBadgeInfo()" style="cursor:pointer">🌱 씨앗</div>
+          <div id="stamp-rank" onclick="switchTab('attend');showAttendTab('rank')" style="display:none;cursor:pointer;font-size:11px;font-weight:800;color:var(--primary-dark);background:#fff;padding:5px 12px;border-radius:12px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.12)"></div>
+        </div>
       </div>
       <div class="stamp-card">
       <div class="stamp-progress">
@@ -2143,7 +2145,7 @@
     </div>
     <div style="flex:1;position:relative;display:flex;align-items:center;justify-content:center;background:#000;margin-top:14px;overflow:hidden" id="story-viewer-image">
       <img id="story-viewer-img-el" style="max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block;transition:opacity .2s ease">
-      <div id="story-viewer-fallback" style="display:none;font-size:52px">📷</div>
+      <div id="story-viewer-fallback" style="display:none;font-size:52px"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="opacity:.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
       <div onclick="storyTap(-1)" style="position:absolute;left:0;top:0;width:45%;height:100%"></div>
       <div onclick="storyTap(1)" style="position:absolute;right:0;top:0;width:45%;height:100%"></div>
     </div>
