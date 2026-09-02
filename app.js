@@ -2603,7 +2603,7 @@ async function submitProfileEdit(){
   }
   var stEl=document.getElementById('pe-status');
   if(stEl){me.statusMsg=(stEl.value||'').trim();G.statusMsg=me.statusMsg;}
-  if(_peAvatar!==null){ if(_peAvatar===''){delete me.avatar;delete G.avatar;} else {me.avatar=_peAvatar;G.avatar=_peAvatar;} }
+  if(_peAvatar!==null){ if(_peAvatar===''){me.avatar='';G.avatar='';} else {me.avatar=_peAvatar;G.avatar=_peAvatar;} }
   const cur=(document.getElementById('pe-pw-cur').value||'').trim();
   const n1=(document.getElementById('pe-pw-new').value||'').trim();
   const n2=(document.getElementById('pe-pw-confirm').value||'').trim();
