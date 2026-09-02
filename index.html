@@ -247,6 +247,7 @@
       <div class="stamp-row">
         <div><div class="banner-label">ATTENDANCE STAMP</div><div class="banner-name" id="stamp-name"></div></div>
         <div class="stamp-level" id="stamp-level" onclick="openBadgeInfo()" style="cursor:pointer">🌱 씨앗</div>
+        <div id="stamp-rank" onclick="switchTab('attend');showAttendTab('rank')" style="display:none;cursor:pointer;margin-top:6px;font-size:11px;font-weight:800;color:#fff;background:rgba(255,255,255,0.24);padding:4px 11px;border-radius:11px;text-align:center"></div>
       </div>
       <div class="stamp-card">
       <div class="stamp-progress">
@@ -472,7 +473,7 @@
         <span id="qr-hint" style="font-size:11px;color:var(--text-light)">아래 버튼을 눌러 카메라를 켜주세요</span>
       </div>
     </div>
-    <button id="qr-scan-btn" class="btn btn-primary" style="margin:24px auto 0;max-width:280px" onclick="toggleQRScan()">📷 카메라로 스캔하기</button>
+    <button id="qr-scan-btn" class="btn btn-primary" style="margin:24px auto 0;max-width:280px" onclick="toggleQRScan()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> 카메라로 스캔하기</button>
     <button class="btn btn-ghost btn-sm" style="margin:12px auto 0;max-width:200px" onclick="openAttendCodeModal()">코드 직접 입력</button>
   </div>
   <!-- 출석 내역 탭 -->
@@ -652,7 +653,7 @@
 
   <!-- 신앙 다이어리 -->
   <div id="admin-diary-tab" style="display:none;padding:14px">
-    <div style="font-size:11px;color:var(--text-light);margin-bottom:10px">학생이 선생님께 공유한 다이어리만 표시됩니다 (🔒 나만 보기 제외)</div>
+    <div style="font-size:11px;color:var(--text-light);margin-bottom:10px">학생이 선생님께 공유한 다이어리만 표시됩니다 (나만 보기 제외)</div>
     <div id="admin-diary-list"></div>
   </div>
 
@@ -1227,11 +1228,11 @@
         </label>
         <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:2px solid var(--border-light);border-radius:var(--radius-sm);cursor:pointer">
           <input type="radio" name="diary-scope" value="teacher" onchange="onScopeChange()" style="accent-color:var(--lavender);width:16px;height:16px">
-          <div><div style="font-size:13px;font-weight:700"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C6FF0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 2v20" stroke="#7C6FF0"/><path d="M7 8h10" stroke="#EBA23B"/></svg> 학년 교사와 공유</div><div style="font-size:11px;color:var(--text-light);margin-top:1px">담당 학년 교사 전원에게 알림</div></div>
+          <div><div style="font-size:13px;font-weight:700">학년 교사와 공유</div><div style="font-size:11px;color:var(--text-light);margin-top:1px">담당 학년 교사 전원에게 알림</div></div>
         </label>
         <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:2px solid var(--border-light);border-radius:var(--radius-sm);cursor:pointer">
           <input type="radio" name="diary-scope" value="specific" onchange="onScopeChange()" style="accent-color:var(--lavender);width:16px;height:16px">
-          <div><div style="font-size:13px;font-weight:700">✝️ 특정 교사와 공유</div><div style="font-size:11px;color:var(--text-light);margin-top:1px">원하는 교사를 직접 선택</div></div>
+          <div><div style="font-size:13px;font-weight:700">특정 교사와 공유</div><div style="font-size:11px;color:var(--text-light);margin-top:1px">원하는 교사를 직접 선택</div></div>
         </label>
       </div>
       <div id="specific-teacher-wrap" style="display:none;margin-top:10px">
@@ -2070,7 +2071,7 @@
     </div>
     <div style="text-align:center;margin-bottom:14px">
       <div id="pe-avatar-preview" style="width:88px;height:88px;border-radius:50%;margin:0 auto 8px;background:linear-gradient(135deg,var(--primary),var(--lavender));display:flex;align-items:center;justify-content:center;color:#fff;font-size:34px;font-weight:800;overflow:hidden;background-size:cover;background-position:center"></div>
-      <label style="display:inline-block;font-size:12px;font-weight:700;color:var(--primary);cursor:pointer">📷 사진 변경<input type="file" accept="image/*" style="display:none" onchange="onPickAvatar(this)"></label>
+      <label style="display:inline-block;font-size:12px;font-weight:700;color:var(--primary);cursor:pointer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> 사진 변경<input type="file" accept="image/*" style="display:none" onchange="onPickAvatar(this)"></label>
       <button type="button" onclick="clearAvatar()" style="background:none;border:none;color:var(--text-light);font-size:11px;cursor:pointer;margin-left:10px">사진 삭제</button>
     </div>
     <div class="form-group"><label class="form-label">상태 메시지</label><input class="form-input" type="text" id="pe-status" maxlength="40" placeholder="상태 메시지 (40자 이내)"></div>
