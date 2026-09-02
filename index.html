@@ -1295,16 +1295,16 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="minutes-trash-modal">
-  <div class="modal">
+<div class="modal-overlay" id="minutes-trash-modal" style="z-index:9000">
+  <div class="modal" style="max-height:82vh;overflow-y:auto">
     <div class="modal-title-row"><span class="modal-title">🗑 회의록 휴지통</span><button class="modal-close" onclick="closeModal('minutes-trash-modal')">✕</button></div>
     <div style="font-size:11px;color:var(--text-light);margin-bottom:10px;line-height:1.6">삭제한 회의록은 여기 보관돼요. 복구하거나 영구 삭제할 수 있어요.</div>
     <div id="minutes-trash-body"></div>
   </div>
 </div>
 
-<div class="modal-overlay" id="avatar-full-modal" style="background:rgba(0,0,0,0.92);align-items:center;justify-content:center" onclick="closeAvatarFull()">
-  <img id="avatar-full-img" src="" alt="프로필 사진" style="max-width:92vw;max-height:80vh;border-radius:14px;object-fit:contain">
+<div class="modal-overlay" id="avatar-full-modal" onclick="closeAvatarFull()" style="background:rgba(0,0,0,0.94);z-index:99999">
+  <img id="avatar-full-img" src="" alt="프로필 사진" style="max-width:100vw;max-height:100vh;width:auto;height:auto;object-fit:contain;margin:auto;display:block;border-radius:0;box-shadow:none">
 </div>
 
 <!-- ══ 모달: 회의록 (노션 스타일) ══ -->
@@ -1349,8 +1349,9 @@
     <div class="pg-head">
       <button class="pg-back" onclick="closeModal('yearplan-modal')">‹</button>
       <span class="pg-title">📋 연간 운영 계획</span>
-      <div class="pg-acts"></div>
+      <div class="pg-acts"><button class="btn btn-sm" id="yp-lock-btn" style="width:auto;padding:6px 11px;font-size:11px;font-weight:800;background:var(--yellow-light);color:#9A6A00;display:none" onclick="toggleLitLock()">🔒 잠김 · 해제</button></div>
     </div>
+    <div id="yp-lock-note" style="display:none;padding:8px 14px;background:var(--yellow-light);color:#9A6A00;font-size:11px;font-weight:700;line-height:1.5">🔒 연간계획이 잠겨 있어요 · 수정하려면 우측 상단에서 잠금을 해제해주세요</div>
     <div id="yp-period" style="padding:10px 14px;border-bottom:1px solid var(--border-light);background:var(--card)"></div>
     <div id="yp-thead" style="background:var(--card);border-bottom:2px solid var(--border);box-shadow:0 2px 5px rgba(0,0,0,.05)"></div>
     <div class="pg-scroll"><div id="yp-body"></div></div>
@@ -1515,7 +1516,7 @@
       <span class="pg-title">전례 편집</span>
       <div class="pg-acts">
         <button class="btn btn-sm btn-outline" style="width:auto;padding:6px 10px;font-size:12px" onclick="makeLitImage()">🖼️ 표 보기</button>
-        <button class="btn btn-sm" style="width:auto;padding:6px 12px;font-size:12px;background:var(--primary);color:#fff" onclick="saveLitMonth()">저장</button><button class="btn btn-sm" id="lit-lock-btn" style="width:auto;padding:6px 10px;font-size:11px;background:var(--yellow-light);color:#9A6A00;display:none;margin-left:4px" onclick="toggleLitLock()">🔒 잠금 해제</button><span id="lit-lock-note" style="font-size:10px;color:var(--text-light);margin-left:4px">🔒 잠김</span><span id="lit-dirty" style="display:none;font-size:10px;color:var(--coral);font-weight:700;margin-left:2px">●</span>
+        <button class="btn btn-sm" style="width:auto;padding:6px 12px;font-size:12px;background:var(--primary);color:#fff" onclick="saveLitMonth()">저장</button><span id="lit-dirty" style="display:none;font-size:10px;color:var(--coral);font-weight:700;margin-left:2px">●</span>
       </div>
     </div>
     <div class="pg-scroll">
