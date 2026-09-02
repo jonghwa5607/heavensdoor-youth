@@ -736,7 +736,7 @@ function startSession(u){
   G.isAdmin=u.isAdmin||false;G.isJabumo=u.isJabumo||false;G.isJabumoPresident=u.isJabumoPresident||false;G.graduated=u.graduated||false;
   G.birthMonth=u.birthMonth||0;G.birthDay=u.birthDay||0;
   G.feastMonth=u.feastMonth||0;G.feastDay=u.feastDay||0;
-  G.attendTotal=u.attendTotal||0;G.streak=u.streak||0;G.history=u.history||[];G.attendedWeeks=u.attendedWeeks||[];G.halfWeeks=u.halfWeeks||[];G.qrScanAt=u.qrScanAt||{};
+  G.attendTotal=u.attendTotal||0;G.streak=u.streak||0;G.history=u.history||[];G.attendedWeeks=u.attendedWeeks||[];G.halfWeeks=u.halfWeeks||[];G.qrScanAt=u.qrScanAt||{};if(u.avatar)G.avatar=u.avatar;G.statusMsg=u.statusMsg||'';
   document.getElementById('bottom-nav').style.display='flex';
   const isS=G.role==='student',isP=G.role==='parent',isT=G.role==='teacher';
   const isFull=isT&&(G.type==='principal'||G.type==='admin'||G.isAdmin);
@@ -770,7 +770,7 @@ function paintTeacherHome(){
     if(thd)thd.textContent=isFull?(G.grade?G.grade+' 담당 · 전체 관리 권한이 있어요.':'전체 학년을 총괄합니다. 관리 탭에서 확인하세요.'):(G.grade||'담당')+' 담당 선생님, 오늘도 좋은 교리를 전해주세요 🙏';
   }catch(e){}
 }
-function setMyProfile(){try{updateVerseEditUI();}catch(e){}const AVT={student:'😊',parent:'👨‍👩‍👧',teacher:'✝️'};const POS={m1:'중1 담당',m2:'중2 담당',m3:'중3 담당',h:'고등 담당',principal:'교감',admin:'교무',etc:'기타 교사'};const roleLabel=G.role==='student'?(G.graduated?'🎓 졸업생':(G.grade||{m1:'중1',m2:'중2',m3:'중3',h:'고등부'}[G.gradeKey]||'')):G.role==='parent'?'':(POS[G.type]||'교사')+(G.isAdmin?' · 관리자':'');var _ma=document.getElementById('my-avatar');if(_ma){if(G.avatar){_ma.style.backgroundImage='url('+G.avatar+')';_ma.style.backgroundSize='cover';_ma.style.backgroundPosition='center';_ma.textContent='';}else{_ma.style.backgroundImage='';_ma.textContent=AVT[G.role]||'😊';}}var _ms=document.getElementById('my-status');if(_ms)_ms.textContent=G.statusMsg||'';document.getElementById('my-name').textContent=G.displayName;document.getElementById('my-role').textContent=roleLabel;show('my-role',G.role!=='parent');show('menu-position',G.role==='teacher');const badgeEl=document.getElementById('my-name-badge');if(G.isJabumoPresident){if(badgeEl){badgeEl.textContent='자부모회장';badgeEl.style.color='var(--yellow)';}show('my-name-badge',true);}else if(G.role==='student'&&crownCount(G)>0){if(badgeEl){const c=crownCount(G);badgeEl.textContent='👑'.repeat(Math.min(c,5))+' 명예 왕관';badgeEl.style.color='var(--yellow)';}show('my-name-badge',true);}else{show('my-name-badge',false);}const mgh=document.getElementById('my-grade-hint');if(mgh)mgh.textContent=G.role==='student'?'학년·이름·세례명 변경은 교사 승인 필요':'이름·세례명 변경은 승인 필요';}
+function setMyProfile(){try{updateVerseEditUI();}catch(e){}const AVT={student:'😊',parent:'👨‍👩‍👧',teacher:'✝️'};const POS={m1:'중1 담당',m2:'중2 담당',m3:'중3 담당',h:'고등 담당',principal:'교감',admin:'교무',etc:'기타 교사'};const roleLabel=G.role==='student'?(G.graduated?'🎓 졸업생':(G.grade||{m1:'중1',m2:'중2',m3:'중3',h:'고등부'}[G.gradeKey]||'')):G.role==='parent'?'':(POS[G.type]||'교사')+(G.isAdmin?' · 관리자':'');var _ma=document.getElementById('my-avatar');if(_ma){if(G.avatar){_ma.style.backgroundImage='url('+G.avatar+')';_ma.style.backgroundSize='cover';_ma.style.backgroundPosition='center';_ma.innerHTML='';}else{_ma.style.backgroundImage='';_ma.innerHTML='<svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.92)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:auto"><circle cx="12" cy="9" r="3.4"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>';}}var _ms=document.getElementById('my-status');if(_ms)_ms.textContent=G.statusMsg||'';document.getElementById('my-name').textContent=G.displayName;document.getElementById('my-role').textContent=roleLabel;show('my-role',G.role!=='parent');show('menu-position',G.role==='teacher');const badgeEl=document.getElementById('my-name-badge');if(G.isJabumoPresident){if(badgeEl){badgeEl.textContent='자부모회장';badgeEl.style.color='var(--yellow)';}show('my-name-badge',true);}else if(G.role==='student'&&crownCount(G)>0){if(badgeEl){const c=crownCount(G);badgeEl.textContent='👑'.repeat(Math.min(c,5))+' 명예 왕관';badgeEl.style.color='var(--yellow)';}show('my-name-badge',true);}else{show('my-name-badge',false);}const mgh=document.getElementById('my-grade-hint');if(mgh)mgh.textContent=G.role==='student'?'학년·이름·세례명 변경은 교사 승인 필요':'이름·세례명 변경은 승인 필요';}
 /* ── 본인 비밀번호 변경 ── */
 let _pwForce=false;
 function openPwChange(force){
@@ -2568,7 +2568,7 @@ function _avatarHTML(u,sz){sz=sz||40;var base='width:'+sz+'px;height:'+sz+'px;mi
 function _avatarById(id,name,sz){var u=(pendingList||[]).find(function(x){return x.id===id;})||(id===G.id?G:null);return _avatarHTML({avatar:u&&u.avatar,name:(u&&u.name)||name},sz);}
 function _resizeImg(file,cb){var r=new FileReader();r.onload=function(){var img=new Image();img.onload=function(){var mx=220,w=img.width,h=img.height;if(w>h){if(w>mx){h=Math.round(h*mx/w);w=mx;}}else{if(h>mx){w=Math.round(w*mx/h);h=mx;}}var c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);cb(c.toDataURL('image/jpeg',0.8));};img.src=r.result;};r.readAsDataURL(file);}
 function onPickAvatar(inp){var f=inp.files&&inp.files[0];if(!f)return;_resizeImg(f,function(d){_peAvatar=d;var pv=document.getElementById('pe-avatar-preview');if(pv){pv.style.backgroundImage='url('+d+')';pv.textContent='';}});}
-function clearAvatar(){_peAvatar='';var pv=document.getElementById('pe-avatar-preview');if(pv){pv.style.backgroundImage='';pv.textContent=(((_meRec()||G).name)||'?').charAt(0);}}
+function clearAvatar(){_peAvatar='';var pv=document.getElementById('pe-avatar-preview');if(pv){pv.style.backgroundImage='';pv.innerHTML='<svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.92)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="3.4"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>';}}
 function openProfileView(uid){var u=(pendingList||[]).find(function(x){return x.id===uid;})||(uid===G.id?(_meRec()||G):null);if(!u)return;var av=document.getElementById('pv-avatar');if(av){if(u.avatar){av.style.backgroundImage='url('+u.avatar+')';av.textContent='';}else{av.style.backgroundImage='';av.textContent=((u.name)||'?').charAt(0);}}document.getElementById('pv-name').textContent=((u.name)||'')+' '+((u.baptism)||'');document.getElementById('pv-role').textContent=(u.role==='student'?((u.gradeLabel)||'학생'):u.role==='parent'?'학부모':'교사');var _pvs=document.getElementById('pv-status');if(_pvs){if(u.statusMsg){_pvs.textContent=u.statusMsg;_pvs.style.display='';}else{_pvs.textContent='';_pvs.style.display='none';}}openModal('profile-view-modal');}
 function _peMode(mode){var t=document.getElementById('pe-modal-title');if(t)t.textContent=(mode==='pw')?'🔑 비밀번호 변경':'✏️ 프로필 설정';var ps=document.getElementById('pe-profile-sec');if(ps)ps.style.display=(mode==='pw')?'none':'';var ws=document.getElementById('pe-pw-sec');if(ws)ws.style.display=(mode==='pw')?'':'none';}
 function openPwChange(){openProfileEdit();_peMode('pw');}
@@ -2580,12 +2580,15 @@ function openProfileEdit(){
   g('pe-pw-cur',''); g('pe-pw-new',''); g('pe-pw-confirm','');
   _peAvatar=null;
   var pv=document.getElementById('pe-avatar-preview');
-  if(pv){if(me.avatar){pv.style.backgroundImage='url('+me.avatar+')';pv.textContent='';}else{pv.style.backgroundImage='';pv.textContent=((me.name)||'?').charAt(0);}}
+  if(pv){if(me.avatar){pv.style.backgroundImage='url('+me.avatar+')';pv.innerHTML='';}else{pv.style.backgroundImage='';pv.innerHTML='<svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.92)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="3.4"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>';}}
   openModal('profile-edit-modal');
 }
 async function submitProfileEdit(){
-  const me=_meRec();
-  if(!me){showToast('내 정보를 찾을 수 없어요');return;}
+  var me=_meRec();
+  if(!me){ /* 관리자 등 회원문서가 아직 없으면 G 기준으로 생성 */
+    me=Object.assign({},G,{id:G.id,name:G.name,baptism:G.baptism,role:G.role,approved:true});
+    try{pendingList.push(me);}catch(e){}
+  }
   var stEl=document.getElementById('pe-status');
   if(stEl){me.statusMsg=(stEl.value||'').trim();G.statusMsg=me.statusMsg;}
   if(_peAvatar!==null){ if(_peAvatar===''){delete me.avatar;delete G.avatar;} else {me.avatar=_peAvatar;G.avatar=_peAvatar;} }
@@ -2602,9 +2605,12 @@ async function submitProfileEdit(){
     me.pwh=await hashPw(G.id,n1);delete me.pw;delete me.mustChangePw;me.pwv=Number(me.pwv||0)+1;
     try{localStorage.setItem('hd-session-pwv',String(me.pwv));}catch(e){}
   }
+  G.avatar=me.avatar;G.statusMsg=me.statusMsg;
+  try{if(G.id===ADMIN.id){ADMIN.avatar=me.avatar;ADMIN.statusMsg=me.statusMsg;}}catch(e){}
   try{if(window.FB&&FB.enabled()&&FB.save)FB.save('members',me.id,me);}catch(e){}
   try{if(window.flushSync)window.flushSync();}catch(e){}
   try{setMyProfile();}catch(e){}
+  try{renderMembersList();}catch(e){}
   _peAvatar=null;
   closeModal('profile-edit-modal');
   showToast('저장되었어요')
