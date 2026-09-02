@@ -1296,15 +1296,16 @@
 </div>
 
 <div class="modal-overlay" id="minutes-trash-modal" style="z-index:9000">
-  <div class="modal" style="max-height:82vh;overflow-y:auto">
+  <div class="modal" style="width:94vw;max-width:560px;max-height:82vh;overflow-y:auto">
     <div class="modal-title-row"><span class="modal-title">🗑 회의록 휴지통</span><button class="modal-close" onclick="closeModal('minutes-trash-modal')">✕</button></div>
     <div style="font-size:11px;color:var(--text-light);margin-bottom:10px;line-height:1.6">삭제한 회의록은 여기 보관돼요. 복구하거나 영구 삭제할 수 있어요.</div>
     <div id="minutes-trash-body"></div>
   </div>
 </div>
 
-<div class="modal-overlay" id="avatar-full-modal" onclick="closeAvatarFull()" style="background:rgba(0,0,0,0.94);z-index:99999">
-  <img id="avatar-full-img" src="" alt="프로필 사진" style="max-width:100vw;max-height:100vh;width:auto;height:auto;object-fit:contain;margin:auto;display:block;border-radius:0;box-shadow:none">
+<div class="modal-overlay" id="avatar-full-modal" onclick="closeAvatarFull()" style="background:#000;z-index:99999;padding:0;display:none;align-items:center;justify-content:center">
+  <button onclick="event.stopPropagation();closeAvatarFull()" style="position:fixed;top:14px;right:14px;z-index:100000;width:42px;height:42px;border-radius:50%;border:none;background:rgba(255,255,255,0.18);color:#fff;font-size:22px;line-height:1;cursor:pointer;font-family:inherit">✕</button>
+  <img id="avatar-full-img" src="" alt="프로필 사진" style="width:100vw;height:100vh;object-fit:contain;display:block;border-radius:0;box-shadow:none">
 </div>
 
 <!-- ══ 모달: 회의록 (노션 스타일) ══ -->
@@ -1351,8 +1352,7 @@
       <span class="pg-title">📋 연간 운영 계획</span>
       <div class="pg-acts"><button class="btn btn-sm" id="yp-lock-btn" style="width:auto;padding:6px 11px;font-size:11px;font-weight:800;background:var(--yellow-light);color:#9A6A00;display:none" onclick="toggleLitLock()">🔒 잠김 · 해제</button></div>
     </div>
-    <div id="yp-lock-note" style="display:none;padding:8px 14px;background:var(--yellow-light);color:#9A6A00;font-size:11px;font-weight:700;line-height:1.5">🔒 연간계획이 잠겨 있어요 · 수정하려면 우측 상단에서 잠금을 해제해주세요</div>
-    <div id="yp-period" style="padding:10px 14px;border-bottom:1px solid var(--border-light);background:var(--card)"></div>
+        <div id="yp-period" style="padding:10px 14px;border-bottom:1px solid var(--border-light);background:var(--card)"></div>
     <div id="yp-thead" style="background:var(--card);border-bottom:2px solid var(--border);box-shadow:0 2px 5px rgba(0,0,0,.05)"></div>
     <div class="pg-scroll"><div id="yp-body"></div></div>
   </div>
