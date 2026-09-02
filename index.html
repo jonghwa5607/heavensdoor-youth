@@ -1295,6 +1295,18 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="app-confirm-modal" style="z-index:99998">
+  <div class="modal" style="background:#fff;width:88vw;max-width:380px;border-radius:20px;padding:22px 20px 18px;text-align:center;box-shadow:0 14px 44px rgba(0,0,0,0.2)">
+    <div id="ac-icon" style="font-size:30px;margin-bottom:8px">💬</div>
+    <div id="ac-title" style="font-size:15px;font-weight:800;color:var(--text);line-height:1.5"></div>
+    <div id="ac-desc" style="font-size:13px;color:var(--text-sub);margin-top:8px;line-height:1.6;white-space:pre-wrap"></div>
+    <div style="display:flex;gap:8px;margin-top:18px">
+      <button class="btn btn-outline btn-sm" style="flex:1" onclick="_acResolve(false)">취소</button>
+      <button class="btn btn-primary btn-sm" id="ac-ok" style="flex:1" onclick="_acResolve(true)">확인</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="minutes-trash-modal" style="z-index:9000">
   <div class="modal" style="width:94vw;max-width:560px;max-height:82vh;overflow-y:auto">
     <div class="modal-title-row"><span class="modal-title">🗑 회의록 휴지통</span><button class="modal-close" onclick="closeModal('minutes-trash-modal')">✕</button></div>
