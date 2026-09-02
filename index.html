@@ -246,10 +246,7 @@
     <div class="stamp-banner home-banner">
       <div class="stamp-row">
         <div><div class="banner-label">ATTENDANCE STAMP</div><div class="banner-name" id="stamp-name"></div></div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-          <div class="stamp-level" id="stamp-level" onclick="openBadgeInfo()" style="cursor:pointer">🌱 씨앗</div>
-          <div id="stamp-rank" onclick="switchTab('attend');showAttendTab('rank')" style="display:none;cursor:pointer;font-size:11px;font-weight:800;color:var(--primary-dark);background:#fff;padding:5px 12px;border-radius:12px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.12)"></div>
-        </div>
+        <div class="stamp-level" id="stamp-level" onclick="openBadgeInfo()" style="cursor:pointer">🌱 씨앗</div>
       </div>
       <div class="stamp-card">
       <div class="stamp-progress">
@@ -271,6 +268,7 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3"/><rect x="18" y="14" width="3" height="3"/><rect x="14" y="18" width="3" height="3"/><rect x="18" y="18" width="3" height="3"/></svg>
         QR 출석체크
       </button>
+      <div id="stamp-rank" onclick="switchTab('attend');showAttendTab('rank')" style="display:none;cursor:pointer;margin-top:10px;font-size:12px;font-weight:800;color:#fff;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.32);padding:9px;border-radius:12px;text-align:center"></div>
       </div>
     </div>
   </div>
