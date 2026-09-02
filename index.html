@@ -254,6 +254,11 @@
         <div class="stamp-progress-bar"><div class="stamp-progress-fill" id="stamp-fill" style="width:0%"></div></div>
       </div>
       <div class="stamp-dots" id="stamp-dots"></div>
+      <div id="stamp-pager" style="display:none;align-items:center;justify-content:center;gap:14px;margin-top:8px">
+        <button onclick="stampPage(-1)" style="background:rgba(255,255,255,0.22);border:none;color:#fff;width:28px;height:28px;border-radius:50%;font-size:15px;cursor:pointer;font-family:inherit;line-height:1">‹</button>
+        <span id="stamp-page-txt" style="font-size:11px;color:rgba(255,255,255,0.92);font-weight:700;min-width:74px;text-align:center"></span>
+        <button onclick="stampPage(1)" style="background:rgba(255,255,255,0.22);border:none;color:#fff;width:28px;height:28px;border-radius:50%;font-size:15px;cursor:pointer;font-family:inherit;line-height:1">›</button>
+      </div>
       <div class="stamp-footer">
         <span>누적 <strong id="stamp-total" style="color:#FFD166">0</strong>회</span>
         <span>이번 달 <strong id="stamp-month">0</strong>회</span>
