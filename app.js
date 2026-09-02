@@ -2288,6 +2288,8 @@ function setMinutesEditing(editing){
     ed.onkeydown=editing?onMinKeydown:null;
     ed.oninput=editing?onMinutesInputRaw:null;
     ed.onpaste=editing?onMinutesPaste:null;
+    ed.oncompositionstart=editing?function(){window._minComposing=true;}:null;
+    ed.oncompositionend=editing?function(){window._minComposing=false;try{onMinutesInput();}catch(e){}}:null;
   }
   if(!editing)_minSlashClose();
   show('minutes-edit-btn',!editing);show('minutes-save-btn',editing);
@@ -2341,7 +2343,7 @@ function onMinutesPaste(e){
   }catch(err){}
 }
 function onMinutesInput(){if(!_minEditing)return;clearTimeout(_minSaveTimer);_minSaveTimer=setTimeout(_saveMinutesNow,250);}
-function _saveMinutesNow(){const r=resources.find(r=>r.id===currentMinutesId);if(!r)return;const v=_minSerialize();if(v===r.content)return;r.content=v;r.updatedAt=_minDateStr();r.updatedBy=G.displayName;r.updatedById=G.id;_renderMinutesMeta(r);try{if(typeof flushSync==='function')flushSync();}catch(e){}var b=document.getElementById('minutes-lock-banner');if(b&&_minEditing){b.textContent='✏️ 편집 중 · 자동 저장됨 ✓';}}
+function _saveMinutesNow(){if(window._minComposing)return;const r=resources.find(r=>r.id===currentMinutesId);if(!r)return;const v=_minSerialize();if(v===r.content)return;r.content=v;r.updatedAt=_minDateStr();r.updatedBy=G.displayName;r.updatedById=G.id;_renderMinutesMeta(r);try{if(typeof flushSync==='function')flushSync();}catch(e){}var b=document.getElementById('minutes-lock-banner');if(b&&_minEditing){b.textContent='✏️ 편집 중 · 자동 저장됨 ✓';}}
 function _updateMinutesLockUI(){var b=document.getElementById('minutes-lock-banner');if(!b)return;var eb=document.getElementById('minutes-edit-btn');var other=_otherLock(currentMinutesId);var _ar=resources.find(function(x){return x.id===currentMinutesId;});if(_isArchivedMinutes(_ar)){b.style.display='';b.style.background='var(--bg)';b.style.color='var(--text-light)';b.textContent='🔒 보관된 회의록 · 읽기 전용';show('minutes-edit-btn',false);show('minutes-save-btn',false);return;}if(_minEditing){b.style.display='';b.style.background='var(--mint-light)';b.style.color='#2D9E8F';b.textContent='✏️ 편집 중 · 자동 저장되고 실시간으로 공유돼요';}else if(other){b.style.display='';b.style.background='var(--coral-light)';b.style.color='#D95F50';b.textContent='🔴 '+other.name+' 선생님이 실시간 편집 중 · 화면이 자동 갱신돼요';if(eb){eb.disabled=true;eb.style.opacity='.4';}}else{b.style.display='none';if(eb){eb.disabled=false;eb.style.opacity='';}}}
 function startMinutesEdit(){var _r=resources.find(function(x){return x.id===currentMinutesId;});if(_isArchivedMinutes(_r)){showToast('보관된 지난해 회의록은 수정할 수 없어요');return;}var other=_otherLock(currentMinutesId);if(other){showToast(other.name+' 작성 중이에요');return;}_minEditing=true;setMinutesEditing(true);_writeLock();_updateMinutesLockUI();clearInterval(_minHbTimer);_minHbTimer=setInterval(_writeLock,8000);clearInterval(_minLiveTimer);_minLiveTimer=setInterval(function(){try{_saveMinutesNow();}catch(e){}},600);var ed=document.getElementById('minutes-viewer-content');var f=ed&&ed.querySelector('.mb-txt');if(f)_minCaretEnd(f);}
 function stopMinutesEdit(){clearTimeout(_minSaveTimer);_saveMinutesNow();_minEditing=false;clearInterval(_minHbTimer);_minHbTimer=null;clearInterval(_minLiveTimer);_minLiveTimer=null;_releaseLock();setMinutesEditing(false);_updateMinutesLockUI();try{renderResourceList();}catch(e){}try{renderMinutesHub();}catch(e){}try{renderHomeMinutes();}catch(e){}showToast('저장되었습니다');}
@@ -2550,7 +2552,7 @@ function setNotifMode(mode){
   }
 }
 var _peAvatar=null;
-function _avatarHTML(u,sz){sz=sz||40;var a=u&&u.avatar;if(a)return '<div class="student-avatar" style="width:'+sz+'px;height:'+sz+'px;background-image:url('+a+');background-size:cover;background-position:center"></div>';return '<div class="student-avatar" style="width:'+sz+'px;height:'+sz+'px;background:linear-gradient(135deg,var(--primary),var(--lavender))">'+(((u&&u.name)||'?').charAt(0))+'</div>';}
+function _avatarHTML(u,sz){sz=sz||40;var base='width:'+sz+'px;height:'+sz+'px;min-width:'+sz+'px;min-height:'+sz+'px;flex-shrink:0;box-sizing:border-box;font-size:'+Math.round(sz*0.42)+'px;';var a=u&&u.avatar;if(a)return '<div class="student-avatar" style="'+base+'background-image:url('+a+');background-size:cover;background-position:center"></div>';return '<div class="student-avatar" style="'+base+'background:linear-gradient(135deg,var(--primary),var(--lavender))">'+(((u&&u.name)||'?').charAt(0))+'</div>';}
 function _avatarById(id,name,sz){var u=(pendingList||[]).find(function(x){return x.id===id;})||(id===G.id?G:null);return _avatarHTML({avatar:u&&u.avatar,name:(u&&u.name)||name},sz);}
 function _resizeImg(file,cb){var r=new FileReader();r.onload=function(){var img=new Image();img.onload=function(){var mx=220,w=img.width,h=img.height;if(w>h){if(w>mx){h=Math.round(h*mx/w);w=mx;}}else{if(h>mx){w=Math.round(w*mx/h);h=mx;}}var c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);cb(c.toDataURL('image/jpeg',0.8));};img.src=r.result;};r.readAsDataURL(file);}
 function onPickAvatar(inp){var f=inp.files&&inp.files[0];if(!f)return;_resizeImg(f,function(d){_peAvatar=d;var pv=document.getElementById('pe-avatar-preview');if(pv){pv.style.backgroundImage='url('+d+')';pv.textContent='';}});}
