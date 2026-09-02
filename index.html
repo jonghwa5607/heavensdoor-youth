@@ -748,6 +748,7 @@
       <div class="cfg-sec-body">
         <div style="font-size:11px;color:var(--text-light);margin-bottom:10px">저장 이후 새로 발급되는 쿠폰부터 적용됩니다 (이미 발급된 쿠폰은 유지)</div>
         <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;width:92px;flex-shrink:0">🌱 씨앗 (1회)</span><input class="form-input" type="text" id="cfg-reward-1" placeholder="예: 축하 스티커" style="flex:1"></div>
           <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;width:92px;flex-shrink:0">🌿 새싹 (5회)</span><input class="form-input" type="text" id="cfg-reward-5" placeholder="예: 간식 교환권" style="flex:1"></div>
           <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;width:92px;flex-shrink:0">🌸 꽃망울 (10회)</span><input class="form-input" type="text" id="cfg-reward-10" placeholder="예: 음료 교환권" style="flex:1"></div>
           <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;width:92px;flex-shrink:0">☀️ 햇살 (20회)</span><input class="form-input" type="text" id="cfg-reward-20" placeholder="예: 문화상품권 5천원" style="flex:1"></div>
@@ -1294,6 +1295,18 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="minutes-trash-modal">
+  <div class="modal">
+    <div class="modal-title-row"><span class="modal-title">🗑 회의록 휴지통</span><button class="modal-close" onclick="closeModal('minutes-trash-modal')">✕</button></div>
+    <div style="font-size:11px;color:var(--text-light);margin-bottom:10px;line-height:1.6">삭제한 회의록은 여기 보관돼요. 복구하거나 영구 삭제할 수 있어요.</div>
+    <div id="minutes-trash-body"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="avatar-full-modal" style="background:rgba(0,0,0,0.92);align-items:center;justify-content:center" onclick="closeAvatarFull()">
+  <img id="avatar-full-img" src="" alt="프로필 사진" style="max-width:92vw;max-height:80vh;border-radius:14px;object-fit:contain">
+</div>
+
 <!-- ══ 모달: 회의록 (노션 스타일) ══ -->
 <div class="modal-overlay" id="minutes-hub-modal">
   <div class="modal-sheet sheet-full">
@@ -1301,6 +1314,7 @@
       <button class="pg-back" onclick="closeMinutesHub()">‹</button>
       <span class="pg-title">회의록</span>
       <select id="mh-year-sel" class="pg-year" onchange="selMinutesYear(this.value)"></select>
+      <button class="header-btn" onclick="openMinutesTrash()" title="휴지통" style="width:32px;height:32px;margin-left:6px">🗑</button>
     </div>
     <div class="pg-scroll" id="mh-list"></div>
     <button class="pg-fab" id="mh-new-btn" onclick="newMinutesFromHub()">＋ 새 회의록</button>
@@ -1501,7 +1515,7 @@
       <span class="pg-title">전례 편집</span>
       <div class="pg-acts">
         <button class="btn btn-sm btn-outline" style="width:auto;padding:6px 10px;font-size:12px" onclick="makeLitImage()">🖼️ 표 보기</button>
-        <button class="btn btn-sm" style="width:auto;padding:6px 12px;font-size:12px;background:var(--primary);color:#fff" onclick="saveLitMonth()">저장</button><span id="lit-dirty" style="display:none;font-size:10px;color:var(--coral);font-weight:700;margin-left:2px">●</span>
+        <button class="btn btn-sm" style="width:auto;padding:6px 12px;font-size:12px;background:var(--primary);color:#fff" onclick="saveLitMonth()">저장</button><button class="btn btn-sm" id="lit-lock-btn" style="width:auto;padding:6px 10px;font-size:11px;background:var(--yellow-light);color:#9A6A00;display:none;margin-left:4px" onclick="toggleLitLock()">🔒 잠금 해제</button><span id="lit-lock-note" style="font-size:10px;color:var(--text-light);margin-left:4px">🔒 잠김</span><span id="lit-dirty" style="display:none;font-size:10px;color:var(--coral);font-weight:700;margin-left:2px">●</span>
       </div>
     </div>
     <div class="pg-scroll">

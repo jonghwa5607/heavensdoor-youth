@@ -1698,7 +1698,7 @@ function openResourceWriteModal(){var cat=resourceCurCat;if(cat==='minutes')cat=
 var LIVE_YEAR=new Date().getFullYear();   /* 해가 바뀌면 자동으로 올라감 */
 var RES_FIRST_YEAR=2023;
 function _isLiveYear(y){return y!=='legacy'&&parseInt(y,10)>=LIVE_YEAR;}
-function _isArchivedMinutes(r){return !!(r&&r.cat==='minutes'&&(r.archived||(r.year!=='legacy'&&parseInt(r.year,10)<LIVE_YEAR)));}
+function _isArchivedMinutes(r){return !!(r&&r.cat==='minutes'&&!r.deleted&&(r.archived||(r.year!=='legacy'&&parseInt(r.year,10)<LIVE_YEAR)));}
 /* 연도 탭·연도 선택칸을 현재 연도에 맞춰 자동 생성 (27년이 되면 2027 탭이 저절로 생김) */
 function renderYearTabs(){
   var years=[];for(var y=LIVE_YEAR;y>=RES_FIRST_YEAR;y--)years.push(String(y));
@@ -1724,7 +1724,7 @@ function autoArchiveMinutes(){
 /* 지난 연도 회의록 전체를 인쇄/PDF로 내보내기 (백업·인계용) */
 function exportMinutesYear(y){
   var year=y||(typeof minutesHubYear!=='undefined'?minutesHubYear:resourceCurYear);
-  var list=(resources||[]).filter(function(r){return r.cat==='minutes'&&r.year===year;})
+  var list=(resources||[]).filter(function(r){return r.cat==='minutes'&&!r.deleted&&r.year===year;})
     .slice().sort(function(a,b){return String(a.date||'').localeCompare(String(b.date||''));});
   if(!list.length){showToast('내보낼 회의록이 없어요');return;}
   var body=list.map(function(r){
@@ -1773,7 +1773,7 @@ function renderMinutesHub(){
   var sel=document.getElementById('mh-year-sel');
   if(sel){sel.innerHTML=years.map(function(y){return '<option value="'+y+'">'+(y===String(LIVE_YEAR)?'올해 ('+y+')':y+'년');}).join('');sel.value=minutesHubYear;}
   var live=_isLiveYear(minutesHubYear);
-  var list=(resources||[]).filter(function(r){return r.cat==='minutes'&&r.year===minutesHubYear;});
+  var list=(resources||[]).filter(function(r){return r.cat==='minutes'&&!r.deleted&&r.year===minutesHubYear;});
   var el=document.getElementById('mh-list');if(!el)return;
   var html='';
   if(!live&&list.length)html+='<div style="background:var(--bg);border-radius:var(--radius-sm);padding:9px 11px;margin-bottom:9px;font-size:11px;color:var(--text-light)">🔒 '+minutesHubYear+'년 회의록은 보관되어 읽기 전용이에요.</div>';
@@ -1793,7 +1793,7 @@ function _teacherRoster(){return (pendingList||[]).filter(function(t){return t.a
 function _isAcked(r,uid){return !!((r&&r.acks||[]).some(function(a){return a&&a.id===uid;}));}
 function _unackedMinutes(){
   var yr=String(LIVE_YEAR);
-  return (resources||[]).filter(function(r){return r.cat==='minutes'&&r.year===yr&&r.published&&!_isAcked(r,G.id);});
+  return (resources||[]).filter(function(r){return r.cat==='minutes'&&!r.deleted&&r.year===yr&&r.published&&!_isAcked(r,G.id);});
 }
 function publishMinutes(){
   var r=resources.find(function(x){return x.id===currentMinutesId;});if(!r)return;
@@ -1867,7 +1867,7 @@ function renderHomeMinutes(){
   var yr=String(LIVE_YEAR);
   /* 미확인은 위 배너에 이미 떠 있으니 목록에서는 빼고 2개만 */
   var list=(resources||[]).filter(function(r){
-    return r.cat==='minutes'&&r.year===yr&&!(r.published&&!_isAcked(r,G.id));
+    return r.cat==='minutes'&&!r.deleted&&r.year===yr&&!(r.published&&!_isAcked(r,G.id));
   }).slice(0,2);
   var rows=list.map(function(r){
     var lk=(typeof _otherLock==='function')?_otherLock(r.id):null;
@@ -1942,7 +1942,7 @@ function embedCard(key,label,url,h){
 function toggleEmbed(key){ _embedOpen[key]=!_embedOpen[key]; renderResourceList(); }
 
 function _resCard(r){
-  if(r.cat==='minutes'){
+  if(r.cat==='minutes'&&!r.deleted){
     const preview=(r.content||'').slice(0,50);
     const lk=(typeof _otherLock==='function')?_otherLock(r.id):null;
     let badge=lk?`<span style="color:var(--coral);font-weight:800">${lk.name} 작성 중</span> · `:'';
@@ -2361,7 +2361,11 @@ function startMinutesEdit(){var _r=resources.find(function(x){return x.id===curr
 function stopMinutesEdit(){clearTimeout(_minSaveTimer);_saveMinutesNow();_minEditing=false;clearInterval(_minHbTimer);_minHbTimer=null;clearInterval(_minLiveTimer);_minLiveTimer=null;_releaseLock();setMinutesEditing(false);_updateMinutesLockUI();try{renderResourceList();}catch(e){}try{renderMinutesHub();}catch(e){}try{renderHomeMinutes();}catch(e){}showToast('저장되었습니다');}
 function closeMinutesViewer(){clearInterval(_minViewTimer);_minViewTimer=null;if(_minEditing){stopMinutesEdit();}else{_releaseLock();}closeModal('minutes-viewer-modal');}
 function saveMinutesEdit(){_saveMinutesNow();stopMinutesEdit();}   /* 옛 호출 호환 */
-function deleteMinutes(){if(!currentMinutesId)return;if(!confirm('이 회의록을 삭제할까요?'))return;const id=currentMinutesId;_minEditing=false;clearInterval(_minHbTimer);_releaseLock();resources=resources.filter(r=>r.id!==id);closeModal('minutes-viewer-modal');renderResourceList();try{renderMinutesHub();}catch(e){}try{if(typeof flushSync==='function')flushSync();}catch(e){}showToast('회의록이 삭제되었습니다');}
+function _isFullAdmin(){return G.role==='teacher'&&(G.type==='principal'||G.type==='admin'||G.isAdmin);}
+function deleteMinutes(){if(!currentMinutesId)return;var r=resources.find(x=>x.id===currentMinutesId);if(!r)return;if(!(_isFullAdmin()||r.authorId===G.id||r.createdById===G.id)){showToast('작성자 또는 교감·교무·관리자만 삭제할 수 있어요');return;}var t=prompt('회의록을 휴지통으로 옮기려면 "삭제" 를 입력해주세요\n\n· '+(r.title||'회의록'));if(t===null)return;if((t||'').trim()!=='삭제'){showToast('"삭제" 를 정확히 입력해주세요');return;}const id=currentMinutesId;_minEditing=false;clearInterval(_minHbTimer);_releaseLock();r.deleted=true;r.deletedAt=Date.now();r.deletedBy=G.displayName;closeModal('minutes-viewer-modal');renderResourceList();try{renderMinutesHub();}catch(e){}try{if(typeof flushSync==='function')flushSync();}catch(e){}showToast('휴지통으로 옮겼어요 · 복구 가능');}
+function openMinutesTrash(){var el=document.getElementById('minutes-trash-body');if(!el)return;var list=(resources||[]).filter(function(r){return r&&r.cat==='minutes'&&!r.deleted&&r.deleted;}).sort(function(a,b){return (b.deletedAt||0)-(a.deletedAt||0);});if(!list.length){el.innerHTML='<div class="empty" style="padding:28px"><div class="empty-emoji" style="font-size:28px">🗑</div><div class="empty-title" style="font-size:13px">휴지통이 비어 있어요</div></div>';}else{el.innerHTML=list.map(function(r){var d=r.deletedAt?new Date(r.deletedAt):null;var ds=d?(d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0')):'';var over=r.deletedAt&&(Date.now()-r.deletedAt>30*86400000);return '<div class="card" style="margin-bottom:8px"><div style="font-size:13px;font-weight:700">'+_esc(r.title||'회의록')+'</div><div style="font-size:11px;color:var(--text-light);margin:3px 0 8px">'+ds+' · '+_esc(r.deletedBy||'')+(over?' · <span style="color:var(--coral)">30일 경과</span>':'')+'</div><div style="display:flex;gap:6px"><button class="btn btn-sm btn-primary" style="flex:1" onclick="restoreMinutes(\''+r.id+'\')">복구</button>'+(_isFullAdmin()?'<button class="btn btn-sm" style="flex:1;background:var(--coral-light);color:#D95F50" onclick="purgeMinutes(\''+r.id+'\')">영구 삭제</button>':'')+'</div></div>';}).join('');}openModal('minutes-trash-modal');}
+function restoreMinutes(id){var r=resources.find(x=>x.id===id);if(!r)return;delete r.deleted;delete r.deletedAt;delete r.deletedBy;try{if(typeof flushSync==='function')flushSync();}catch(e){}try{renderMinutesHub();}catch(e){}renderResourceList();openMinutesTrash();showToast('복구했어요');}
+function purgeMinutes(id){if(!_isFullAdmin()){showToast('교감·교무·관리자만 영구 삭제할 수 있어요');return;}var r=resources.find(x=>x.id===id);if(!r)return;var t=prompt('영구 삭제하면 복구할 수 없어요.\n계속하려면 "영구삭제" 를 입력해주세요\n\n· '+(r.title||'회의록'));if(t===null)return;if((t||'').trim()!=='영구삭제'){showToast('"영구삭제" 를 정확히 입력해주세요');return;}resources=resources.filter(x=>x.id!==id);try{if(window.FB&&FB.enabled()&&FB.remove)FB.remove('resources',id);}catch(e){}try{if(typeof flushSync==='function')flushSync();}catch(e){}openMinutesTrash();renderResourceList();showToast('영구 삭제했어요');}
 function _writeLock(){var id=currentMinutesId;if(!id||!(window.FB&&FB.enabled()))return;try{var pr=FB.save('minutesLocks',id,{id:id,uid:G.id,name:((G.name||'')+' '+(G.baptism||'')).trim(),ts:Date.now()});if(pr&&pr.catch)pr.catch(function(){if(!window._lockWarned){window._lockWarned=true;showToast('⚠️ 편집 잠금 저장 실패 — Firestore 규칙에 minutesLocks 권한이 필요해요');}});}catch(e){}}
 function _releaseLock(){var id=currentMinutesId;if(!id)return;var l=_minutesLocks[id];if(l&&l.uid&&l.uid!==G.id)return;/* 남의 락은 건드리지 않음 */try{if(window.FB&&FB.enabled())FB.remove('minutesLocks',id);}catch(e){}delete _minutesLocks[id];}
 if(window.FB&&FB.enabled()){FB.ready(function(){
@@ -2569,7 +2573,9 @@ function _avatarById(id,name,sz){var u=(pendingList||[]).find(function(x){return
 function _resizeImg(file,cb){var r=new FileReader();r.onload=function(){var img=new Image();img.onload=function(){var mx=220,w=img.width,h=img.height;if(w>h){if(w>mx){h=Math.round(h*mx/w);w=mx;}}else{if(h>mx){w=Math.round(w*mx/h);h=mx;}}var c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);cb(c.toDataURL('image/jpeg',0.8));};img.src=r.result;};r.readAsDataURL(file);}
 function onPickAvatar(inp){var f=inp.files&&inp.files[0];if(!f)return;_resizeImg(f,function(d){_peAvatar=d;var pv=document.getElementById('pe-avatar-preview');if(pv){pv.style.backgroundImage='url('+d+')';pv.textContent='';}});}
 function clearAvatar(){_peAvatar='';var pv=document.getElementById('pe-avatar-preview');if(pv){pv.style.backgroundImage='';pv.innerHTML='<svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.92)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="3.4"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>';}}
-function openProfileView(uid){var u=(pendingList||[]).find(function(x){return x.id===uid;})||(uid===G.id?(_meRec()||G):null);if(!u)return;var av=document.getElementById('pv-avatar');if(av){if(u.avatar){av.style.backgroundImage='url('+u.avatar+')';av.textContent='';}else{av.style.backgroundImage='';av.textContent=((u.name)||'?').charAt(0);}}document.getElementById('pv-name').textContent=((u.name)||'')+' '+((u.baptism)||'');document.getElementById('pv-role').textContent=(u.role==='student'?((u.gradeLabel)||'학생'):u.role==='parent'?'학부모':'교사');var _pvs=document.getElementById('pv-status');if(_pvs){if(u.statusMsg){_pvs.textContent=u.statusMsg;_pvs.style.display='';}else{_pvs.textContent='';_pvs.style.display='none';}}openModal('profile-view-modal');}
+function openAvatarFull(src){if(!src)return;var m=document.getElementById('avatar-full-modal');var im=document.getElementById('avatar-full-img');if(!m||!im)return;im.src=src;m.classList.add('show');m.style.display='flex';}
+function closeAvatarFull(){var m=document.getElementById('avatar-full-modal');if(m){m.classList.remove('show');m.style.display='none';}}
+function openProfileView(uid){var u=(pendingList||[]).find(function(x){return x.id===uid;})||(uid===G.id?(_meRec()||G):null);if(!u)return;var av=document.getElementById('pv-avatar');if(av){av.onclick=u.avatar?function(){openAvatarFull(u.avatar);}:null;av.style.cursor=u.avatar?'zoom-in':'default';if(u.avatar){av.style.backgroundImage='url('+u.avatar+')';av.textContent='';}else{av.style.backgroundImage='';av.textContent=((u.name)||'?').charAt(0);}}document.getElementById('pv-name').textContent=((u.name)||'')+' '+((u.baptism)||'');document.getElementById('pv-role').textContent=(u.role==='student'?((u.gradeLabel)||'학생'):u.role==='parent'?'학부모':'교사');var _pvs=document.getElementById('pv-status');if(_pvs){if(u.statusMsg){_pvs.textContent=u.statusMsg;_pvs.style.display='';}else{_pvs.textContent='';_pvs.style.display='none';}}openModal('profile-view-modal');}
 function _peMode(mode){var t=document.getElementById('pe-modal-title');if(t)t.textContent=(mode==='pw')?'🔑 비밀번호 변경':'✏️ 프로필 설정';var ps=document.getElementById('pe-profile-sec');if(ps)ps.style.display=(mode==='pw')?'none':'';var ws=document.getElementById('pe-pw-sec');if(ws)ws.style.display=(mode==='pw')?'':'none';}
 function openPwChange(){openProfileEdit();_peMode('pw');}
 function openProfileEdit(){
@@ -3722,7 +3728,7 @@ function downloadHymnImage(){
     var h=hymnFor(ds)||{items:{},label:'',note:''};
     var d=ds.split('-');
     ctx.fillStyle='#1E7D70'; ctx.font='bold 13px '+F;
-    ctx.fillText(_dayLabel(ds)||h.label||'', colX(i)+CW/2, Y0+HR1/2);
+    (function(){var _t=_dayLabel(ds)||h.label||'';if(!_t)return;var _fs=17,_mx=CW-14;ctx.font='700 '+_fs+'px "Noto Sans KR",sans-serif';while(ctx.measureText(_t).width>_mx&&_fs>10){_fs--;ctx.font='700 '+_fs+'px "Noto Sans KR",sans-serif';}if(ctx.measureText(_t).width>_mx){var _s=_t;while(_s.length>1&&ctx.measureText(_s+'…').width>_mx)_s=_s.slice(0,-1);_t=_s+'…';}ctx.fillText(_t, colX(i)+CW/2, Y0+HR1/2);})();
     ctx.fillStyle='#5A6A8A'; ctx.font='12px '+F;
     ctx.fillText((+d[1])+'월 '+(+d[2])+'일', colX(i)+CW/2, Y0+HR1+HR2/2);
   });
@@ -3817,7 +3823,7 @@ var litYear=new Date().getFullYear(), litMonth=new Date().getMonth();
 function litFor(ds){return (litData||[]).find(function(x){return x&&x.date===ds;})||null;}
 function openLitPage(){var n=new Date();litYear=n.getFullYear();litMonth=n.getMonth();renderLitGrid();openModal('lit-modal');}
 function litMonthShift(d){litMonth+=d;if(litMonth>11){litMonth=0;litYear++;}else if(litMonth<0){litMonth=11;litYear--;}renderLitGrid();}
-function renderLitGrid(){
+function renderLitGrid(){try{renderLitLockUI();}catch(e){}
   var lb=document.getElementById('lit-month-label');
   if(lb)lb.textContent=litYear+'년 '+(litMonth+1)+'월';
   var el=document.getElementById('lit-grid');if(!el)return;
@@ -3913,7 +3919,24 @@ function setLit(ds,key,val){
   _litEntry(ds)[key]=val;
   var b=document.getElementById('lit-dirty');if(b)b.style.display='';
 }
+function litLocked(){return appConfig.litLocked!==false;}
+function toggleLitLock(){
+  if(!_isFullAdmin()){showToast('교감·교무·관리자만 잠금을 바꿀 수 있어요');return;}
+  var lock=litLocked();
+  if(lock){
+    if(!confirm('연간계획 잠금을 해제할까요?\n해제하면 편집·저장이 가능해집니다.'))return;
+    var t=prompt('실수 방지를 위해 "잠금해제" 를 입력해주세요');
+    if(t===null)return;
+    if((t||'').trim()!=='잠금해제'){showToast('"잠금해제" 를 정확히 입력해주세요');return;}
+    appConfig.litLocked=false;showToast('🔓 잠금 해제됨 · 편집 가능');
+  }else{ appConfig.litLocked=true;showToast('🔒 연간계획을 잠갔어요'); }
+  try{if(window.flushCfg)window.flushCfg();}catch(e){}
+  try{renderLitLockUI();}catch(e){}
+}
+function renderLitLockUI(){var b=document.getElementById('lit-lock-btn');if(!b)return;var lock=litLocked();b.style.display=_isFullAdmin()?'':'none';b.textContent=lock?'🔒 잠금 해제':'🔓 다시 잠그기';var n=document.getElementById('lit-lock-note');if(n)n.style.display=lock?'':'none';}
 function saveLitMonth(){
+  if(!_isFullAdmin()){showToast('연간계획은 교감·교무·관리자만 수정할 수 있어요');return;}
+  if(litLocked()){showToast('🔒 연간계획이 잠겨 있어요 · 잠금을 해제해주세요');return;}
   if(_litBuf){
     Object.keys(_litBuf).forEach(function(ds){
       var b=_litBuf[ds], h=litFor(ds);
@@ -4230,7 +4253,7 @@ function renderYearPlan(){var edit=_canEditPlan();
   var el=document.getElementById('yp-body');if(!el)return;var sats=_satsInRange(dispStart,dispEnd);
   var rows=sats.map(function(ds){var l=litFor(ds)||{};var d=ds.split('-');
     function cell(key,val,flex,ph){return edit?'<input value="'+_esc(val||'')+'" onchange="setPlan(\''+ds+'\',\''+key+'\',this.value)" placeholder="'+ph+'" style="flex:'+flex+';min-width:0;font-size:12px;padding:6px 8px;border:1px solid var(--border-light);border-radius:6px;font-family:inherit;background:var(--card)">':'<span style="flex:'+flex+';font-size:12px;color:var(--text-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:4px 0">'+_esc(val||'')+'</span>';}
-    var mn=(resources||[]).find(function(r){return r.cat==='minutes'&&r.mdate===ds;});
+    var mn=(resources||[]).find(function(r){return r.cat==='minutes'&&!r.deleted&&r.mdate===ds;});
     var mnCell=mn?'<button onclick="closeModal(\'yearplan-modal\');openMinutesViewer(\''+mn.id+'\')" style="width:30px;background:none;border:none;cursor:pointer;font-size:15px">📝</button>':(edit?'<button onclick="newMinutesForDate(\''+ds+'\')" style="width:30px;background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-light)">＋</button>':'<span style="width:30px;display:inline-block"></span>');
     return '<div style="display:flex;gap:6px;align-items:center;padding:7px 8px;border-bottom:1px solid var(--border-light)"><span style="width:46px;flex-shrink:0;font-size:12px;font-weight:700;color:var(--text-sub)">'+(+d[1])+'/'+(+d[2])+'</span>'+cell('label',l.label||_dayLabel(ds),'1.5','전례시기')+cell('form',l.form,'1.5','교리')+cell('progress',l.progress,'1','진행')+'<span style="width:30px;flex-shrink:0;text-align:center">'+mnCell+'</span></div>';}).join('');
   el.innerHTML='<div style="max-width:760px;margin:0 auto">'+'<div style="font-size:12px;color:var(--text-light);margin:10px 0;line-height:1.5">'+(edit?'✏️ 교감·교무·관리자만 입력 가능 · 전례시기는 전례·성가 편집에도 반영돼요.':'👁 열람 전용 (작성은 교감·교무·관리자)')+'</div><div>'+rows+'</div></div>';}
