@@ -933,6 +933,7 @@
     <button class="tab-btn" onclick="selResourceCat('doctrine',this)">교리</button>
     <button class="tab-btn" onclick="selResourceCat('liturgy',this)">전례·성가</button>
     <button class="tab-btn" onclick="selResourceCat('camp',this)">행사</button>
+    <button class="tab-btn" onclick="selResourceCat('plan',this)">복음화계획서</button>
   </div>
   <div id="resource-year-tabs" style="display:none"></div>
   <div id="res-year-wrap" style="display:none"><span id="res-year-label"></span><select id="res-year-sel" onchange="selResourceYear(this.value)"></select></div>
@@ -1377,7 +1378,7 @@
     <div class="modal-title-row"><span class="modal-title" id="rw-modal-title">📚 자료 등록</span><button class="modal-close" onclick="closeModal('resource-write-modal')">✕</button></div>
     <div class="form-group"><label class="form-label">카테고리 *</label>
       <select class="form-select" id="rw-cat" onchange="onResourceCatChange()">
-        <option value="form">양식</option><option value="doctrine">교리</option><option value="liturgy">전례·성가</option><option value="camp">행사</option>
+        <option value="form">양식</option><option value="doctrine">교리</option><option value="liturgy">전례·성가</option><option value="camp">행사</option><option value="plan">복음화계획서</option>
       </select>
     </div>
     <div class="form-group"><label class="form-label">연도 *</label>
@@ -1721,6 +1722,7 @@
             <option value="shared">👥 전체 교사 공유</option><option value="private">🔒 나만 보기</option>
           </select>
         </div>
+        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;margin:2px 0 14px"><input type="checkbox" id="cal-ev-vote" style="width:16px;height:16px;accent-color:var(--primary)"><span style="font-size:13px;font-weight:600">교사 참석 투표 받기</span></label>
         <div class="form-group"><label class="form-label">내용</label><textarea class="form-input" id="cal-ev-content" rows="3" style="resize:none" placeholder="내용을 입력하세요"></textarea></div>
       </div>
 
@@ -1962,7 +1964,6 @@
     <div style="border-top:1px solid var(--border-light);margin-top:2px;padding-top:12px;margin-bottom:6px">
       <label class="form-label">생일 (선택)</label>
       <div style="display:flex;gap:8px;margin-bottom:10px"><select class="form-select" id="me-bmonth"><option value="0">월</option></select><select class="form-select" id="me-bday"><option value="0">일</option></select></div>
-        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;margin-bottom:14px"><input type="checkbox" id="cal-ev-vote" style="width:16px;height:16px;accent-color:var(--primary)"><span style="font-size:13px;font-weight:600">교사 참석 투표 받기</span></label>
       <label class="form-label">축일 (선택)</label>
       <div style="display:flex;gap:8px"><select class="form-select" id="me-fmonth"><option value="0">월</option></select><select class="form-select" id="me-fday"><option value="0">일</option></select></div>
       <div style="font-size:10px;color:var(--text-light);margin-top:4px">입력하면 그 날 홈 화면에 축하 배너가 떠요</div>
