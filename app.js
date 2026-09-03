@@ -4097,7 +4097,7 @@ function toggleLitLock(){
   try{renderLitLockUI();}catch(e){}
   try{renderYearPlan();}catch(e){}
 }
-function renderLitLockUI(){var pb=document.getElementById('yp-paste-btn');if(pb)pb.style.display=_isFullAdmin()?'':'none';var b=document.getElementById('yp-lock-btn');if(!b)return;var lock=litLocked();b.style.display=_isFullAdmin()?'':'none';b.style.background=lock?'var(--yellow-light)':'var(--primary-light)';b.style.color=lock?'#9A6A00':'var(--primary-dark)';b.textContent=lock?'🔒 잠김 · 해제':'🔓 열림 · 잠그기';var n=document.getElementById('yp-lock-note');if(n)n.style.display=lock?'':'none';try{_ypDirtyUI();}catch(e){}}
+function renderLitLockUI(){var pb=document.getElementById('yp-paste-btn');if(pb)pb.style.display=_isFullAdmin()?'':'none';var t=document.getElementById('yp-lock-toggle');var lock=litLocked();if(t){t.style.display=_isFullAdmin()?'inline-flex':'none';t.setAttribute('aria-checked',lock?'true':'false');var sw=document.getElementById('yp-lock-switch');if(sw)sw.className='yp-switch'+(lock?' on':'');}var n=document.getElementById('yp-lock-note');if(n)n.style.display=lock?'':'none';try{_ypDirtyUI();}catch(e){}}
 function saveLitMonth(){
   if(!_isFullAdmin()){showToast('연간계획은 교감·교무·관리자만 수정할 수 있어요');return;}
   if(litLocked()){showToast('🔒 연간계획이 잠겨 있어요 · 잠금을 해제해주세요');return;}
@@ -4517,13 +4517,12 @@ function newMinutesForDate(ds){if(!_canEditPlan()){showToast('작성 권한이 �
 /* ── 연간계획: 저장 전 임시 보관(_ypBuf) → [저장] 눌러야 반영 ── */
 var YP_KEYS=['label','optype','form','owner','detail','liturgyTeam','choir','note2','agenda'];
 var _ypBuf=null;   /* {date:{key:val,...}} 저장 전 변경분 */
-var YP_SAVE_SVG='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>';
 /* 클라우드에 안전 저장된 appConfig.litPlan → litData로 복원(반복 호출 안전) */
 function _hydrateYP(){try{var m=appConfig&&appConfig.litPlan;if(!m)return;Object.keys(m).forEach(function(ds){var rec=litFor(ds);if(!rec){rec={id:'lt'+ds,date:ds};litData.push(rec);}var src=m[ds]||{};YP_KEYS.forEach(function(k){if(src[k]!=null&&src[k]!=='')rec[k]=src[k];});});}catch(e){}}
 /* 임시 보관분을 합쳐 화면에 보여줄 한 행 */
 function _ypView(ds){var base=litFor(ds)||{};var b=_ypBuf&&_ypBuf[ds];return b?Object.assign({},base,b):base;}
 function _ypDirty(){return !!(_ypBuf&&Object.keys(_ypBuf).length);}
-function _ypDirtyUI(){var b=document.getElementById('yp-save-btn');if(!b)return;var dirty=_ypDirty();b.style.display=(_canEditPlan()&&_isFullAdmin())?'':'none';b.style.background=dirty?'var(--primary)':'var(--primary-light)';b.style.color=dirty?'#fff':'var(--primary-dark)';b.innerHTML=YP_SAVE_SVG+'저장'+(dirty?' *':'');}
+function _ypDirtyUI(){var b=document.getElementById('yp-save-btn');if(!b)return;var dirty=_ypDirty();b.style.display=(_canEditPlan()&&_isFullAdmin())?'':'none';b.style.background=dirty?'var(--primary)':'var(--primary-light)';b.style.color=dirty?'#fff':'var(--primary-dark)';b.textContent='저장'+(dirty?' *':'');}
 function setPlanDraft(ds,key,val){if(!_ypBuf)_ypBuf={};if(!_ypBuf[ds])_ypBuf[ds]={};_ypBuf[ds][key]=(val||'').trim();_ypDirtyUI();}
 function savePlan(){
   if(!_isFullAdmin()){showToast('교감·교무·관리자만 저장할 수 있어요');return;}

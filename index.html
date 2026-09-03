@@ -42,6 +42,12 @@
 #yearplan-modal #yp-period{flex:0 0 auto;margin:0}
 #yearplan-modal .pg-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff;margin:0}
 #yearplan-modal #yp-body{background:#fff}
+/* 잠금 토글 스위치 */
+#yearplan-modal #yp-lock-toggle{display:none}
+.yp-switch{position:relative;display:inline-block;width:40px;height:22px;border-radius:11px;background:#cfd8d3;transition:background .18s;flex:0 0 auto}
+.yp-switch-knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .18s}
+.yp-switch.on{background:#E0A800}
+.yp-switch.on .yp-switch-knob{transform:translateX(18px)}
 
 /* 연간 운영 계획 — 데스크탑/노트북 최적화 */
 @media (min-width:1024px){
@@ -1421,7 +1427,7 @@
     <div class="pg-head">
       <button class="pg-back" onclick="closeYearPlan()">‹</button>
       <span class="pg-title">📋 연간 운영 계획</span>
-      <div class="pg-acts"><button class="btn btn-sm" id="yp-paste-btn" style="width:auto;padding:6px 11px;font-size:11px;font-weight:800;background:var(--primary-light);color:var(--primary-dark);margin-right:4px" onclick="openPlanPaste()">붙여넣기</button><button class="btn btn-sm" id="yp-save-btn" style="width:auto;padding:6px 11px;font-size:11px;font-weight:800;background:var(--primary-light);color:var(--primary-dark);margin-right:4px;display:none" onclick="savePlan()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>저장</button><button class="btn btn-sm" id="yp-lock-btn" style="width:auto;padding:6px 11px;font-size:11px;font-weight:800;background:var(--yellow-light);color:#9A6A00;display:none" onclick="toggleLitLock()">🔒 잠김 · 해제</button></div>
+      <div class="pg-acts"><button class="btn btn-sm" id="yp-paste-btn" style="width:auto;padding:6px 11px;font-size:11px;font-weight:800;background:var(--primary-light);color:var(--primary-dark)" onclick="openPlanPaste()">붙여넣기</button><button class="btn btn-sm" id="yp-save-btn" style="width:auto;padding:6px 11px;font-size:11px;font-weight:800;background:var(--primary-light);color:var(--primary-dark);display:none" onclick="savePlan()">저장</button><span id="yp-lock-toggle" role="switch" aria-checked="true" onclick="toggleLitLock()" style="display:none;align-items:center;gap:6px;cursor:pointer;user-select:none;flex:0 0 auto"><span id="yp-lock-label" style="font-size:11px;font-weight:800;color:var(--text-sub);white-space:nowrap">잠금</span><span class="yp-switch on" id="yp-lock-switch"><span class="yp-switch-knob"></span></span></span></div>
     </div>
         <div id="yp-period" style="padding:10px 14px;border-bottom:1px solid var(--border-light);background:#ffffff;position:relative;z-index:4"></div>
     <div class="pg-scroll" style="overflow-x:auto"><div style="min-width:1240px"><div id="yp-thead" style="position:sticky;top:0;z-index:3;background:#ffffff;border-bottom:2px solid var(--border);box-shadow:0 2px 6px rgba(0,0,0,.08)"></div><div id="yp-body"></div></div></div>
