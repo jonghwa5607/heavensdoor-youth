@@ -4470,6 +4470,7 @@ function applyPlanPaste(){
     if(wrote)n++;
   }
   try{if(typeof flushSync==='function')flushSync();}catch(e){}
+  try{if(window.FB&&FB.enabled()&&FB.save){(litData||[]).forEach(function(r){if(r&&r.id&&r.date)FB.save('liturgy',r.id,r);});}}catch(e){}
   closeModal('plan-paste-modal'); renderYearPlan();
   showToast(n?(n+'개 행을 반영했어요'):'인식된 행이 없어요 · 머리글과 날짜 열을 함께 복사해주세요');
 }
