@@ -17,16 +17,18 @@
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(e){console.warn('SW register failed',e);});});}</script>
 <link rel="stylesheet" href="./styles.css">
 <style>
+/* 회의록: 플레이스홀더는 커서가 있는 빈 줄에만 표시 */
+#minutes-viewer-content .mb-txt[data-ph]::before,#minutes-viewer-content .mb-txt[data-ph]:empty:focus::before{content:none!important;display:none!important}
 /* 홈 스탬프 카드 컴팩트화 (여백·요소 축소) */
 #home-student .stamp-banner{padding:14px 14px 12px}
 #home-student .stamp-row{margin-bottom:2px}
 #home-student .banner-label{font-size:9px;letter-spacing:1.5px;margin-bottom:1px}
 #home-student .banner-name{font-size:17px}
-#home-student .stamp-card{padding:12px;margin-top:2px}
+#home-student .stamp-card{padding:12px 8px;margin-top:2px}
 #home-student .stamp-progress{margin-bottom:10px}
 #home-student .stamp-progress-labels{font-size:11px;margin-bottom:4px}
-#home-student .stamp-dots{padding:10px;gap:7px;justify-content:center;justify-items:center;place-content:center;margin:0 auto;width:fit-content}
-#home-student .stamp-dot{width:38px;height:38px}
+#home-student .stamp-dots{padding:14px 10px;gap:10px;justify-content:space-evenly;justify-items:center;place-content:center;margin:0;width:100%;box-sizing:border-box}
+#home-student .stamp-dot{width:54px;height:54px}
 #home-student .stamp-footer{margin-top:10px;padding-top:9px;font-size:12px}
 #home-student .stamp-card>button{margin-top:10px!important;padding:11px!important;font-size:14px!important}
 #home-student #stamp-rank{margin-top:7px!important;padding:8px!important}
