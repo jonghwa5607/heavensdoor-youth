@@ -1334,8 +1334,8 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="plan-paste-modal">
-  <div class="modal" style="width:94vw;max-width:600px">
+<div class="modal-overlay" id="plan-paste-modal" style="z-index:9000">
+  <div class="modal" style="width:94vw;max-width:600px;max-height:86vh;overflow-y:auto">
     <div class="modal-title-row"><span class="modal-title">엑셀에서 붙여넣기</span><button class="modal-close" onclick="closeModal('plan-paste-modal')">✕</button></div>
     <div id="plan-paste-hint" style="font-size:11px;color:var(--text-light);margin-bottom:10px;line-height:1.6"></div>
     <textarea id="plan-paste-text" class="form-input" style="height:220px;font-size:12px;font-family:monospace;white-space:pre;overflow:auto" placeholder="엑셀에서 표 전체를 복사(Ctrl+C)한 뒤 여기에 붙여넣기(Ctrl+V)"></textarea>
