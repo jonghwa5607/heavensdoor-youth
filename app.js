@@ -4438,7 +4438,15 @@ function applyPlanPaste(){
     Object.keys(score).forEach(function(k){if(score[k]>bc){bc=score[k];best=+k;}});
     dcol=best;
   }
-  if(dcol<0&&!map){showToast('표를 인식하지 못했어요 · 머리글 행을 포함해 복사해주세요');return;}
+  if(dcol<0&&!map){showToast('표를 인식하지 못했어요 · 머리글 행 또는 날짜 열을 포함해 복사해주세요');return;}
+  /* 머리글은 있는데 날짜 열을 못 찾은 경우: 머리글 기준 상대 위치로 추정 */
+  if(dcol<0&&map){
+    var _minc=Math.min.apply(null,Object.keys(map).map(function(k){return map[k];}));
+    for(var _r=start;_r<rows.length&&_r<start+25;_r++){
+      for(var _c=Math.max(0,_minc-4);_c<_minc;_c++){ if(_pDate(rows[_r][_c],yr)){dcol=_c;break;} }
+      if(dcol>=0)break;
+    }
+  }
   var keys=['label','optype','form','owner','detail','liturgyTeam','choir','note2','agenda'];
   var sats=_satsInRange(_termStart(yr),_termEnd(yr))||[];
   var n=0,idx=0;
@@ -4466,13 +4474,18 @@ function applyPlanPaste(){
   showToast(n?(n+'개 행을 반영했어요'):'인식된 행이 없어요 · 머리글과 날짜 열을 함께 복사해주세요');
 }
 function _pDate(v,yr){
-  v=(v||'').trim(); if(!v)return null;
-  var m=v.match(/^(\d{4})[-.\/](\d{1,2})[-.\/](\d{1,2})/);
+  v=String(v==null?'':v).replace(/\u00a0/g,' ').trim();
+  if(!v)return null;
+  var m=v.match(/(\d{4})\s*[-.\/]\s*(\d{1,2})\s*[-.\/]\s*(\d{1,2})/);   /* 2026. 1. 3. / 2026-01-03 */
   if(m)return m[1]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[3]).slice(-2);
-  m=v.match(/^(\d{1,2})[-.\/](\d{1,2})$/);
-  if(m){var mo=+m[1],dd=+m[2];var y=(mo>=3)?yr:(yr+1);return y+'-'+('0'+mo).slice(-2)+'-'+('0'+dd).slice(-2);}
-  m=v.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
-  if(m){var mo2=+m[1],dd2=+m[2];var y2=(mo2>=3)?yr:(yr+1);return y2+'-'+('0'+mo2).slice(-2)+'-'+('0'+dd2).slice(-2);}
+  m=v.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);                              /* 1월 3일 */
+  if(m){var a=+m[1],b=+m[2];return ((a>=3)?yr:(yr+1))+'-'+('0'+a).slice(-2)+'-'+('0'+b).slice(-2);}
+  m=v.match(/^(\d{1,2})\s*[-.\/]\s*(\d{1,2})\.?$/);                        /* 1/3 · 1.3 */
+  if(m){var c=+m[1],d=+m[2];return ((c>=3)?yr:(yr+1))+'-'+('0'+c).slice(-2)+'-'+('0'+d).slice(-2);}
+  if(/^\d{5}$/.test(v)){                                                     /* 엑셀 일련번호 */
+    var dt=new Date(Date.UTC(1899,11,30)+(+v)*86400000);
+    return dt.getUTCFullYear()+'-'+('0'+(dt.getUTCMonth()+1)).slice(-2)+'-'+('0'+dt.getUTCDate()).slice(-2);
+  }
   return null;
 }
 function renderYearPlan(){var edit=_canEditPlan();
