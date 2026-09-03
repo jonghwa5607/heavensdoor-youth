@@ -4097,7 +4097,7 @@ function toggleLitLock(){
   try{renderLitLockUI();}catch(e){}
   try{renderYearPlan();}catch(e){}
 }
-function renderLitLockUI(){var b=document.getElementById('yp-lock-btn');if(!b)return;var lock=litLocked();b.style.display=_isFullAdmin()?'':'none';b.style.background=lock?'var(--yellow-light)':'var(--primary-light)';b.style.color=lock?'#9A6A00':'var(--primary-dark)';b.textContent=lock?'🔒 잠김 · 해제':'🔓 열림 · 잠그기';var n=document.getElementById('yp-lock-note');if(n)n.style.display=lock?'':'none';}
+function renderLitLockUI(){var pb=document.getElementById('yp-paste-btn');if(pb)pb.style.display=_isFullAdmin()?'':'none';var b=document.getElementById('yp-lock-btn');if(!b)return;var lock=litLocked();b.style.display=_isFullAdmin()?'':'none';b.style.background=lock?'var(--yellow-light)':'var(--primary-light)';b.style.color=lock?'#9A6A00':'var(--primary-dark)';b.textContent=lock?'🔒 잠김 · 해제':'🔓 열림 · 잠그기';var n=document.getElementById('yp-lock-note');if(n)n.style.display=lock?'':'none';}
 function saveLitMonth(){
   if(!_isFullAdmin()){showToast('연간계획은 교감·교무·관리자만 수정할 수 있어요');return;}
   if(litLocked()){showToast('🔒 연간계획이 잠겨 있어요 · 잠금을 해제해주세요');return;}
@@ -4400,7 +4400,8 @@ function _checkPlanEnd(){try{var terms=_planTerms(),td=toDateStr(new Date());for
 function openYearPlan(){if(G.role!=='teacher'){showToast('교사 전용이에요');return;}_planTerms();_planViewYr=_curSchoolYr();renderYearPlan();try{renderLitLockUI();}catch(e){}openModal('yearplan-modal');}
 function _satsInRange(s,e){var out=[];var d=new Date(s+'T00:00:00'),end=new Date(e+'T00:00:00');while(d<=end){if(d.getDay()===6)out.push(d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()));d.setDate(d.getDate()+1);}return out;}
 function openPlanPaste(){
-  if(!_canEditPlan()){showToast(litLocked()?'🔒 잠금을 먼저 해제해주세요':'교감·교무·관리자만 입력할 수 있어요');return;}
+  if(!_isFullAdmin()){showToast('교감·교무·관리자만 입력할 수 있어요');return;}
+  if(litLocked()){showToast('🔒 잠금을 먼저 해제해주세요 · 우측 상단');return;}
   var ta=document.getElementById('plan-paste-text');if(ta)ta.value='';
   var hint=document.getElementById('plan-paste-hint');
   if(hint)hint.innerHTML='엑셀 표를 <b>통째로 복사해서</b> 붙여넣으세요. 머리글(전례시기·운영구분·교리…)과 날짜를 자동으로 인식해 맞는 칸에 넣어드려요.';
@@ -4408,44 +4409,61 @@ function openPlanPaste(){
 }
 function _planRowCount(){try{var yr=_planViewYr==null?_curSchoolYr():_planViewYr;return (_satsInRange(_termStart(yr),_termEnd(yr))||[]).length;}catch(e){return 0;}}
 function applyPlanPaste(){
-  if(!_canEditPlan()){showToast('권한이 없어요');return;}
+  if(!_isFullAdmin()){showToast('권한이 없어요');return;}
+  if(litLocked()){showToast('🔒 잠금을 먼저 해제해주세요');return;}
   var ta=document.getElementById('plan-paste-text');var raw=(ta&&ta.value||'').replace(/\r/g,'');
   if(!raw.trim()){showToast('붙여넣을 내용이 없어요');return;}
   var yr=_planViewYr==null?_curSchoolYr():_planViewYr;
-  var sats=_satsInRange(_termStart(yr),_termEnd(yr))||[];
-  var keys=['label','optype','form','owner','detail','liturgyTeam','choir','note2','agenda'];
-  var HEAD={'전례시기':'label','운영구분':'optype','교리':'form','교안담당':'owner','교리내용':'detail','내용(전례부)':'liturgyTeam','전례부':'liturgyTeam','내용(성가대)':'choir','성가대':'choir','비고(교리 참고자료)':'note2','비고':'note2','회의 안건':'agenda','회의안건':'agenda'};
   var rows=raw.split('\n').map(function(l){return l.split('\t');});
-  /* ① 머리글 행 찾기 → 열 위치 매핑 */
-  var map=null, start=0;
-  for(var h=0;h<rows.length&&h<40;h++){
-    var hit={},cnt=0;
-    rows[h].forEach(function(c,ci){var k=HEAD[(c||'').trim()];if(k&&hit[k]===undefined){hit[k]=ci;cnt++;}});
-    if(cnt>=3){map=hit;start=h+1;break;}
+  var HEAD={'전례력':'label','전례시기':'label','운영구분':'optype','교리':'form','교안담당':'owner','교안 담당':'owner','교리내용':'detail','내용(전례부)':'liturgyTeam','전례부':'liturgyTeam','내용(성가대)':'choir','성가대':'choir','비고(교리 참고자료)':'note2','비고':'note2','회의 안건':'agenda','회의안건':'agenda'};
+  /* ① 머리글 행에서 열 위치 + 날짜 열 파악 */
+  var map=null,dcol=-1,start=0;
+  for(var h=0;h<rows.length&&h<60;h++){
+    var hit={},cnt=0,dc=-1;
+    rows[h].forEach(function(c,ci){
+      var t=(c||'').replace(/\s+/g,' ').trim();
+      if(t==='날짜'){dc=ci;return;}
+      var k=HEAD[t]||HEAD[t.replace(/\s/g,'')];
+      if(k&&hit[k]===undefined){hit[k]=ci;cnt++;}
+    });
+    if(cnt>=3){map=hit;if(dc>=0)dcol=dc;start=h+1;break;}
   }
-  /* ② 날짜 열 찾기(머리글 없거나 있어도) */
-  var dcol=-1;
-  for(var r0=start;r0<rows.length&&r0<start+8;r0++){
-    for(var c0=0;c0<rows[r0].length&&c0<6;c0++){
-      if(_pDate(rows[r0][c0],yr)){dcol=c0;break;}
-    }
-    if(dcol>=0)break;
+  /* ② 머리글에 '날짜'가 없으면 데이터에서 날짜 열 탐색 */
+  if(dcol<0){
+    var score={};
+    for(var r0=start;r0<rows.length&&r0<start+25;r0++)
+      for(var c0=0;c0<rows[r0].length&&c0<8;c0++)
+        if(_pDate(rows[r0][c0],yr))score[c0]=(score[c0]||0)+1;
+    var best=-1,bc=0;
+    Object.keys(score).forEach(function(k){if(score[k]>bc){bc=score[k];best=+k;}});
+    dcol=best;
   }
+  if(dcol<0&&!map){showToast('표를 인식하지 못했어요 · 머리글 행을 포함해 복사해주세요');return;}
+  var keys=['label','optype','form','owner','detail','liturgyTeam','choir','note2','agenda'];
+  var sats=_satsInRange(_termStart(yr),_termEnd(yr))||[];
   var n=0,idx=0;
   for(var i2=start;i2<rows.length;i2++){
     var cols=rows[i2]; if(!cols.join('').trim())continue;
-    var ds=null;
-    if(dcol>=0)ds=_pDate(cols[dcol],yr);           /* 날짜가 있으면 그 날짜로 */
-    if(!ds){ if(map)continue; ds=sats[idx++]; }     /* 없으면 토요일 순서대로 */
+    var ds=(dcol>=0)?_pDate(cols[dcol],yr):null;
+    if(!ds){ if(dcol>=0)continue; ds=sats[idx++]; }
     if(!ds)break;
     var rec=litFor(ds); if(!rec){rec={id:'lt'+ds,date:ds};litData.push(rec);}
-    if(map){ Object.keys(map).forEach(function(k){var v=(cols[map[k]]||'').trim();if(v)rec[k]=v;}); }
-    else { for(var k2=0;k2<keys.length;k2++){var v2=(cols[k2]||'').trim();if(v2)rec[keys[k2]]=v2;} }
-    n++;
+    var wrote=false;
+    if(map){ Object.keys(map).forEach(function(k){
+        var ci=map[k], v=(cols[ci]||'').trim();
+        if(!v&&cols[ci+1]!==undefined){                    /* 병합 셀 보정: 바로 옆 칸 확인 */
+          var nx=(cols[ci+1]||'').trim();
+          var taken=Object.keys(map).some(function(k2){return map[k2]===ci+1;});
+          if(nx&&!taken)v=nx;
+        }
+        if(v){rec[k]=v;wrote=true;}
+      }); }
+    else { for(var k2=0;k2<keys.length;k2++){var v2=(cols[k2]||'').trim();if(v2){rec[keys[k2]]=v2;wrote=true;}} }
+    if(wrote)n++;
   }
   try{if(typeof flushSync==='function')flushSync();}catch(e){}
   closeModal('plan-paste-modal'); renderYearPlan();
-  showToast(n?(n+'개 행을 반영했어요'):'인식된 행이 없어요 · 표를 다시 복사해주세요');
+  showToast(n?(n+'개 행을 반영했어요'):'인식된 행이 없어요 · 머리글과 날짜 열을 함께 복사해주세요');
 }
 function _pDate(v,yr){
   v=(v||'').trim(); if(!v)return null;
