@@ -1803,9 +1803,10 @@ function ensureWeeklyMinutes(){
     return made>0;
   }catch(e){return false;}
 }
-var _mLongT=null;
-function _mLongStart(ev,id){try{clearTimeout(_mLongT);_mLongT=setTimeout(function(){try{if(navigator.vibrate)navigator.vibrate([18,26,18]);}catch(e){}minSelStart(id);},420);}catch(e){}}
-function _mLongEnd(){try{clearTimeout(_mLongT);}catch(e){}}
+var _mLongT=null,_mLongFiredAt=0;
+function _mLongStart(ev,id){_mLongEnd();_mLongT=setTimeout(function(){_mLongFiredAt=Date.now();try{if(navigator.vibrate)navigator.vibrate(28);}catch(e){}minSelStart(id);},500);}
+function _mLongEnd(){try{clearTimeout(_mLongT);}catch(e){}_mLongT=null;}
+function _mCardTap(id){if(Date.now()-_mLongFiredAt<700)return;if(_mSel)minSelToggle(id);else openMinutesViewer(id);}
 var _mSel=null; /* 다중선택 모드 */
 function minSelStart(id){
   if(!(G.role==='teacher'))return;
@@ -1849,7 +1850,6 @@ function renderMinutesHub(){
   if(!live&&list.length)html+='<div style="background:var(--bg);border-radius:var(--radius-sm);padding:9px 11px;margin-bottom:9px;font-size:11px;color:var(--text-light)">🔒 '+minutesHubYear+'년 회의록은 보관되어 읽기 전용이에요.</div>';
   if(list.length)html+='<div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn btn-sm btn-outline" style="width:auto" onclick="exportMinutesYear()">⬇ '+minutesHubYear+'년 전체 PDF</button></div>';
   var _n=_mSel?Object.keys(_mSel).length:0;
-  html+='<div style="height:46px;margin-bottom:9px;position:sticky;top:0;z-index:5"><div style="opacity:'+(_mSel?'1':'0')+';transform:translateY('+(_mSel?'0':'-6px')+');pointer-events:'+(_mSel?'auto':'none')+';transition:opacity .18s ease,transform .18s ease;background:var(--card);border:1px solid var(--border-light);border-radius:12px;padding:9px 11px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 10px rgba(0,0,0,.06)"><span style="font-size:12px;font-weight:800;flex:1">'+_n+'개 선택됨</span><button class="btn btn-sm btn-outline" style="width:auto;padding:5px 10px;font-size:11px" onclick="minSelAll()">전체</button><button class="btn btn-sm" style="width:auto;padding:5px 10px;font-size:11px;background:var(--coral-light);color:#D95F50" onclick="minSelDelete()">삭제</button><button class="btn btn-sm btn-outline" style="width:auto;padding:5px 10px;font-size:11px" onclick="minSelCancel(false)">취소</button></div></div>';
   html+=list.length?list.map(_resCard).join(''):_resEmpty('📝','회의록이 없어요',live?'＋ 새 회의록을 눌러 바로 시작해요':'이 해에는 작성된 회의록이 없어요');
   if(live&&appConfig.notionUrl){
     html+='<div style="margin-top:16px;padding-top:13px;border-top:1px dashed var(--border-light)"></div>'
@@ -1857,8 +1857,10 @@ function renderMinutesHub(){
       +embedCard('minutes','노션에서 보기',appConfig.notionUrl,400)
       +'<div style="font-size:10px;color:var(--text-light);text-align:center;margin-top:2px">이관이 끝나면 설정에서 노션 링크를 비워주세요.</div>';
   }
+  if(_mSel)html+='<div style="height:66px"></div>';
   el.innerHTML=html;
-  var nb=document.getElementById('mh-new-btn');if(nb)nb.style.display=live?'block':'none';
+  var sb=document.getElementById('mh-selbar');if(sb){sb.classList.toggle('show',!!_mSel);var cc=document.getElementById('mh-selcount');if(cc)cc.textContent=_n+'개 선택됨';}
+  var nb=document.getElementById('mh-new-btn');if(nb)nb.style.display=_mSel?'none':(live?'block':'none');
 }
 /* ══ 회의록 발행 · 확인 ══ */
 function _teacherRoster(){return (pendingList||[]).filter(function(t){return t.approved&&t.role==='teacher'&&!t.hidden;});}
@@ -2027,7 +2029,7 @@ function _resCard(r){
     else {_dot='#EBA23B';_tip='미발행';}
     var _past=!!(r.mdate&&r.mdate<_today());
     var _selMode=!!_mSel, _on=!!(_mSel&&_mSel[r.id]);
-    var _click=_selMode?`minSelToggle('${r.id}')`:`openMinutesViewer('${r.id}')`;
+    var _click=`_mCardTap('${r.id}')`;
     var _mark=_selMode?`<span style="width:19px;height:19px;border-radius:50%;border:2px solid ${_on?'var(--primary)':'var(--border)'};background:${_on?'var(--primary)':'transparent'};color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${_on?'✓':''}</span>`:`<span title="${_tip}" style="width:7px;height:7px;border-radius:50%;background:${_dot};flex-shrink:0"></span>`;
     return `<div class="resource-card" style="${_past?'opacity:.6;':''}${_on?'background:var(--primary-light);':''}" onclick="${_click}" oncontextmenu="event.preventDefault();minSelStart('${r.id}');return false" ontouchstart="_mLongStart&&_mLongStart(event,'${r.id}')" ontouchend="_mLongEnd&&_mLongEnd()" ontouchmove="_mLongEnd&&_mLongEnd()"><div style="display:flex;align-items:center;gap:10px">${_mark}<div class="resource-info" style="min-width:0"><div class="resource-title">${r.title}</div><div class="resource-meta">${r.updatedAt||r.date}</div></div></div></div>`;
   }
@@ -4097,7 +4099,7 @@ function toggleLitLock(){
   try{renderLitLockUI();}catch(e){}
   try{renderYearPlan();}catch(e){}
 }
-function renderLitLockUI(){var pb=document.getElementById('yp-paste-btn');if(pb)pb.style.display=_isFullAdmin()?'':'none';var t=document.getElementById('yp-lock-toggle');var lock=litLocked();if(t){t.style.display=_isFullAdmin()?'inline-flex':'none';t.setAttribute('aria-checked',lock?'true':'false');var sw=document.getElementById('yp-lock-switch');if(sw)sw.className='yp-switch'+(lock?' on':'');}var n=document.getElementById('yp-lock-note');if(n)n.style.display=lock?'':'none';try{_ypDirtyUI();}catch(e){}}
+function renderLitLockUI(){var pb=document.getElementById('yp-paste-btn');if(pb)pb.style.display=_isFullAdmin()?'':'none';var t=document.getElementById('yp-lock-toggle');var lock=litLocked();if(t){t.style.display=_isFullAdmin()?'inline-flex':'none';t.setAttribute('aria-checked',lock?'false':'true');var sw=document.getElementById('yp-lock-switch');if(sw)sw.className='yp-switch'+(lock?'':' on');var lb=document.getElementById('yp-lock-label');if(lb)lb.textContent=lock?'잠금':'해제';}var n=document.getElementById('yp-lock-note');if(n)n.style.display=lock?'':'none';try{_ypDirtyUI();}catch(e){}}
 function saveLitMonth(){
   if(!_isFullAdmin()){showToast('연간계획은 교감·교무·관리자만 수정할 수 있어요');return;}
   if(litLocked()){showToast('🔒 연간계획이 잠겨 있어요 · 잠금을 해제해주세요');return;}

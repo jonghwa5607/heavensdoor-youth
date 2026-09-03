@@ -46,8 +46,12 @@
 #yearplan-modal #yp-lock-toggle{display:none}
 .yp-switch{position:relative;display:inline-block;width:40px;height:22px;border-radius:11px;background:#cfd8d3;transition:background .18s;flex:0 0 auto}
 .yp-switch-knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .18s}
-.yp-switch.on{background:#E0A800}
+.yp-switch.on{background:var(--primary)}
 .yp-switch.on .yp-switch-knob{transform:translateX(18px)}
+/* 회의록 하단 선택 액션 바 (아래에서 부드럽게 올라옴) */
+#minutes-hub-modal .modal-sheet{position:relative}
+#mh-selbar{position:absolute;left:0;right:0;bottom:0;z-index:30;display:flex;align-items:center;gap:8px;background:var(--card);border-top:1px solid var(--border-light);box-shadow:0 -6px 18px rgba(0,0,0,.12);padding:11px 14px;padding-bottom:calc(11px + env(safe-area-inset-bottom));transform:translateY(130%);pointer-events:none;transition:transform .22s cubic-bezier(.2,.8,.2,1)}
+#mh-selbar.show{transform:translateY(0);pointer-events:auto}
 
 /* 연간 운영 계획 — 데스크탑/노트북 최적화 */
 @media (min-width:1024px){
@@ -1396,6 +1400,7 @@
     </div>
     <div class="pg-scroll" id="mh-list"></div>
     <button class="pg-fab" id="mh-new-btn" onclick="newMinutesFromHub()">＋ 새 회의록</button>
+    <div id="mh-selbar"><span id="mh-selcount" style="font-size:14px;font-weight:800;flex:1;color:var(--text)">0개 선택됨</span><button class="btn btn-sm btn-outline" style="width:auto;padding:8px 13px;font-size:12px;font-weight:700" onclick="minSelAll()">전체</button><button class="btn btn-sm btn-outline" style="width:auto;padding:8px 13px;font-size:12px;font-weight:700" onclick="minSelCancel(false)">취소</button><button class="btn btn-sm" style="width:auto;padding:8px 15px;font-size:12px;font-weight:800;background:var(--coral);color:#fff" onclick="minSelDelete()">삭제</button></div>
   </div>
 </div>
 <div class="modal-overlay" id="minutes-viewer-modal">
@@ -1427,7 +1432,7 @@
     <div class="pg-head">
       <button class="pg-back" onclick="closeYearPlan()">‹</button>
       <span class="pg-title">📋 연간 운영 계획</span>
-      <div class="pg-acts"><button class="btn btn-sm" id="yp-paste-btn" style="width:auto;padding:6px 11px;font-size:11px;font-weight:800;background:var(--primary-light);color:var(--primary-dark)" onclick="openPlanPaste()">붙여넣기</button><button class="btn btn-sm" id="yp-save-btn" style="width:auto;padding:6px 11px;font-size:11px;font-weight:800;background:var(--primary-light);color:var(--primary-dark);display:none" onclick="savePlan()">저장</button><span id="yp-lock-toggle" role="switch" aria-checked="true" onclick="toggleLitLock()" style="display:none;align-items:center;gap:6px;cursor:pointer;user-select:none;flex:0 0 auto"><span id="yp-lock-label" style="font-size:11px;font-weight:800;color:var(--text-sub);white-space:nowrap">잠금</span><span class="yp-switch on" id="yp-lock-switch"><span class="yp-switch-knob"></span></span></span></div>
+      <div class="pg-acts"><button class="btn btn-sm" id="yp-paste-btn" style="width:auto;padding:6px 11px;font-size:11px;font-weight:800;background:var(--primary-light);color:var(--primary-dark)" onclick="openPlanPaste()">붙여넣기</button><button class="btn btn-sm" id="yp-save-btn" style="width:auto;padding:6px 11px;font-size:11px;font-weight:800;background:var(--primary-light);color:var(--primary-dark);display:none" onclick="savePlan()">저장</button><span id="yp-lock-toggle" role="switch" aria-checked="false" onclick="toggleLitLock()" style="display:none;align-items:center;gap:6px;cursor:pointer;user-select:none;flex:0 0 auto"><span id="yp-lock-label" style="font-size:11px;font-weight:800;color:var(--text-sub);white-space:nowrap">잠금</span><span class="yp-switch" id="yp-lock-switch"><span class="yp-switch-knob"></span></span></span></div>
     </div>
         <div id="yp-period" style="padding:10px 14px;border-bottom:1px solid var(--border-light);background:#ffffff;position:relative;z-index:4"></div>
     <div class="pg-scroll" style="overflow-x:auto"><div style="min-width:1240px"><div id="yp-thead" style="position:sticky;top:0;z-index:3;background:#ffffff;border-bottom:2px solid var(--border);box-shadow:0 2px 6px rgba(0,0,0,.08)"></div><div id="yp-body"></div></div></div>
