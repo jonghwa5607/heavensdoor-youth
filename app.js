@@ -1938,9 +1938,13 @@ function renderHomeMinutes(){
   }
   var yr=String(LIVE_YEAR);
   /* 미확인은 위 배너에 이미 떠 있으니 목록에서는 빼고 2개만 */
-  var list=(resources||[]).filter(function(r){
+  var _td=_today();
+  var _base=(resources||[]).filter(function(r){
     return r.cat==='minutes'&&!r.deleted&&r.year===yr&&!(r.published&&!_isAcked(r,G.id));
-  }).slice(0,2);
+  });
+  var _up=_base.filter(function(r){return (r.mdate||'')>=_td;}).sort(function(a,b){return (a.mdate||'')<(b.mdate||'')?-1:1;});
+  var _pastL=_base.filter(function(r){return (r.mdate||'')<_td;}).sort(function(a,b){return (a.mdate||'')>(b.mdate||'')?-1:1;});
+  var list=_up.concat(_pastL).slice(0,2);
   var rows=list.map(function(r){
     var lk=(typeof _otherLock==='function')?_otherLock(r.id):null;
     var badge=lk?'<span style="color:var(--coral);font-weight:800">'+lk.name+' 작성 중</span> · ':'';
