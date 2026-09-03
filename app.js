@@ -1793,7 +1793,7 @@ function ensureWeeklyMinutes(){
       var d=ds.split('-');
       var base=(+d[1])+'월 '+(+d[2])+'일 회의록';
       var title=base;
-      var body=ag?ag.split(/[,·]/).map(function(x){return x.trim();}).filter(Boolean).map(function(x){return '- [ ] '+x;}).join('\n'):'';
+      var body=ag?ag.split(/[,·]/).map(function(x){return x.trim();}).filter(Boolean).map(function(x){return '## '+x;}).join('\n'):'';
       if(ex){ if(ex.title!==title){ex.title=title;made++;} if(ag&&!(ex.content||'').trim()){ex.content=body;made++;} return; }
       resources.unshift({id:'rs'+Date.now()+Math.random().toString(36).slice(2,5),cat:'minutes',year:String(+d[0]),mdate:ds,
         title:title,content:body,authorId:G.id,authorName:G.displayName,date:_minDateStr(),updatedAt:_minDateStr(),updatedBy:G.displayName});
@@ -1804,12 +1804,12 @@ function ensureWeeklyMinutes(){
   }catch(e){return false;}
 }
 var _mLongT=null;
-function _mLongStart(ev,id){try{clearTimeout(_mLongT);_mLongT=setTimeout(function(){if(navigator.vibrate)navigator.vibrate(30);minSelStart(id);},520);}catch(e){}}
+function _mLongStart(ev,id){try{clearTimeout(_mLongT);_mLongT=setTimeout(function(){try{if(navigator.vibrate)navigator.vibrate([18,26,18]);}catch(e){}minSelStart(id);},420);}catch(e){}}
 function _mLongEnd(){try{clearTimeout(_mLongT);}catch(e){}}
 var _mSel=null; /* 다중선택 모드 */
 function minSelStart(id){
   if(!(G.role==='teacher'))return;
-  if(!_mSel)_mSel={};
+  if(!_mSel){_mSel={};try{history.pushState({mSel:1},'');window._mSelHist=true;}catch(e){}}
   if(id)_mSel[id]=1;
   renderMinutesHub();
 }
@@ -1818,7 +1818,8 @@ function minSelToggle(id){
   if(_mSel[id])delete _mSel[id];else _mSel[id]=1;
   renderMinutesHub();
 }
-function minSelCancel(){_mSel=null;renderMinutesHub();}
+function minSelCancel(byPop){if(!_mSel)return;_mSel=null;renderMinutesHub();if(!byPop&&window._mSelHist){window._mSelHist=false;try{history.back();}catch(e){}}else{window._mSelHist=false;}}
+window.addEventListener('popstate',function(){if(_mSel)minSelCancel(true);});
 function minSelAll(){
   var list=(resources||[]).filter(function(r){return r.cat==='minutes'&&!r.deleted&&r.year===minutesHubYear;});
   _mSel={};list.forEach(function(r){_mSel[r.id]=1;});renderMinutesHub();
@@ -1832,7 +1833,7 @@ function minSelDelete(){
     if(!ok)return;
     mine.forEach(function(id){var r=(resources||[]).find(function(x){return x.id===id;});if(r){r.deleted=true;r.deletedAt=Date.now();r.deletedBy=G.displayName;}});
     try{if(typeof flushSync==='function')flushSync();}catch(e){}
-    _mSel=null;renderMinutesHub();renderResourceList();
+    _mSel=null;if(window._mSelHist){window._mSelHist=false;try{history.back();}catch(e){}}renderMinutesHub();renderResourceList();
     showToast(mine.length+'개를 휴지통으로 옮겼어요');
   });
 }
@@ -1847,7 +1848,8 @@ function renderMinutesHub(){
   var html='';
   if(!live&&list.length)html+='<div style="background:var(--bg);border-radius:var(--radius-sm);padding:9px 11px;margin-bottom:9px;font-size:11px;color:var(--text-light)">🔒 '+minutesHubYear+'년 회의록은 보관되어 읽기 전용이에요.</div>';
   if(list.length)html+='<div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn btn-sm btn-outline" style="width:auto" onclick="exportMinutesYear()">⬇ '+minutesHubYear+'년 전체 PDF</button></div>';
-  if(_mSel){var _n=Object.keys(_mSel).length;html+='<div style="position:sticky;top:0;z-index:5;background:var(--card);border:1px solid var(--border-light);border-radius:12px;padding:9px 11px;margin-bottom:9px;display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:800;flex:1">'+_n+'개 선택됨</span><button class="btn btn-sm btn-outline" style="width:auto;padding:5px 10px;font-size:11px" onclick="minSelAll()">전체</button><button class="btn btn-sm" style="width:auto;padding:5px 10px;font-size:11px;background:var(--coral-light);color:#D95F50" onclick="minSelDelete()">삭제</button><button class="btn btn-sm btn-outline" style="width:auto;padding:5px 10px;font-size:11px" onclick="minSelCancel()">취소</button></div>';}
+  var _n=_mSel?Object.keys(_mSel).length:0;
+  html+='<div style="height:46px;margin-bottom:9px;position:sticky;top:0;z-index:5"><div style="opacity:'+(_mSel?'1':'0')+';transform:translateY('+(_mSel?'0':'-6px')+');pointer-events:'+(_mSel?'auto':'none')+';transition:opacity .18s ease,transform .18s ease;background:var(--card);border:1px solid var(--border-light);border-radius:12px;padding:9px 11px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 10px rgba(0,0,0,.06)"><span style="font-size:12px;font-weight:800;flex:1">'+_n+'개 선택됨</span><button class="btn btn-sm btn-outline" style="width:auto;padding:5px 10px;font-size:11px" onclick="minSelAll()">전체</button><button class="btn btn-sm" style="width:auto;padding:5px 10px;font-size:11px;background:var(--coral-light);color:#D95F50" onclick="minSelDelete()">삭제</button><button class="btn btn-sm btn-outline" style="width:auto;padding:5px 10px;font-size:11px" onclick="minSelCancel(false)">취소</button></div></div>';
   html+=list.length?list.map(_resCard).join(''):_resEmpty('📝','회의록이 없어요',live?'＋ 새 회의록을 눌러 바로 시작해요':'이 해에는 작성된 회의록이 없어요');
   if(live&&appConfig.notionUrl){
     html+='<div style="margin-top:16px;padding-top:13px;border-top:1px dashed var(--border-light)"></div>'
@@ -2302,7 +2304,16 @@ function onMinKeydown(e){
   if(e.key==='Backspace'&&_minAtStart()){
     var c2=txt?txt.innerText:'';
     if(t==='div'){ e.preventDefault(); var pv0=blk.previousElementSibling; blk.remove(); _minRenumber(); if(pv0){var p0=pv0.querySelector('.mb-txt');if(p0)_minCaretEnd(p0);} onMinutesInput(); return; }
-    if(t!=='p'){ e.preventDefault(); _minSetType(blk,'p'); return; }
+    if(t!=='p'){ e.preventDefault();
+      if(!c2.trim()&&blk.previousElementSibling){ /* 빈 줄이면 타입 변환 없이 바로 삭제·병합 */
+        var _pv=blk.previousElementSibling, _pt=_pv.querySelector('.mb-txt');
+        blk.remove(); _minRenumber();
+        if(_pt){_pt.focus();_minCaretEnd(_pt);} onMinutesInput(); return;
+      }
+      _minSetType(blk,'p');
+      var _cur=_minCurBlock(); var _ct=_cur&&_cur.querySelector('.mb-txt');
+      if(_ct){_ct.focus();try{var r0=document.createRange(),s0=getSelection();r0.selectNodeContents(_ct);r0.collapse(true);s0.removeAllRanges();s0.addRange(r0);}catch(e2){}}
+      return; }
     var prev=blk.previousElementSibling;
     if(prev&&prev.dataset&&prev.dataset.t==='div'){ e.preventDefault(); prev.remove(); _minRenumber(); onMinutesInput(); return; }
     if(prev){
@@ -4407,7 +4418,7 @@ function renderYearPlan(){var edit=_canEditPlan();
     return '<div style="display:flex;gap:6px;align-items:center;padding:7px 8px;border-bottom:1px solid var(--border-light)"><span style="width:46px;flex-shrink:0;font-size:12px;font-weight:700;color:var(--text-sub)">'+(+d[1])+'/'+(+d[2])+'</span>'+cell('label',l.label||_dayLabel(ds),'1.2','전례시기')+cell('form',l.form,'1.2','교리')+cell('progress',l.progress,'1','진행')+cell('choir',l.choir,'1.2','성가대')+cell('note2',l.note2,'1.2','비고')+cell('agenda',l.agenda,'2','회의 안건')+'</div>';}).join('');
   el.innerHTML=rows;}
 function setPlan(ds,key,val){var r=litFor(ds);if(!r){r={id:'lt'+ds,date:ds};litData.push(r);}r[key]=(val||'').trim();
-  if(key==='agenda'){try{var mn=(resources||[]).find(function(x){return x.cat==='minutes'&&!x.deleted&&x.mdate===ds;});if(mn&&r.agenda&&!(mn.content||'').trim()){mn.content=r.agenda.split(/[,\u00b7]/).map(function(x){return x.trim();}).filter(Boolean).map(function(x){return '- [ ] '+x;}).join('\n');try{renderMinutesHub();}catch(e){}}}catch(e){}}try{if(typeof flushSync==='function')flushSync();}catch(e){}}
+  if(key==='agenda'){try{var mn=(resources||[]).find(function(x){return x.cat==='minutes'&&!x.deleted&&x.mdate===ds;});if(mn&&r.agenda&&!(mn.content||'').trim()){mn.content=r.agenda.split(/[,\u00b7]/).map(function(x){return x.trim();}).filter(Boolean).map(function(x){return '## '+x;}).join('\n');try{renderMinutesHub();}catch(e){}}}catch(e){}}try{if(typeof flushSync==='function')flushSync();}catch(e){}}
 function newMinutesForDate(ds){if(!_canEditPlan()){showToast('작성 권한이 없어요');return;}var d=ds.split('-');var r={id:'rs'+Date.now(),cat:'minutes',year:String(+d[0]),mdate:ds,title:(+d[1])+'월 '+(+d[2])+'일 회의록',content:'',authorId:G.id,authorName:G.displayName,date:_minDateStr(),updatedAt:_minDateStr(),updatedBy:G.displayName};resources.unshift(r);try{if(typeof flushSync==='function')flushSync();}catch(e){}try{renderYearPlan();}catch(e){}closeModal('yearplan-modal');openMinutesViewer(r.id);startMinutesEdit();}
 
 let currentReminderId=null;
