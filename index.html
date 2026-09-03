@@ -33,12 +33,15 @@
 #home-student .stamp-card>button{margin-top:10px!important;padding:11px!important;font-size:14px!important}
 #home-student #stamp-rank{margin-top:7px!important;padding:8px!important}
 
-/* 연간 운영 계획 — 머리(제목)부터 날짜 표까지 흰색으로 통일(비침·정간 정리) */
-#yearplan-modal .modal-sheet{background:#ffffff}
-#yearplan-modal .pg-head{background:#ffffff;border-bottom:1px solid var(--border-light)}
-#yearplan-modal .pg-scroll{background:#ffffff}
-#yearplan-modal #yp-period{background:#ffffff}
-#yearplan-modal #yp-body{background:#ffffff;min-height:60vh}
+/* 연간 운영 계획 — 상단 버튼 크기 정리 + 헤더와 표 사이 빈틈(뒷배경 비침) 제거로 연결 */
+#yearplan-modal .modal-sheet{display:flex;flex-direction:column;background:#fff}
+#yearplan-modal .pg-head{flex:0 0 auto;flex-wrap:nowrap;gap:6px;align-items:center}
+#yearplan-modal .pg-title{flex:1 1 auto;min-width:0;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#yearplan-modal .pg-acts{flex:0 0 auto;display:flex;gap:5px}
+#yearplan-modal .pg-acts .btn{white-space:nowrap!important;flex:0 0 auto;padding:6px 9px!important;font-size:11px!important;line-height:1.1}
+#yearplan-modal #yp-period{flex:0 0 auto;margin:0}
+#yearplan-modal .pg-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff;margin:0}
+#yearplan-modal #yp-body{background:#fff}
 
 /* 연간 운영 계획 — 데스크탑/노트북 최적화 */
 @media (min-width:1024px){
