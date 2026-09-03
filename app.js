@@ -1776,6 +1776,7 @@ function closeMinutesHub(){clearInterval(_mhTimer);_mhTimer=null;closeModal('min
 function openMinutesHub(){minutesHubYear=String(LIVE_YEAR);renderMinutesHub();clearInterval(_mhTimer);_mhTimer=setInterval(function(){try{if(document.getElementById('minutes-hub-modal').classList.contains('open'))renderMinutesHub();else{clearInterval(_mhTimer);_mhTimer=null;}}catch(e){}},3000);openModal('minutes-hub-modal');}
 function selMinutesYear(y){minutesHubYear=y;renderMinutesHub();}
 function ensureWeeklyMinutes(){
+  try{_hydrateYP();}catch(e){}
   try{
     if(G.role!=='teacher')return false;
     if(!_isLiveYear(minutesHubYear))return false;
@@ -4542,7 +4543,8 @@ function savePlan(){
     if(!Object.keys(store).length)delete appConfig.litPlan[ds];
   });
   /* 회의 안건 → 회의록 초안 자동 채우기(기존 setPlan 동작 유지) */
-  agendaDates.forEach(function(ds){try{var r=litFor(ds);var mn=(resources||[]).find(function(x){return x.cat==='minutes'&&!x.deleted&&x.mdate===ds;});if(mn&&r&&r.agenda&&!(mn.content||'').trim()){mn.content=r.agenda.split(/[,\u00b7]/).map(function(x){return x.trim();}).filter(Boolean).map(function(x){return '## '+x;}).join('\n');try{renderMinutesHub();}catch(e){}}}catch(e){}});
+  agendaDates.forEach(function(ds){try{var r=litFor(ds);var mn=(resources||[]).find(function(x){return x.cat==='minutes'&&!x.deleted&&x.mdate===ds;});if(mn&&r&&r.agenda&&!(mn.content||'').trim()){mn.content=r.agenda.split(/[,\u00b7]/).map(function(x){return x.trim();}).filter(Boolean).map(function(x){return '## '+x;}).join('\n');}}catch(e){}});
+  if(agendaDates.length){try{ensureWeeklyMinutes();}catch(e){}try{renderMinutesHub();}catch(e){}}
   _ypBuf=null;
   try{if(window.flushCfg)window.flushCfg();}catch(e){}
   try{if(typeof flushSync==='function')flushSync();}catch(e){}
