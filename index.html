@@ -32,6 +32,21 @@
 #home-student .stamp-footer{margin-top:10px;padding-top:9px;font-size:12px}
 #home-student .stamp-card>button{margin-top:10px!important;padding:11px!important;font-size:14px!important}
 #home-student #stamp-rank{margin-top:7px!important;padding:8px!important}
+
+/* 연간 운영 계획 — 데스크탑/노트북 최적화 */
+@media (min-width:1024px){
+  #yearplan-modal .modal-sheet{max-width:100%;width:100%;}
+  #yearplan-modal .pg-scroll{overflow-x:hidden}
+  #yearplan-modal .pg-scroll>div{min-width:0!important;width:100%}
+  #yearplan-modal #yp-thead>div,
+  #yearplan-modal #yp-body .yp-row{max-width:1400px;margin:0 auto}
+  #yearplan-modal input.form-input,#yearplan-modal #yp-body input{font-size:13px!important;padding:8px 10px!important}
+  #yearplan-modal #yp-thead>div{font-size:12px!important;padding:11px 10px!important}
+}
+@media (min-width:1440px){
+  #yearplan-modal #yp-thead>div,
+  #yearplan-modal #yp-body .yp-row{max-width:1640px}
+}
 </style>
 </head>
 <body>
@@ -1319,6 +1334,16 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="plan-paste-modal">
+  <div class="modal" style="width:94vw;max-width:600px">
+    <div class="modal-title-row"><span class="modal-title">엑셀에서 붙여넣기</span><button class="modal-close" onclick="closeModal('plan-paste-modal')">✕</button></div>
+    <div id="plan-paste-hint" style="font-size:11px;color:var(--text-light);margin-bottom:10px;line-height:1.6"></div>
+    <textarea id="plan-paste-text" class="form-input" style="height:220px;font-size:12px;font-family:monospace;white-space:pre;overflow:auto" placeholder="엑셀에서 표 전체를 복사(Ctrl+C)한 뒤 여기에 붙여넣기(Ctrl+V)"></textarea>
+    <div style="font-size:11px;color:var(--text-light);margin:8px 0 12px;line-height:1.6">· 머리글·날짜 열이 있어도 그대로 붙여넣으면 돼요<br>· 빈 칸은 기존 값을 유지해요<br>· 날짜가 없으면 토요일 순서대로 채워집니다</div>
+    <button class="btn btn-primary" onclick="applyPlanPaste()">반영하기</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="app-confirm-modal" style="z-index:99998">
   <div class="modal" style="background:#fff;width:88vw;max-width:380px;border-radius:20px;padding:22px 20px 18px;text-align:center;box-shadow:0 14px 44px rgba(0,0,0,0.2)">
     <div id="ac-icon" style="font-size:30px;margin-bottom:8px">💬</div>
@@ -1386,10 +1411,10 @@
     <div class="pg-head">
       <button class="pg-back" onclick="closeModal('yearplan-modal')">‹</button>
       <span class="pg-title">📋 연간 운영 계획</span>
-      <div class="pg-acts"><button class="btn btn-sm" id="yp-lock-btn" style="width:auto;padding:6px 11px;font-size:11px;font-weight:800;background:var(--yellow-light);color:#9A6A00;display:none" onclick="toggleLitLock()">🔒 잠김 · 해제</button></div>
+      <div class="pg-acts"><button class="btn btn-sm" id="yp-paste-btn" style="width:auto;padding:6px 11px;font-size:11px;font-weight:800;background:var(--primary-light);color:var(--primary-dark);margin-right:4px" onclick="openPlanPaste()">붙여넣기</button><button class="btn btn-sm" id="yp-lock-btn" style="width:auto;padding:6px 11px;font-size:11px;font-weight:800;background:var(--yellow-light);color:#9A6A00;display:none" onclick="toggleLitLock()">🔒 잠김 · 해제</button></div>
     </div>
         <div id="yp-period" style="padding:10px 14px;border-bottom:1px solid var(--border-light);background:var(--card)"></div>
-    <div class="pg-scroll" style="overflow-x:auto"><div style="min-width:980px"><div id="yp-thead" style="position:sticky;top:0;z-index:3;background:#ffffff;border-bottom:2px solid var(--border);box-shadow:0 2px 6px rgba(0,0,0,.08)"></div><div id="yp-body"></div></div></div>
+    <div class="pg-scroll" style="overflow-x:auto"><div style="min-width:1240px"><div id="yp-thead" style="position:sticky;top:0;z-index:3;background:#ffffff;border-bottom:2px solid var(--border);box-shadow:0 2px 6px rgba(0,0,0,.08)"></div><div id="yp-body"></div></div></div>
   </div>
 </div>
 
