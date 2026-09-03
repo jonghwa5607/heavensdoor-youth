@@ -3989,7 +3989,7 @@ var litYear=new Date().getFullYear(), litMonth=new Date().getMonth();
 function litFor(ds){return (litData||[]).find(function(x){return x&&x.date===ds;})||null;}
 function openLitPage(){var n=new Date();litYear=n.getFullYear();litMonth=n.getMonth();renderLitGrid();openModal('lit-modal');}
 function litMonthShift(d){litMonth+=d;if(litMonth>11){litMonth=0;litYear++;}else if(litMonth<0){litMonth=11;litYear--;}renderLitGrid();}
-function renderLitGrid(){try{renderLitLockUI();}catch(e){}
+function renderLitGrid(){try{renderLitLockUI();}catch(e){}try{_hydrateYP();}catch(e){}
   var lb=document.getElementById('lit-month-label');
   if(lb)lb.textContent=litYear+'년 '+(litMonth+1)+'월';
   var el=document.getElementById('lit-grid');if(!el)return;
@@ -4097,7 +4097,7 @@ function toggleLitLock(){
   try{renderLitLockUI();}catch(e){}
   try{renderYearPlan();}catch(e){}
 }
-function renderLitLockUI(){var pb=document.getElementById('yp-paste-btn');if(pb)pb.style.display=_isFullAdmin()?'':'none';var b=document.getElementById('yp-lock-btn');if(!b)return;var lock=litLocked();b.style.display=_isFullAdmin()?'':'none';b.style.background=lock?'var(--yellow-light)':'var(--primary-light)';b.style.color=lock?'#9A6A00':'var(--primary-dark)';b.textContent=lock?'🔒 잠김 · 해제':'🔓 열림 · 잠그기';var n=document.getElementById('yp-lock-note');if(n)n.style.display=lock?'':'none';}
+function renderLitLockUI(){var pb=document.getElementById('yp-paste-btn');if(pb)pb.style.display=_isFullAdmin()?'':'none';var b=document.getElementById('yp-lock-btn');if(!b)return;var lock=litLocked();b.style.display=_isFullAdmin()?'':'none';b.style.background=lock?'var(--yellow-light)':'var(--primary-light)';b.style.color=lock?'#9A6A00':'var(--primary-dark)';b.textContent=lock?'🔒 잠김 · 해제':'🔓 열림 · 잠그기';var n=document.getElementById('yp-lock-note');if(n)n.style.display=lock?'':'none';try{_ypDirtyUI();}catch(e){}}
 function saveLitMonth(){
   if(!_isFullAdmin()){showToast('연간계획은 교감·교무·관리자만 수정할 수 있어요');return;}
   if(litLocked()){showToast('🔒 연간계획이 잠겨 있어요 · 잠금을 해제해주세요');return;}
@@ -4197,7 +4197,7 @@ function renderCalendar(){ensureWeeklyEvents();try{_gradeSync();}catch(e){}const
     const extra=Math.max(0,dayEvents.length-3);
     const dotsHtml=dots.length?`<div style="display:flex;justify-content:center;gap:2px;margin-top:2px">${dots.map(c=>`<div style="width:5px;height:5px;border-radius:50%;background:${c}"></div>`).join('')}${extra?`<span style="font-size:8px;color:var(--text-light);line-height:5px">+${extra}</span>`:''}</div>`:'';html+=`<div class="cal-day${isToday?' today':''}${isSun?' sunday':''}${selectedCalDate===dateStr?' sel':''}" onclick="onCalDayClick('${dateStr}')"><span class="cal-day-num">${d}</span>${dotsHtml}</div>`;}el.innerHTML=html;if(selectedCalDate)renderCalDayEvents(selectedCalDate);}
 function onCalDayClick(dateStr){selectedCalDate=dateStr;renderCalendar();renderCalDayEvents(dateStr);}
-function renderCalDayEvents(dateStr){const el=document.getElementById('cal-event-list');if(!el)return;const events=calEvents.filter(e=>e.date===dateStr&&(e.isRecurring||e.visibility!=='private'||e.authorId===G.id));const isFull=G.role==='teacher'&&(G.type==='principal'||G.type==='admin'||G.isAdmin);const isT=G.role==='teacher';const [y,m,d]=dateStr.split('-');const isSat=new Date(dateStr+'T12:00:00').getDay()===6;const isVac=isVacationDate(dateStr);const isEdu=isEduVacation(dateStr);const anyVac=isVac||isEdu;let html=`<div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 8px"><span style="font-size:13px;font-weight:800">${parseInt(m)}월 ${parseInt(d)}일 일정${isEdu?' <span class="chip chip-blue">📖 교리방학</span>':isVac?' <span class="chip chip-yellow">🏖️ 방학</span>':''}</span><span style="display:flex;gap:6px">${isFull&&isSat?`<button class="btn btn-sm" style="width:auto;background:${anyVac?'var(--bg)':'var(--yellow-light)'};color:${anyVac?'var(--text-sub)':'#9A6A00'};font-weight:700" onclick="setVacationDate('${dateStr}',${!anyVac})">${anyVac?'방학 해제':'🏖️ 방학 지정'}</button>`:''}</span></div>`;if(isSat){var _lp=litFor(dateStr)||{};var _ph=_dayLabel(dateStr);var _bits=[];if(_ph)_bits.push(['전례시기',_ph]);if(_lp.form)_bits.push(['교리',_lp.form]);if(_lp.progress)_bits.push(['진행',_lp.progress]);if(_bits.length){html+='<div '+(isT?'onclick="openYearPlan()" ':'')+'style="background:var(--primary-light);border-radius:10px;padding:10px 12px;margin-bottom:8px'+(isT?';cursor:pointer':'')+'"><div style="font-size:11px;font-weight:800;color:var(--primary-dark);margin-bottom:5px;display:flex;justify-content:space-between;align-items:center"><span>📋 연간 운영 계획</span>'+(isT?'<span style="font-weight:700;color:var(--primary)">전체 보기 ›</span>':'')+'</div>'+_bits.map(function(b){return '<div style="font-size:12px;display:flex;gap:6px;margin-top:2px"><span style="color:var(--text-light);width:52px;flex-shrink:0">'+b[0]+'</span><span style="font-weight:600;color:var(--text-sub)">'+_esc(b[1])+'</span></div>';}).join('')+'</div>';}}if(!events.length){html+='<div class="empty" style="padding:20px"><div class="empty-emoji" style="font-size:24px">📅</div><div class="empty-title" style="font-size:12px">등록된 일정이 없어요</div></div>';}else{html+=events.map(e=>{const teachers=getApprovedTeachers();const _R=_evResp(e);const yesCount=teachers.filter(t=>_R[t.id]==='yes').length;const noCount=teachers.filter(t=>_R[t.id]==='no').length;const noResp=teachers.filter(t=>!_R[t.id]);const myResp=_R[G.id];const isShared=e.visibility==='shared';const borderColor=e.isRecurring?'var(--mint)':(isShared?'var(--primary)':'var(--lavender)');const badge=e.isRecurring?'':(isShared?`<span class="chip chip-blue">👥 전체 공유</span>`:`<span class="chip chip-lavender">🔒 나만 보기</span>`);const _isPast=dateStr<toDateStr(new Date());
+function renderCalDayEvents(dateStr){const el=document.getElementById('cal-event-list');if(!el)return;try{_hydrateYP();}catch(e){}const events=calEvents.filter(e=>e.date===dateStr&&(e.isRecurring||e.visibility!=='private'||e.authorId===G.id));const isFull=G.role==='teacher'&&(G.type==='principal'||G.type==='admin'||G.isAdmin);const isT=G.role==='teacher';const [y,m,d]=dateStr.split('-');const isSat=new Date(dateStr+'T12:00:00').getDay()===6;const isVac=isVacationDate(dateStr);const isEdu=isEduVacation(dateStr);const anyVac=isVac||isEdu;let html=`<div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 8px"><span style="font-size:13px;font-weight:800">${parseInt(m)}월 ${parseInt(d)}일 일정${isEdu?' <span class="chip chip-blue">📖 교리방학</span>':isVac?' <span class="chip chip-yellow">🏖️ 방학</span>':''}</span><span style="display:flex;gap:6px">${isFull&&isSat?`<button class="btn btn-sm" style="width:auto;background:${anyVac?'var(--bg)':'var(--yellow-light)'};color:${anyVac?'var(--text-sub)':'#9A6A00'};font-weight:700" onclick="setVacationDate('${dateStr}',${!anyVac})">${anyVac?'방학 해제':'🏖️ 방학 지정'}</button>`:''}</span></div>`;if(isSat){var _lp=litFor(dateStr)||{};var _ph=_dayLabel(dateStr);var _bits=[];if(_ph)_bits.push(['전례시기',_ph]);if(_lp.form)_bits.push(['교리',_lp.form]);if(_lp.progress)_bits.push(['진행',_lp.progress]);if(_bits.length){html+='<div '+(isT?'onclick="openYearPlan()" ':'')+'style="background:var(--primary-light);border-radius:10px;padding:10px 12px;margin-bottom:8px'+(isT?';cursor:pointer':'')+'"><div style="font-size:11px;font-weight:800;color:var(--primary-dark);margin-bottom:5px;display:flex;justify-content:space-between;align-items:center"><span>📋 연간 운영 계획</span>'+(isT?'<span style="font-weight:700;color:var(--primary)">전체 보기 ›</span>':'')+'</div>'+_bits.map(function(b){return '<div style="font-size:12px;display:flex;gap:6px;margin-top:2px"><span style="color:var(--text-light);width:52px;flex-shrink:0">'+b[0]+'</span><span style="font-weight:600;color:var(--text-sub)">'+_esc(b[1])+'</span></div>';}).join('')+'</div>';}}if(!events.length){html+='<div class="empty" style="padding:20px"><div class="empty-emoji" style="font-size:24px">📅</div><div class="empty-title" style="font-size:12px">등록된 일정이 없어요</div></div>';}else{html+=events.map(e=>{const teachers=getApprovedTeachers();const _R=_evResp(e);const yesCount=teachers.filter(t=>_R[t.id]==='yes').length;const noCount=teachers.filter(t=>_R[t.id]==='no').length;const noResp=teachers.filter(t=>!_R[t.id]);const myResp=_R[G.id];const isShared=e.visibility==='shared';const borderColor=e.isRecurring?'var(--mint)':(isShared?'var(--primary)':'var(--lavender)');const badge=e.isRecurring?'':(isShared?`<span class="chip chip-blue">👥 전체 공유</span>`:`<span class="chip chip-lavender">🔒 나만 보기</span>`);const _isPast=dateStr<toDateStr(new Date());
     let respHtml='';if((e.isRecurring||e.vote||e.visibility==='shared')&&G.role==='teacher'){respHtml=(_isPast?'':`<div style="display:flex;gap:6px;margin-top:10px">
         <button class="filter-chip${myResp==='yes'?' active':''}" onclick="setCalResponse('${e.id}','yes')">✅ 참석</button>
         <button class="filter-chip${myResp==='no'?' active':''}" onclick="setCalResponse('${e.id}','no')">❌ 불참</button>
@@ -4397,7 +4397,7 @@ function _defTerm(yr){return {yr:yr,start:_termStart(yr),end:_termEnd(yr),locked
 function setTermEnd(yr,val){if(!_canEditPlan())return;if(!val||val<=_termStart(yr)){showToast('종료일을 시작일 이후로 정해주세요');return;}_planEnds()[yr]=val;try{if(window.flushCfg)window.flushCfg();}catch(e){}renderYearPlan();showToast('종료일 변경 · 다음 학년도 시작일이 자동 연결됩니다');}
 function planNav(d){_planViewYr+=d;renderYearPlan();}
 function _checkPlanEnd(){try{var terms=_planTerms(),td=toDateStr(new Date());for(var i=0;i<terms.length;i++){var t=terms[i];if(t.locked&&_termEnd(t.yr)<td&&!terms.some(function(x){return x.yr===t.yr+1;})){if(appConfig.planEndNotified===t.yr)return;appConfig.planEndNotified=t.yr;(pendingList||[]).filter(function(u){return u.approved&&u.role==='teacher'&&!u.hidden&&(u.teacherType==='principal'||u.teacherType==='admin'||u.isAdmin);}).forEach(function(u){notifications.unshift({pushed:false,id:'nt-planend-'+t.yr+'-'+u.id,text:'📋 <b>'+t.yr+'학년도 운영 기간이 끝났어요.</b> 일정 → 연간계획에서 새 학년도 계획을 시작해 주세요.',time:'방금',ts:Date.now(),readBy:[],forTeacherId:u.id});});try{if(window.flushCfg)window.flushCfg();}catch(e){}try{if(typeof flushSync==='function')flushSync();}catch(e){}updateNotifDot();return;}}}catch(e){}}
-function openYearPlan(){if(G.role!=='teacher'){showToast('교사 전용이에요');return;}_planTerms();_planViewYr=_curSchoolYr();renderYearPlan();try{renderLitLockUI();}catch(e){}openModal('yearplan-modal');}
+function openYearPlan(){if(G.role!=='teacher'){showToast('교사 전용이에요');return;}_ypBuf=null;_hydrateYP();_planTerms();_planViewYr=_curSchoolYr();renderYearPlan();try{renderLitLockUI();}catch(e){}openModal('yearplan-modal');}
 function _satsInRange(s,e){var out=[];var d=new Date(s+'T00:00:00'),end=new Date(e+'T00:00:00');while(d<=end){if(d.getDay()===6)out.push(d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()));d.setDate(d.getDate()+1);}return out;}
 function openPlanPaste(){
   if(!_isFullAdmin()){showToast('교감·교무·관리자만 입력할 수 있어요');return;}
@@ -4455,7 +4455,8 @@ function applyPlanPaste(){
     var ds=(dcol>=0)?_pDate(cols[dcol],yr):null;
     if(!ds){ if(dcol>=0)continue; ds=sats[idx++]; }
     if(!ds)break;
-    var rec=litFor(ds); if(!rec){rec={id:'lt'+ds,date:ds};litData.push(rec);}
+    /* 저장 전 임시 보관(_ypBuf)에만 기록 — [저장]을 눌러야 실제 반영·영속 */
+    if(!_ypBuf)_ypBuf={}; var rec=_ypBuf[ds]||(_ypBuf[ds]={});
     var wrote=false;
     if(map){ Object.keys(map).forEach(function(k){
         var ci=map[k], v=(cols[ci]||'').trim();
@@ -4467,12 +4468,10 @@ function applyPlanPaste(){
         if(v){rec[k]=v;wrote=true;}
       }); }
     else { for(var k2=0;k2<keys.length;k2++){var v2=(cols[k2]||'').trim();if(v2){rec[keys[k2]]=v2;wrote=true;}} }
-    if(wrote)n++;
+    if(!wrote)delete _ypBuf[ds]; else n++;
   }
-  try{if(typeof flushSync==='function')flushSync();}catch(e){}
-  try{if(window.FB&&FB.enabled()&&FB.save){(litData||[]).forEach(function(r){if(r&&r.id&&r.date)FB.save('liturgy',r.id,r);});}}catch(e){}
-  closeModal('plan-paste-modal'); renderYearPlan();
-  showToast(n?(n+'개 행을 반영했어요'):'인식된 행이 없어요 · 머리글과 날짜 열을 함께 복사해주세요');
+  closeModal('plan-paste-modal'); renderYearPlan(); _ypDirtyUI();
+  showToast(n?(n+'개 행을 불러왔어요 · 저장을 눌러 반영하세요'):'인식된 행이 없어요 · 머리글과 날짜 열을 함께 복사해주세요');
 }
 function _pDate(v,yr){
   v=String(v==null?'':v).replace(/\u00a0/g,' ').trim();
@@ -4489,7 +4488,7 @@ function _pDate(v,yr){
   }
   return null;
 }
-function renderYearPlan(){var edit=_canEditPlan();
+function renderYearPlan(){var edit=_canEditPlan();_hydrateYP();
   if(_planViewYr==null)_planViewYr=_curSchoolYr();
   var yr=_planViewYr,term=_termOf(yr);
   var locked=!!(term&&term.locked),editing=edit&&!locked;
@@ -4505,15 +4504,56 @@ function renderYearPlan(){var edit=_canEditPlan();
   var thead=document.getElementById('yp-thead');
   if(thead)thead.innerHTML='<div style="display:flex;gap:6px;padding:9px 8px;font-size:11px;font-weight:800;color:var(--text-sub)"><span style="width:46px;flex-shrink:0">날짜</span><span style="flex:1.2">전례시기</span><span style="flex:.9">운영구분</span><span style="flex:1.2">교리</span><span style="flex:.9">교안담당</span><span style="flex:1.5">교리내용</span><span style="flex:1.2">전례부</span><span style="flex:1.2">성가대</span><span style="flex:1.2">비고</span><span style="flex:1.8">회의 안건</span></div>';
   var el=document.getElementById('yp-body');if(!el)return;var sats=_satsInRange(dispStart,dispEnd);
-  var rows=sats.map(function(ds){var l=litFor(ds)||{};var d=ds.split('-');
-    function cell(key,val,flex,ph){return edit?'<input value="'+_esc(val||'')+'" onchange="setPlan(\''+ds+'\',\''+key+'\',this.value)" placeholder="'+ph+'" style="flex:'+flex+';min-width:0;font-size:12px;padding:6px 8px;border:1px solid var(--border-light);border-radius:6px;font-family:inherit;background:var(--card)">':'<span style="flex:'+flex+';font-size:12px;color:var(--text-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:4px 0">'+_esc(val||'')+'</span>';}
+  var rows=sats.map(function(ds){var l=_ypView(ds);var d=ds.split('-');
+    function cell(key,val,flex,ph){return edit?'<input value="'+_esc(val||'')+'" onchange="setPlanDraft(\''+ds+'\',\''+key+'\',this.value)" placeholder="'+ph+'" style="flex:'+flex+';min-width:0;font-size:12px;padding:6px 8px;border:1px solid var(--border-light);border-radius:6px;font-family:inherit;background:var(--card)">':'<span style="flex:'+flex+';font-size:12px;color:var(--text-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:4px 0">'+_esc(val||'')+'</span>';}
     var mn=(resources||[]).find(function(r){return r.cat==='minutes'&&!r.deleted&&r.mdate===ds;});
     var mnCell=mn?'<button onclick="closeModal(\'yearplan-modal\');openMinutesViewer(\''+mn.id+'\')" style="width:30px;background:none;border:none;cursor:pointer;font-size:15px">📝</button>':(edit?'<button onclick="newMinutesForDate(\''+ds+'\')" style="width:30px;background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-light)">＋</button>':'<span style="width:30px;display:inline-block"></span>');
     return '<div class="yp-row" style="display:flex;gap:6px;align-items:center;padding:7px 8px;border-bottom:1px solid var(--border-light)"><span style="width:46px;flex-shrink:0;font-size:12px;font-weight:700;color:var(--text-sub)">'+(+d[1])+'/'+(+d[2])+'</span>'+cell('label',l.label||_dayLabel(ds),'1.2','전례시기')+cell('optype',l.optype,'.9','운영구분')+cell('form',l.form,'1.2','교리')+cell('owner',l.owner,'.9','교안담당')+cell('detail',l.detail,'1.5','교리내용')+cell('liturgyTeam',l.liturgyTeam,'1.2','전례부')+cell('choir',l.choir,'1.2','성가대')+cell('note2',l.note2,'1.2','비고')+cell('agenda',l.agenda,'1.8','회의 안건')+'</div>';}).join('');
-  el.innerHTML=rows;}
+  el.innerHTML=rows;try{_ypDirtyUI();}catch(e){}}
 function setPlan(ds,key,val){var r=litFor(ds);if(!r){r={id:'lt'+ds,date:ds};litData.push(r);}r[key]=(val||'').trim();
   if(key==='agenda'){try{var mn=(resources||[]).find(function(x){return x.cat==='minutes'&&!x.deleted&&x.mdate===ds;});if(mn&&r.agenda&&!(mn.content||'').trim()){mn.content=r.agenda.split(/[,\u00b7]/).map(function(x){return x.trim();}).filter(Boolean).map(function(x){return '## '+x;}).join('\n');try{renderMinutesHub();}catch(e){}}}catch(e){}}try{if(typeof flushSync==='function')flushSync();}catch(e){}}
 function newMinutesForDate(ds){if(!_canEditPlan()){showToast('작성 권한이 없어요');return;}var d=ds.split('-');var r={id:'rs'+Date.now(),cat:'minutes',year:String(+d[0]),mdate:ds,title:(+d[1])+'월 '+(+d[2])+'일 회의록',content:'',authorId:G.id,authorName:G.displayName,date:_minDateStr(),updatedAt:_minDateStr(),updatedBy:G.displayName};resources.unshift(r);try{if(typeof flushSync==='function')flushSync();}catch(e){}try{renderYearPlan();}catch(e){}closeModal('yearplan-modal');openMinutesViewer(r.id);startMinutesEdit();}
+
+/* ── 연간계획: 저장 전 임시 보관(_ypBuf) → [저장] 눌러야 반영 ── */
+var YP_KEYS=['label','optype','form','owner','detail','liturgyTeam','choir','note2','agenda'];
+var _ypBuf=null;   /* {date:{key:val,...}} 저장 전 변경분 */
+var YP_SAVE_SVG='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>';
+/* 클라우드에 안전 저장된 appConfig.litPlan → litData로 복원(반복 호출 안전) */
+function _hydrateYP(){try{var m=appConfig&&appConfig.litPlan;if(!m)return;Object.keys(m).forEach(function(ds){var rec=litFor(ds);if(!rec){rec={id:'lt'+ds,date:ds};litData.push(rec);}var src=m[ds]||{};YP_KEYS.forEach(function(k){if(src[k]!=null&&src[k]!=='')rec[k]=src[k];});});}catch(e){}}
+/* 임시 보관분을 합쳐 화면에 보여줄 한 행 */
+function _ypView(ds){var base=litFor(ds)||{};var b=_ypBuf&&_ypBuf[ds];return b?Object.assign({},base,b):base;}
+function _ypDirty(){return !!(_ypBuf&&Object.keys(_ypBuf).length);}
+function _ypDirtyUI(){var b=document.getElementById('yp-save-btn');if(!b)return;var dirty=_ypDirty();b.style.display=(_canEditPlan()&&_isFullAdmin())?'':'none';b.style.background=dirty?'var(--primary)':'var(--primary-light)';b.style.color=dirty?'#fff':'var(--primary-dark)';b.innerHTML=YP_SAVE_SVG+'저장'+(dirty?' *':'');}
+function setPlanDraft(ds,key,val){if(!_ypBuf)_ypBuf={};if(!_ypBuf[ds])_ypBuf[ds]={};_ypBuf[ds][key]=(val||'').trim();_ypDirtyUI();}
+function savePlan(){
+  if(!_isFullAdmin()){showToast('교감·교무·관리자만 저장할 수 있어요');return;}
+  if(litLocked()){showToast('잠금을 먼저 해제해주세요');return;}
+  if(!_ypDirty()){showToast('저장할 변경사항이 없어요');return;}
+  if(!appConfig.litPlan)appConfig.litPlan={};
+  var agendaDates=[];
+  Object.keys(_ypBuf).forEach(function(ds){
+    var rec=litFor(ds);if(!rec){rec={id:'lt'+ds,date:ds};litData.push(rec);}
+    var chg=_ypBuf[ds];
+    Object.keys(chg).forEach(function(k){rec[k]=chg[k];if(k==='agenda')agendaDates.push(ds);});
+    /* 클라우드 저장용 미러(appConfig → flushCfg로 확실히 영속) */
+    var store=appConfig.litPlan[ds]||(appConfig.litPlan[ds]={});
+    YP_KEYS.forEach(function(k){var v=(rec[k]||'').trim();if(v)store[k]=v;else delete store[k];});
+    if(!Object.keys(store).length)delete appConfig.litPlan[ds];
+  });
+  /* 회의 안건 → 회의록 초안 자동 채우기(기존 setPlan 동작 유지) */
+  agendaDates.forEach(function(ds){try{var r=litFor(ds);var mn=(resources||[]).find(function(x){return x.cat==='minutes'&&!x.deleted&&x.mdate===ds;});if(mn&&r&&r.agenda&&!(mn.content||'').trim()){mn.content=r.agenda.split(/[,\u00b7]/).map(function(x){return x.trim();}).filter(Boolean).map(function(x){return '## '+x;}).join('\n');try{renderMinutesHub();}catch(e){}}}catch(e){}});
+  _ypBuf=null;
+  try{if(window.flushCfg)window.flushCfg();}catch(e){}
+  try{if(typeof flushSync==='function')flushSync();}catch(e){}
+  try{if(window.FB&&FB.enabled()&&FB.save){(litData||[]).forEach(function(r){if(r&&r.id&&r.date)FB.save('liturgy',r.id,r);});}}catch(e){}
+  renderYearPlan();
+  try{renderLitLockUI();}catch(e){}
+  showToast('연간계획을 저장했어요');
+}
+function closeYearPlan(){
+  if(_ypDirty()&&!confirm('저장하지 않은 변경사항이 있어요. 저장하지 않고 닫을까요?'))return;
+  _ypBuf=null;closeModal('yearplan-modal');
+}
 
 let currentReminderId=null;
 /* 일정 ↔ 리마인더 전환 (삼성 캘린더 방식) */
