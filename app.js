@@ -1803,6 +1803,39 @@ function ensureWeeklyMinutes(){
     return made>0;
   }catch(e){return false;}
 }
+var _mLongT=null;
+function _mLongStart(ev,id){try{clearTimeout(_mLongT);_mLongT=setTimeout(function(){if(navigator.vibrate)navigator.vibrate(30);minSelStart(id);},520);}catch(e){}}
+function _mLongEnd(){try{clearTimeout(_mLongT);}catch(e){}}
+var _mSel=null; /* 다중선택 모드 */
+function minSelStart(id){
+  if(!(G.role==='teacher'))return;
+  if(!_mSel)_mSel={};
+  if(id)_mSel[id]=1;
+  renderMinutesHub();
+}
+function minSelToggle(id){
+  if(!_mSel)return;
+  if(_mSel[id])delete _mSel[id];else _mSel[id]=1;
+  renderMinutesHub();
+}
+function minSelCancel(){_mSel=null;renderMinutesHub();}
+function minSelAll(){
+  var list=(resources||[]).filter(function(r){return r.cat==='minutes'&&!r.deleted&&r.year===minutesHubYear;});
+  _mSel={};list.forEach(function(r){_mSel[r.id]=1;});renderMinutesHub();
+}
+function minSelDelete(){
+  var ids=Object.keys(_mSel||{});
+  if(!ids.length){showToast('선택된 회의록이 없어요');return;}
+  var mine=ids.filter(function(id){var r=(resources||[]).find(function(x){return x.id===id;});return r&&(_isFullAdmin()||r.authorId===G.id);});
+  if(!mine.length){showToast('삭제 권한이 있는 회의록이 없어요');return;}
+  appConfirm({icon:'trash',title:mine.length+'개를 휴지통으로 옮길까요?',desc:'휴지통에서 다시 복구할 수 있어요.'+(mine.length<ids.length?('\n권한이 없는 '+(ids.length-mine.length)+'개는 제외돼요.'):''),okText:'옮기기'}).then(function(ok){
+    if(!ok)return;
+    mine.forEach(function(id){var r=(resources||[]).find(function(x){return x.id===id;});if(r){r.deleted=true;r.deletedAt=Date.now();r.deletedBy=G.displayName;}});
+    try{if(typeof flushSync==='function')flushSync();}catch(e){}
+    _mSel=null;renderMinutesHub();renderResourceList();
+    showToast(mine.length+'개를 휴지통으로 옮겼어요');
+  });
+}
 function renderMinutesHub(){
   try{ensureWeeklyMinutes();}catch(e){}
   var years=[];for(var y=LIVE_YEAR;y>=RES_FIRST_YEAR;y--)years.push(String(y));
@@ -1814,6 +1847,7 @@ function renderMinutesHub(){
   var html='';
   if(!live&&list.length)html+='<div style="background:var(--bg);border-radius:var(--radius-sm);padding:9px 11px;margin-bottom:9px;font-size:11px;color:var(--text-light)">🔒 '+minutesHubYear+'년 회의록은 보관되어 읽기 전용이에요.</div>';
   if(list.length)html+='<div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn btn-sm btn-outline" style="width:auto" onclick="exportMinutesYear()">⬇ '+minutesHubYear+'년 전체 PDF</button></div>';
+  if(_mSel){var _n=Object.keys(_mSel).length;html+='<div style="position:sticky;top:0;z-index:5;background:var(--card);border:1px solid var(--border-light);border-radius:12px;padding:9px 11px;margin-bottom:9px;display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:800;flex:1">'+_n+'개 선택됨</span><button class="btn btn-sm btn-outline" style="width:auto;padding:5px 10px;font-size:11px" onclick="minSelAll()">전체</button><button class="btn btn-sm" style="width:auto;padding:5px 10px;font-size:11px;background:var(--coral-light);color:#D95F50" onclick="minSelDelete()">삭제</button><button class="btn btn-sm btn-outline" style="width:auto;padding:5px 10px;font-size:11px" onclick="minSelCancel()">취소</button></div>';}
   html+=list.length?list.map(_resCard).join(''):_resEmpty('📝','회의록이 없어요',live?'＋ 새 회의록을 눌러 바로 시작해요':'이 해에는 작성된 회의록이 없어요');
   if(live&&appConfig.notionUrl){
     html+='<div style="margin-top:16px;padding-top:13px;border-top:1px dashed var(--border-light)"></div>'
@@ -1986,7 +2020,10 @@ function _resCard(r){
     else if(r.published){_dot='#2D9E8F';_tip=(r.acks||[]).length+'명 확인';}
     else {_dot='#EBA23B';_tip='미발행';}
     var _past=!!(r.mdate&&r.mdate<_today());
-    return `<div class="resource-card" style="${_past?'opacity:.6':''}" onclick="openMinutesViewer('${r.id}')"><div style="display:flex;align-items:center;gap:10px"><span title="${_tip}" style="width:7px;height:7px;border-radius:50%;background:${_dot};flex-shrink:0"></span><div class="resource-info" style="min-width:0"><div class="resource-title">${r.title}</div><div class="resource-meta">${r.updatedAt||r.date}</div></div></div></div>`;
+    var _selMode=!!_mSel, _on=!!(_mSel&&_mSel[r.id]);
+    var _click=_selMode?`minSelToggle('${r.id}')`:`openMinutesViewer('${r.id}')`;
+    var _mark=_selMode?`<span style="width:19px;height:19px;border-radius:50%;border:2px solid ${_on?'var(--primary)':'var(--border)'};background:${_on?'var(--primary)':'transparent'};color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${_on?'✓':''}</span>`:`<span title="${_tip}" style="width:7px;height:7px;border-radius:50%;background:${_dot};flex-shrink:0"></span>`;
+    return `<div class="resource-card" style="${_past?'opacity:.6;':''}${_on?'background:var(--primary-light);':''}" onclick="${_click}" oncontextmenu="event.preventDefault();minSelStart('${r.id}');return false" ontouchstart="_mLongStart&&_mLongStart(event,'${r.id}')" ontouchend="_mLongEnd&&_mLongEnd()" ontouchmove="_mLongEnd&&_mLongEnd()"><div style="display:flex;align-items:center;gap:10px">${_mark}<div class="resource-info" style="min-width:0"><div class="resource-title">${r.title}</div><div class="resource-meta">${r.updatedAt||r.date}</div></div></div></div>`;
   }
   const oc=`<span class="post-meta-chip">${r.date||''}</span> `;
   return `<div class="resource-card" onclick="openResourceDetail('${r.id}')"><div class="resource-info"><div class="resource-title">${r.title}</div><div class="resource-meta">${oc}${r.authorName} · ${r.date}${(r.docs&&r.docs.length)?' · 📎 '+r.docs.length+'개':''}</div></div></div>`;
@@ -4361,14 +4398,14 @@ function renderYearPlan(){var edit=_canEditPlan();
       +'</div>';
     }
   var thead=document.getElementById('yp-thead');
-  if(thead)thead.innerHTML='<div style="min-width:860px;margin:0 auto;display:flex;gap:6px;padding:9px 8px;font-size:11px;font-weight:800;color:var(--text-sub)"><span style="width:46px;flex-shrink:0">날짜</span><span style="flex:1.2">전례시기</span><span style="flex:1.2">교리</span><span style="flex:1">진행</span><span style="flex:1.2">성가대</span><span style="flex:1.2">비고</span><span style="flex:2">회의 안건</span></div>';
+  if(thead)thead.innerHTML='<div style="display:flex;gap:6px;padding:9px 8px;font-size:11px;font-weight:800;color:var(--text-sub)"><span style="width:46px;flex-shrink:0">날짜</span><span style="flex:1.2">전례시기</span><span style="flex:1.2">교리</span><span style="flex:1">진행</span><span style="flex:1.2">성가대</span><span style="flex:1.2">비고</span><span style="flex:2">회의 안건</span></div>';
   var el=document.getElementById('yp-body');if(!el)return;var sats=_satsInRange(dispStart,dispEnd);
   var rows=sats.map(function(ds){var l=litFor(ds)||{};var d=ds.split('-');
     function cell(key,val,flex,ph){return edit?'<input value="'+_esc(val||'')+'" onchange="setPlan(\''+ds+'\',\''+key+'\',this.value)" placeholder="'+ph+'" style="flex:'+flex+';min-width:0;font-size:12px;padding:6px 8px;border:1px solid var(--border-light);border-radius:6px;font-family:inherit;background:var(--card)">':'<span style="flex:'+flex+';font-size:12px;color:var(--text-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:4px 0">'+_esc(val||'')+'</span>';}
     var mn=(resources||[]).find(function(r){return r.cat==='minutes'&&!r.deleted&&r.mdate===ds;});
     var mnCell=mn?'<button onclick="closeModal(\'yearplan-modal\');openMinutesViewer(\''+mn.id+'\')" style="width:30px;background:none;border:none;cursor:pointer;font-size:15px">📝</button>':(edit?'<button onclick="newMinutesForDate(\''+ds+'\')" style="width:30px;background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-light)">＋</button>':'<span style="width:30px;display:inline-block"></span>');
     return '<div style="display:flex;gap:6px;align-items:center;padding:7px 8px;border-bottom:1px solid var(--border-light)"><span style="width:46px;flex-shrink:0;font-size:12px;font-weight:700;color:var(--text-sub)">'+(+d[1])+'/'+(+d[2])+'</span>'+cell('label',l.label||_dayLabel(ds),'1.2','전례시기')+cell('form',l.form,'1.2','교리')+cell('progress',l.progress,'1','진행')+cell('choir',l.choir,'1.2','성가대')+cell('note2',l.note2,'1.2','비고')+cell('agenda',l.agenda,'2','회의 안건')+'</div>';}).join('');
-  el.innerHTML='<div style="min-width:860px;margin:0 auto">'+'<div style="font-size:12px;color:var(--text-light);margin:10px 0;line-height:1.5">'+(edit?'✏️ 교감·교무·관리자만 입력 가능 · 전례시기는 전례·성가 편집에도 반영돼요.':'👁 열람 전용 (작성은 교감·교무·관리자)')+'</div><div>'+rows+'</div></div>';}
+  el.innerHTML=rows;}
 function setPlan(ds,key,val){var r=litFor(ds);if(!r){r={id:'lt'+ds,date:ds};litData.push(r);}r[key]=(val||'').trim();
   if(key==='agenda'){try{var mn=(resources||[]).find(function(x){return x.cat==='minutes'&&!x.deleted&&x.mdate===ds;});if(mn&&r.agenda&&!(mn.content||'').trim()){mn.content=r.agenda.split(/[,\u00b7]/).map(function(x){return x.trim();}).filter(Boolean).map(function(x){return '- [ ] '+x;}).join('\n');try{renderMinutesHub();}catch(e){}}}catch(e){}}try{if(typeof flushSync==='function')flushSync();}catch(e){}}
 function newMinutesForDate(ds){if(!_canEditPlan()){showToast('작성 권한이 없어요');return;}var d=ds.split('-');var r={id:'rs'+Date.now(),cat:'minutes',year:String(+d[0]),mdate:ds,title:(+d[1])+'월 '+(+d[2])+'일 회의록',content:'',authorId:G.id,authorName:G.displayName,date:_minDateStr(),updatedAt:_minDateStr(),updatedBy:G.displayName};resources.unshift(r);try{if(typeof flushSync==='function')flushSync();}catch(e){}try{renderYearPlan();}catch(e){}closeModal('yearplan-modal');openMinutesViewer(r.id);startMinutesEdit();}
