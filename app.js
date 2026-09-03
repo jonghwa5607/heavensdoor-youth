@@ -1784,7 +1784,6 @@ function ensureWeeklyMinutes(){
     var en=(typeof _termEnd==='function')?_termEnd(yr):null;
     if(!st||!en)return false;
     var today=_today();
-    if(en>today)en=today;                       /* 미래 회의록은 만들지 않음 */
     var sats=(typeof _satsInRange==='function')?_satsInRange(st,en):[];
     var made=0;
     sats.forEach(function(ds){
@@ -1810,7 +1809,7 @@ function renderMinutesHub(){
   var sel=document.getElementById('mh-year-sel');
   if(sel){sel.innerHTML=years.map(function(y){return '<option value="'+y+'">'+(y===String(LIVE_YEAR)?'올해 ('+y+')':y+'년');}).join('');sel.value=minutesHubYear;}
   var live=_isLiveYear(minutesHubYear);
-  var list=(resources||[]).filter(function(r){return r.cat==='minutes'&&!r.deleted&&r.year===minutesHubYear;}).sort(function(a,b){return (b.mdate||'')<(a.mdate||'')?-1:1;});
+  var list=(resources||[]).filter(function(r){return r.cat==='minutes'&&!r.deleted&&r.year===minutesHubYear;}).sort(function(a,b){return (a.mdate||a.date||'')<(b.mdate||b.date||'')?-1:1;});
   var el=document.getElementById('mh-list');if(!el)return;
   var html='';
   if(!live&&list.length)html+='<div style="background:var(--bg);border-radius:var(--radius-sm);padding:9px 11px;margin-bottom:9px;font-size:11px;color:var(--text-light)">🔒 '+minutesHubYear+'년 회의록은 보관되어 읽기 전용이에요.</div>';
@@ -1980,15 +1979,14 @@ function toggleEmbed(key){ _embedOpen[key]=!_embedOpen[key]; renderResourceList(
 
 function _resCard(r){
   if(r.cat==='minutes'&&!r.deleted){
-    const preview=(r.content||'').slice(0,50);
     const lk=(typeof _otherLock==='function')?_otherLock(r.id):null;
-    let badge=lk?`<span style="color:var(--coral);font-weight:800">${lk.name} 작성 중</span> · `:'';
-    if(!lk&&r.published&&G.role==='teacher'&&!_isAcked(r,G.id))badge=`<span style="color:var(--coral);font-weight:800">📣 미확인</span> · `;
-    else if(!lk&&r.published)badge=`<span style="color:#2D9E8F;font-weight:800">✅ ${(r.acks||[]).length}명 확인</span> · `;
-    else if(!lk&&!r.published)badge=`<span style="color:#B08A2E;font-weight:800">✎ 미발행</span> · `;
+    var _dot='#C9CEd6', _tip='미발행';
+    if(lk){_dot='#E5806B';_tip=lk.name+' 작성 중';}
+    else if(r.published&&G.role==='teacher'&&!_isAcked(r,G.id)){_dot='#E5806B';_tip='미확인';}
+    else if(r.published){_dot='#2D9E8F';_tip=(r.acks||[]).length+'명 확인';}
+    else {_dot='#EBA23B';_tip='미발행';}
     var _past=!!(r.mdate&&r.mdate<_today());
-    var _cardStyle=_past?'opacity:.68;border-left:3px solid var(--border)':'border-left:3px solid var(--primary)';
-    return `<div class="resource-card" style="${_cardStyle}" onclick="openMinutesViewer('${r.id}')"><div class="resource-info"><div class="resource-title" style="${_past?'color:var(--text-sub)':''}">${r.title}</div><div class="resource-meta">${badge}${r.authorName} · ${r.updatedAt||r.date}${preview?' · '+preview+(r.content.length>50?'...':''):''}</div></div></div>`;
+    return `<div class="resource-card" style="${_past?'opacity:.6':''}" onclick="openMinutesViewer('${r.id}')"><div style="display:flex;align-items:center;gap:10px"><span title="${_tip}" style="width:7px;height:7px;border-radius:50%;background:${_dot};flex-shrink:0"></span><div class="resource-info" style="min-width:0"><div class="resource-title">${r.title}</div><div class="resource-meta">${r.updatedAt||r.date}</div></div></div></div>`;
   }
   const oc=`<span class="post-meta-chip">${r.date||''}</span> `;
   return `<div class="resource-card" onclick="openResourceDetail('${r.id}')"><div class="resource-info"><div class="resource-title">${r.title}</div><div class="resource-meta">${oc}${r.authorName} · ${r.date}${(r.docs&&r.docs.length)?' · 📎 '+r.docs.length+'개':''}</div></div></div>`;
