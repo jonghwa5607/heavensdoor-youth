@@ -588,9 +588,10 @@ function doRegister(){
   if(G.regRole==='student'){const s=document.getElementById('reg-school').value;const gnR=document.getElementById('reg-grade-num').value||'';if(gnR==='prep'){user.cohort=_curSchoolYr()+1;}else{const g=gnR.replace('학년','');if(!s||!g){showToast('학교급과 학년을 선택해주세요');return;}user.cohort=_curSchoolYr()-(s==='middle'?(+g-1):(+g-1+3));}user.gradeOffset=0;try{applyStudentGrade(user);}catch(e){}user.attendTotal=0;user.streak=0;}
   else if(G.regRole==='parent'){const children=[];document.querySelectorAll('#children-list .child-row').forEach(row=>{const inputs=row.querySelectorAll('input');const cn=(inputs[0]?.value||'').trim();const cb=(inputs[1]?.value||'').trim();if(cn)children.push({name:cn,baptism:cb});});if(!children.length){showToast('자녀 이름을 입력해주세요');return;}if(children.some(c=>!c.baptism)){showToast('자녀 세례명도 입력해주세요(동명이인 구분용)');return;}user.children=children;user.isJabumo=false;}
   else{const pos=document.getElementById('reg-position').value;if(!pos){showToast('담당 구분을 선택해주세요');return;}if(pos==='principal'||pos==='admin'){const holder=pendingList.find(x=>x.role==='teacher'&&x.approved&&!x.hidden&&x.teacherType===pos);if(holder){showToast('❌ '+(pos==='principal'?'교감':'교무')+'은 이미 있어요 ('+holder.name+' 선생님). 다른 담당을 선택해주세요');return;}}user.teacherType=pos;const POS={m1:'중1',m2:'중2',m3:'중3',h:'고등',principal:'교감',admin:'교무',etc:'기타'};user.gradeLabel=POS[pos]||pos;}
-  hashPw(id,pw).then(function(h){user.pwh=h;});
   pendingList.push(user);
-  notifications.unshift({pushed:false,id:'nt'+Date.now()+'rg',text:'⏳ 새 가입 신청: <b>'+name+' '+baptism+'</b> ('+(user.role==='student'?'학생 · '+(user.gradeLabel||''):user.role==='parent'?'학부모':'교사 · '+(user.gradeLabel||''))+') · 승인이 필요해요.',time:'방금',ts:Date.now(),readBy:[],forTeacher:true,tap:{type:'pending'}});updateNotifDot();
+  hashPw(id,pw).then(function(h){user.pwh=h;try{saveMemberNow(user);}catch(e){}},function(){try{saveMemberNow(user);}catch(e){}});
+  try{saveMemberNow(user);}catch(e){}
+  notifications.unshift({pushed:false,id:'nt'+Date.now()+'rg',text:'⏳ 새 가입 신청: <b>'+name+' '+baptism+'</b> ('+(user.role==='student'?'학생 · '+(user.gradeLabel||''):user.role==='parent'?'학부모':'교사 · '+(user.gradeLabel||''))+') · 승인이 필요해요.',time:'방금',ts:Date.now(),readBy:[],forTeacher:true,tap:{type:'pending'}});updateNotifDot();try{if(typeof flushSync==='function')flushSync();}catch(e){}
   showToast('신청 완료! 교사 승인 후 로그인할 수 있어요 😊');
   setTimeout(()=>goScreen('intro'),2200);
 }
