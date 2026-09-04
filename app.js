@@ -4349,24 +4349,44 @@ var _SVG_QR='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke=
 var _SVG_SPK='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h3l4 4V6L7 10H4a1 1 0 0 0-1 1z"/><path d="M16 8a5 5 0 0 1 0 8"/></svg>';
 var _SVG_PHONE='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.4-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>';
 var _SVG_NOTE='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>';
+var _SVG_CARD='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6.5 16.2c.5-1.3 1.6-1.9 2.5-1.9s2 .6 2.5 1.9M15 10h4M15 13.5h3"/></svg>';
+var _SVG_STATS='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="20" x2="6" y2="14"/><line x1="12" y1="20" x2="12" y2="8"/><line x1="18" y1="20" x2="18" y2="4"/></svg>';
+var _SVG_EDIT='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
 function _isFullAdminRole(){return G.type==='principal'||G.type==='admin'||G.isAdmin;}
 function _absentFlaggedCount(){try{var isFull=_isFullAdminRole();var sat=currentSaturday();return (pendingList||[]).filter(function(u){return u&&u.approved&&u.role==='student'&&!u.hidden&&!u.graduated&&(isFull||u.gradeKey===G.type)&&(typeof computeAbsentStreak==='function')&&computeAbsentStreak(u)>=3&&u.absentAckWeek!==sat;}).length;}catch(e){return 0;}}
 function goAttendance(){switchTab('admin');try{showAdminTab('attend');}catch(e){}}
+function goStudentCards(){switchTab('admin');try{showAdminTab('students');}catch(e){}}
+function goStats(){switchTab('admin');try{showAdminTab('stats');}catch(e){}}
+function goWriteNotice(){try{currentBoardCat='notice';}catch(e){}try{openWriteModal();}catch(e){}}
+function _dateStrOffset(days){var d=new Date();d.setDate(d.getDate()+(days||0));return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());}
+function openMinutesForDate(ds){try{try{_syncAgendaToMinutes(ds);}catch(e){}var mn=(resources||[]).find(function(x){return x&&x.cat==='minutes'&&!x.deleted&&x.mdate===ds;});if(!mn){var d=ds.split('-');mn={id:'rs'+Date.now()+Math.random().toString(36).slice(2,5),cat:'minutes',year:String(+d[0]),mdate:ds,title:(+d[1])+'월 '+(+d[2])+'일 회의록',content:'',authorId:G.id,authorName:G.displayName,date:_minDateStr(),updatedAt:_minDateStr(),updatedBy:G.displayName};resources.unshift(mn);try{if(typeof flushSync==='function')flushSync();}catch(e){}}openMinutesViewer(mn.id);}catch(e){}}
+function openThisWeekMinutes(){openMinutesForDate(currentSaturday());}
+function openYesterdayMinutes(){openMinutesForDate(_dateStrOffset(-1));}
 function goAbsentContacts(){switchTab('admin');try{showAdminTab('stats');}catch(e){}}
-function openThisWeekMinutes(){try{var ds=currentSaturday();try{_syncAgendaToMinutes(ds);}catch(e){}var mn=(resources||[]).find(function(x){return x&&x.cat==='minutes'&&!x.deleted&&x.mdate===ds;});if(!mn){var d=ds.split('-');mn={id:'rs'+Date.now()+Math.random().toString(36).slice(2,5),cat:'minutes',year:String(+d[0]),mdate:ds,title:(+d[1])+'월 '+(+d[2])+'일 회의록',content:'',authorId:G.id,authorName:G.displayName,date:_minDateStr(),updatedAt:_minDateStr(),updatedBy:G.displayName};resources.unshift(mn);try{if(typeof flushSync==='function')flushSync();}catch(e){}}openMinutesViewer(mn.id);}catch(e){}}
 function renderHomeSmart(){
   var el=document.getElementById('home-smart');if(!el)return;
-  var isFull=_isFullAdminRole();var dow=new Date().getDay();var isSat=dow===6;
-  var big=(isFull&&(dow===4||dow===5))
-    ? {label:'주간공지 보내기',sub:'',fn:'openWeeklyNotice()',svg:_SVG_SPK}
-    : {label:'출석관리',sub:isSat?'토요일 · QR 출석체크':'출석·QR 관리',fn:'goAttendance()',svg:_SVG_QR};
-  var absN=_absentFlaggedCount();
+  var isFull=_isFullAdminRole();var dow=new Date().getDay();
+  var big;
+  if(dow===6){                        /* 토 — 출석관리(출석체크) */
+    big={label:'출석관리',sub:'토요일 · QR 출석체크',fn:'goAttendance()',svg:_SVG_QR};
+  }else if(dow===0){                  /* 일 — 전날(토) 회의록 확인 */
+    big={label:'회의록 확인',sub:'어제(토) 회의록',fn:'openYesterdayMinutes()',svg:_SVG_NOTE};
+  }else if(isFull){
+    big=(dow===4||dow===5)            /* 목·금 → 주간공지 / 월화수 → 출석통계 */
+      ? {label:'주간공지 보내기',sub:'',fn:'openWeeklyNotice()',svg:_SVG_SPK}
+      : {label:'출석통계',sub:'',fn:'goStats()',svg:_SVG_STATS};
+  }else{
+    big=(dow===4||dow===5)            /* 목·금 → 출석통계(결석관리) / 월화수 → 학생카드 */
+      ? {label:'출석통계',sub:'결석관리 함께',fn:'goStats()',svg:_SVG_STATS}
+      : {label:'학생카드',sub:'',fn:'goStudentCards()',svg:_SVG_CARD};
+  }
   var _lab='<span style="display:block;font-size:15px;font-weight:800">'+big.label+'</span>'+(big.sub?'<span style="display:block;font-size:12px;opacity:.9">'+big.sub+'</span>':'');
   var html='<button onclick="'+big.fn+'" style="width:100%;border:none;background:var(--primary);color:#fff;border-radius:12px;padding:15px 14px;display:flex;align-items:center;gap:11px;text-align:left;cursor:pointer;font-family:inherit">'+big.svg+'<span style="flex:1;min-width:0">'+_lab+'</span><span style="font-size:20px;line-height:1">›</span></button>';
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">';
-  html+='<button onclick="goAbsentContacts()" style="position:relative;background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:11px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;font-family:inherit"><span style="color:var(--text-sub);display:flex">'+_SVG_PHONE+'</span><span style="font-size:12.5px;font-weight:700;color:var(--text)">결석 연락</span>'+(absN?'<span style="position:absolute;top:7px;right:7px;background:var(--coral);color:#fff;font-size:10px;font-weight:800;border-radius:20px;min-width:16px;height:16px;padding:0 4px;display:flex;align-items:center;justify-content:center">'+absN+'</span>':'')+'</button>';
-  html+='<button onclick="openThisWeekMinutes()" style="background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:11px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;font-family:inherit"><span style="color:var(--text-sub);display:flex">'+_SVG_NOTE+'</span><span style="font-size:12.5px;font-weight:700;color:var(--text)">이번주 회의록</span></button>';
-  html+='</div>';
+  function sub(fn,svg,label,badge){return '<button onclick="'+fn+'" style="position:relative;background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:11px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;font-family:inherit"><span style="color:var(--text-sub);display:flex">'+svg+'</span><span style="font-size:12.5px;font-weight:700;color:var(--text)">'+label+'</span>'+(badge?'<span style="position:absolute;top:7px;right:7px;background:var(--coral);color:#fff;font-size:10px;font-weight:800;border-radius:20px;min-width:16px;height:16px;padding:0 4px;display:flex;align-items:center;justify-content:center">'+badge+'</span>':'')+'</button>';}
+  var left = isFull
+    ? sub('goWriteNotice()',_SVG_EDIT,'공지사항 작성',0)
+    : sub('goAbsentContacts()',_SVG_PHONE,'결석 연락',_absentFlaggedCount());
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">'+left+sub('openThisWeekMinutes()',_SVG_NOTE,'이번주 회의록',0)+'</div>';
   el.innerHTML=html;
 }
 function _planCardHtml(wsat){
