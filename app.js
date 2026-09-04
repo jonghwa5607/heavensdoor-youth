@@ -4318,9 +4318,15 @@ function renderHomeMiniCal(){
     cells+='<div onclick="_openCalDay(\''+ds+'\')" style="height:34px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border-radius:8px;'+(isToday?'background:var(--primary)':isSel?'background:var(--primary-light)':'')+'"><span style="font-size:12px;font-weight:'+(isToday?'800':'500')+';color:'+(isToday?'#fff':isSun?'#E5806B':isSat?'#5B8DEF':'var(--text)')+'">'+d+'</span><span style="display:flex;gap:2px;height:5px;margin-top:1px">'+dots+'</span></div>';
   }
   el.innerHTML='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;margin-bottom:3px">'+head+'</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px">'+cells+'</div>';
+  try{
+    var _selDs=window._miniSel;
+    var _selOK=_selDs&&(function(){var _p=_selDs.split('-');return (+_p[0])===y&&(+_p[1])===(m+1);})();
+    if(!_selOK){var _s=currentSaturday();var _sd=new Date(_s+'T12:00:00');_selDs=(_sd.getFullYear()===y&&_sd.getMonth()===m)?_s:(y+'-'+pad2(m+1)+'-'+pad2(td));window._miniSel=_selDs;}
+    _renderCalPreview(window._miniSel);
+  }catch(e){}
 }
-function _openCalDay(ds){
-  window._miniSel=ds;try{renderHomeMiniCal();}catch(e){}
+function _openCalDay(ds){window._miniSel=ds;try{renderHomeMiniCal();}catch(e){}}
+function _renderCalPreview(ds){
   var el=document.getElementById('home-cal-preview');if(!el)return;
   var evs=(calEvents||[]).filter(function(e){return e.date===ds&&(e.isRecurring||e.visibility!=='private'||e.authorId===G.id);});
   var rems=(reminderData||[]).filter(function(r){return r.date===ds&&!r.done&&(r.shared||!r.ownerId||r.ownerId===G.id);});
