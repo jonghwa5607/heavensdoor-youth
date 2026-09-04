@@ -1735,7 +1735,8 @@ function exportMinutesYear(y){
     .slice().sort(function(a,b){return String(a.date||'').localeCompare(String(b.date||''));});
   if(!list.length){showToast('내보낼 회의록이 없어요');return;}
   var body=list.map(function(r){
-    var blocks=_minParse(r.content||''),n=0;
+    var _agTxt=_minAgendaText(r);
+    var blocks=_minParse(_minWithAgenda(r.content||'','')),n=0;
     var inner=blocks.map(function(b){
       if(b.t==='div')return '<hr>';
       var c=_mdInline(b.c);var im=(parseInt(b.ind,10)||0)*14;var sty=im?' style="margin-left:'+im+'px"':'';
@@ -1749,7 +1750,7 @@ function exportMinutesYear(y){
       if(b.t==='callout')return '<div class="callout">\uD83D\uDCA1 '+c+'</div>';
       return '<p>'+(c||'&nbsp;')+'</p>';
     }).join('');
-    return '<section><h1>'+_esc(r.title)+'</h1><div class="meta">'+_esc(r.authorName||'')+' \u00B7 '+_esc(r.updatedAt||r.date||'')+'</div>'+inner+'</section>';
+    return '<section><h1>'+_esc(r.title)+'</h1><div class="meta">'+_esc(r.authorName||'')+' \u00B7 '+_esc(r.updatedAt||r.date||'')+'</div>'+(_agTxt?'<div class="callout"><b>회의안건</b> '+_esc(_agTxt)+'</div>':'')+inner+'</section>';
   }).join('');
   var html='<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>'+year+'년 회의록</title><style>'
     +'body{font-family:-apple-system,BlinkMacSystemFont,"Malgun Gothic","Apple SD Gothic Neo",sans-serif;color:#222;line-height:1.75;padding:28px;max-width:760px;margin:0 auto}'
@@ -1777,17 +1778,16 @@ function openMinutesHub(){minutesHubYear=String(LIVE_YEAR);renderMinutesHub();cl
 function selMinutesYear(y){minutesHubYear=y;renderMinutesHub();}
 /* 회의 안건을 회의록 맨 위에 "회의안건: (내용 그대로)" 한 줄로 넣는다(분리 없음). 재편집·재저장에도 안전(본문 보존, 중복 없음). */
 function _agendaLine(ag){return (ag||'').replace(/\s*\n\s*/g,' ').trim();}
-function _agendaHeaderOf(content){var lines=(content||'').split('\n');var i=0;while(i<lines.length&&lines[i].trim()==='')i++;if(i<lines.length){var m=lines[i].trim().match(/^회의\s*안건\s*[:：]\s*(.*)$/);if(m)return (m[1]||'').trim();}return null;}
 function _minWithAgenda(content,ag){ag=_agendaLine(ag);var lines=(content||'').split('\n');var i=0;while(i<lines.length&&lines[i].trim()==='')i++;if(i<lines.length&&/^회의\s*안건\s*[:：]/.test(lines[i].trim())){lines.splice(0,i+1);if(lines.length&&lines[0].trim()==='')lines.shift();}var rest=lines.join('\n').replace(/^\n+/,'');if(!ag)return rest;return '회의안건: '+ag+(rest.trim()?'\n\n'+rest:'');}
-/* 안건을 회의록에 반영: 없으면 만들고, 있으면 맨 위 안건 줄만 최신으로 교체(아래 본문은 그대로) */
+/* 안건을 회의록에 반영: 안건은 본문과 분리해 agendaText에 저장(본문엔 넣지 않음). 옛 "회의안건:" 줄이 본문에 있으면 제거(마이그레이션). */
 function _syncAgendaToMinutes(ds){try{
   var r=litFor(ds);if(!r)return false;var ag=_agendaLine(r.agenda);
   var mn=(resources||[]).find(function(x){return x&&x.cat==='minutes'&&!x.deleted&&x.mdate===ds;});
-  if(!mn){if(!ag)return false;var d=ds.split('-');resources.unshift({id:'rs'+Date.now()+Math.random().toString(36).slice(2,5),cat:'minutes',year:String(+d[0]),mdate:ds,title:(+d[1])+'월 '+(+d[2])+'일 회의록',content:_minWithAgenda('',ag),agendaSync:ag,authorId:G.id,authorName:G.displayName,date:_minDateStr(),updatedAt:_minDateStr(),updatedBy:G.displayName});return true;}
-  if(_agendaHeaderOf(mn.content)===ag)return false;   /* 이미 최신이면 손대지 않음(불필요한 저장 방지) */
-  var nc=_minWithAgenda(mn.content,ag);
-  if(nc!==(mn.content||'')){mn.content=nc;mn.agendaSync=ag;return true;}
-  return false;
+  if(!mn){if(!ag)return false;var d=ds.split('-');resources.unshift({id:'rs'+Date.now()+Math.random().toString(36).slice(2,5),cat:'minutes',year:String(+d[0]),mdate:ds,title:(+d[1])+'월 '+(+d[2])+'일 회의록',content:'',agendaText:ag,authorId:G.id,authorName:G.displayName,date:_minDateStr(),updatedAt:_minDateStr(),updatedBy:G.displayName});return true;}
+  var changed=false;
+  var cleaned=_minWithAgenda(mn.content,'');if(cleaned!==(mn.content||'')){mn.content=cleaned;changed=true;}
+  if((mn.agendaText||'')!==ag){mn.agendaText=ag;changed=true;}
+  return changed;
 }catch(e){return false;}}
 function ensureWeeklyMinutes(){
   try{_hydrateYP();}catch(e){}
@@ -1809,11 +1809,12 @@ function ensureWeeklyMinutes(){
       var title=(+d[1])+'월 '+(+d[2])+'일 회의록';
       if(ex){
         if(ex.title!==title){ex.title=title;made++;}
-        if(_agendaHeaderOf(ex.content)!==ag){var nc=_minWithAgenda(ex.content,ag);if(nc!==(ex.content||'')){ex.content=nc;ex.agendaSync=ag;made++;}}
+        var cleaned=_minWithAgenda(ex.content,'');if(cleaned!==(ex.content||'')){ex.content=cleaned;made++;}
+        if((ex.agendaText||'')!==ag){ex.agendaText=ag;made++;}
         return;
       }
       resources.unshift({id:'rs'+Date.now()+Math.random().toString(36).slice(2,5),cat:'minutes',year:String(+d[0]),mdate:ds,
-        title:title,content:_minWithAgenda('',ag),agendaSync:(ag||''),authorId:G.id,authorName:G.displayName,date:_minDateStr(),updatedAt:_minDateStr(),updatedBy:G.displayName});
+        title:title,content:'',agendaText:(ag||''),authorId:G.id,authorName:G.displayName,date:_minDateStr(),updatedAt:_minDateStr(),updatedBy:G.displayName});
       made++;
     });
     if(made){try{if(typeof flushSync==='function')flushSync();}catch(e){}}
@@ -1889,7 +1890,7 @@ function _unackedMinutes(){
 function publishMinutes(){
   var r=resources.find(function(x){return x.id===currentMinutesId;});if(!r)return;
   if(_minEditing){showToast('편집을 끝낸 뒤 발행해주세요');return;}
-  if(!(r.content||'').trim()){showToast('내용이 비어 있어요');return;}
+  if(!(r.content||'').trim()&&!_minAgendaText(r)){showToast('내용이 비어 있어요');return;}
   var _n=_teacherRoster().length;if(!confirm('📣 푸시 알림을 보냅니다\n\n대상: 교사 전체 '+_n+'명\n내용: '+r.title+'\n\n발행할까요?'))return;
   r.published=true;r.publishedAt=_minDateStr();r.publishedBy=((G.name||'')+' '+(G.baptism||'')).trim();
   r.acks=r.acks||[];
@@ -2445,25 +2446,28 @@ function _slashQ(){var t=_slashBlk&&_slashBlk.querySelector('.mb-txt');var c=t?t
 document.addEventListener('click',function(e){var el=document.getElementById('min-blockmenu');if(el&&el.style.display!=='none'&&!el.contains(e.target)&&!(e.target.classList&&e.target.classList.contains('mb-h')))closeBlockMenu();},true);
 function _minSlashClose(){_slashOpen=false;_slashBlk=null;var el=document.getElementById('min-slash');if(el)el.style.display='none';}
 /* 열어둔 채로도 남의 수정이 반영되게 — 2.5초마다 화면과 데이터를 대조 */
+function _minAgendaText(r){try{var a=(r&&r.agendaText||'').trim();if(a)return a;_hydrateYP();var l=(r&&r.mdate)?litFor(r.mdate):null;if(l&&(l.agenda||'').trim())return _agendaLine(l.agenda);}catch(e){}return '';}
+function _renderMinAgenda(r){var el=document.getElementById('minutes-agenda');if(!el)return;var a=_minAgendaText(r);if(!a){el.style.display='none';el.innerHTML='';return;}el.style.display='';el.innerHTML='<div style="background:var(--primary-light);border:1px solid var(--primary);border-radius:12px;padding:11px 13px;margin-bottom:14px"><div style="font-size:11px;font-weight:800;color:var(--primary-dark);margin-bottom:5px">회의안건 <span style="font-weight:600;color:var(--text-light);font-size:10px">· 연간계획에서만 수정</span></div><div style="font-size:14px;line-height:1.65;color:var(--text);white-space:pre-wrap">'+_esc(a)+'</div></div>';}
 function _minViewSync(){
   try{
     if(!_minModalOpen()||_minEditing||!currentMinutesId)return;
     var r=resources.find(function(x){return x.id===currentMinutesId;});
     if(!r)return;
     var ed=document.getElementById('minutes-viewer-content');
-    if(ed&&_minSerialize()!==(r.content||'')){
+    if(ed&&_minSerialize()!==_minWithAgenda(r.content,'')){
       var sc=ed.scrollTop;
-      _minRender(_minParse(r.content),false);
+      _minRender(_minParse(_minWithAgenda(r.content,'')),false);
       ed.scrollTop=sc;
       _renderMinutesMeta(r);
     }
+    _renderMinAgenda(r);
     var ti=document.getElementById('minutes-viewer-title');
     if(ti&&document.activeElement!==ti&&ti.value!==r.title)ti.value=r.title;
     renderMinutesAck();          /* 확인 현황도 같이 갱신 */
     _updateMinutesLockUI();
   }catch(e){}
 }
-function openMinutesViewer(id){const r=resources.find(r=>r.id===id);if(!r)return;currentMinutesId=id;_minEditing=false;_minSlashClose();document.getElementById('minutes-viewer-title').value=r.title;_minRender(_minParse(r.content),false);_renderMinutesMeta(r);setMinutesEditing(false);_updateMinutesLockUI();renderMinutesAck();clearInterval(_minViewTimer);_minViewTimer=setInterval(_minViewSync,500);openModal('minutes-viewer-modal');}
+function openMinutesViewer(id){const r=resources.find(r=>r.id===id);if(!r)return;currentMinutesId=id;_minEditing=false;_minSlashClose();document.getElementById('minutes-viewer-title').value=r.title;_minRender(_minParse(_minWithAgenda(r.content,'')),false);_renderMinAgenda(r);_renderMinutesMeta(r);setMinutesEditing(false);_updateMinutesLockUI();renderMinutesAck();clearInterval(_minViewTimer);_minViewTimer=setInterval(_minViewSync,500);openModal('minutes-viewer-modal');}
 function _bindHrClick(){try{var ed=document.getElementById('minutes-viewer-content');if(!ed)return;ed.querySelectorAll('.mb').forEach(function(b){if(b.querySelector('.mb-txt'))return;b.onclick=function(ev){if(!_minEditing)return;ev.stopPropagation();if(confirm('이 구분선을 삭제할까요?')){b.remove();_minRenumber();onMinutesInput();}};b.style.cursor=_minEditing?'pointer':'';});}catch(e){}}
 function setMinutesEditing(editing){
   const ti=document.getElementById('minutes-viewer-title');
@@ -2551,7 +2555,7 @@ function _writeLock(){var id=currentMinutesId;if(!id||!(window.FB&&FB.enabled())
 function _releaseLock(){var id=currentMinutesId;if(!id)return;var l=_minutesLocks[id];if(l&&l.uid&&l.uid!==G.id)return;/* 남의 락은 건드리지 않음 */try{if(window.FB&&FB.enabled())FB.remove('minutesLocks',id);}catch(e){}delete _minutesLocks[id];}
 if(window.FB&&FB.enabled()){FB.ready(function(){
   FB.watch('minutesLocks',function(arr){var m={};(arr||[]).forEach(function(l){if(l&&l.id)m[l.id]=l;});_minutesLocks=m;if(_minModalOpen())_updateMinutesLockUI();try{if(typeof resourceCurCat!=='undefined'&&resourceCurCat==='minutes')renderResourceList();}catch(e){}});
-  FB.watch('resources',function(cloud){try{autoArchiveMinutes();}catch(e){}try{renderMinutesHub();}catch(e){}try{renderHomeMinutes();}catch(e){}if(!_minModalOpen()||_minEditing||!currentMinutesId)return;var cd=(cloud||[]).find(function(x){return x&&x.id===currentMinutesId;});if(!cd)return;if(_minSerialize()!==(cd.content||'')){var _ed=document.getElementById('minutes-viewer-content');var _sc=_ed?_ed.scrollTop:0;_minRender(_minParse(cd.content),false);if(_ed)_ed.scrollTop=_sc;_renderMinutesMeta(cd);var _ti=document.getElementById('minutes-viewer-title');if(_ti&&_ti.value!==cd.title)_ti.value=cd.title;}});
+  FB.watch('resources',function(cloud){try{autoArchiveMinutes();}catch(e){}try{renderMinutesHub();}catch(e){}try{renderHomeMinutes();}catch(e){}if(!_minModalOpen()||_minEditing||!currentMinutesId)return;var cd=(cloud||[]).find(function(x){return x&&x.id===currentMinutesId;});if(!cd)return;if(_minSerialize()!==_minWithAgenda(cd.content,'')){var _ed=document.getElementById('minutes-viewer-content');var _sc=_ed?_ed.scrollTop:0;_minRender(_minParse(_minWithAgenda(cd.content,'')),false);if(_ed)_ed.scrollTop=_sc;_renderMinutesMeta(cd);var _ti=document.getElementById('minutes-viewer-title');if(_ti&&_ti.value!==cd.title)_ti.value=cd.title;}try{_renderMinAgenda(cd);}catch(e){}});
 });}
 window.addEventListener('beforeunload',function(){try{if(currentMinutesId&&_minEditing)_releaseLock();}catch(e){}});
 let attachBuf={write:{imgs:[],docs:[]},aw:{imgs:[],docs:[]},gallery:{imgs:[],docs:[]},event:{imgs:[],docs:[]},rw:{imgs:[],docs:[]},wn:{imgs:[],docs:[]}};
