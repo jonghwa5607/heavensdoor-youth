@@ -370,7 +370,7 @@ function switchTab(tab){if(tab==='activity'&&G.role==='student'&&G.graduated){op
       }catch(e){}
       renderCalendar();
       try{renderCalDayEvents(selectedCalDate);}catch(e){}
-    }if(tab==='activity')renderDeptInfo();if(tab==='home'){checkImportantNotices();try{updateVerseEditUI();}catch(e){}try{checkThursdayNotice();}catch(e){}renderHomeSchedule();try{renderTeacherWeek();}catch(e){}try{renderHomeMiniCal();}catch(e){}try{renderHomeMinutes();}catch(e){}applySeason(appConfig.season||'ordinary');try{renderBdayBannerAuto();}catch(e){}}if(tab==='teacher'){autoArchiveMinutes();renderResourceList();}}catch(e){console.error('switchTab render error:',e);}try{maybeCoach(tab);}catch(e){}}
+    }if(tab==='activity')renderDeptInfo();if(tab==='home'){checkImportantNotices();try{updateVerseEditUI();}catch(e){}try{checkThursdayNotice();}catch(e){}renderHomeSchedule();try{renderTeacherWeek();}catch(e){}try{renderHomeMiniCal();}catch(e){}try{renderHomeMinutes();}catch(e){}applySeason(appConfig.season||'ordinary');try{renderBdayBannerAuto();}catch(e){}try{_homePlanRetry();}catch(e){}}if(tab==='teacher'){autoArchiveMinutes();renderResourceList();}}catch(e){console.error('switchTab render error:',e);}try{maybeCoach(tab);}catch(e){}}
 function show(id,v){const e=document.getElementById(id);if(e)e.style.display=v?'':'none';}
 function showToast(msg,dur=2200){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
 function openModal(id){const m=document.getElementById(id);if(m)m.classList.add('open');}
@@ -2555,7 +2555,7 @@ function _writeLock(){var id=currentMinutesId;if(!id||!(window.FB&&FB.enabled())
 function _releaseLock(){var id=currentMinutesId;if(!id)return;var l=_minutesLocks[id];if(l&&l.uid&&l.uid!==G.id)return;/* 남의 락은 건드리지 않음 */try{if(window.FB&&FB.enabled())FB.remove('minutesLocks',id);}catch(e){}delete _minutesLocks[id];}
 if(window.FB&&FB.enabled()){FB.ready(function(){
   FB.watch('minutesLocks',function(arr){var m={};(arr||[]).forEach(function(l){if(l&&l.id)m[l.id]=l;});_minutesLocks=m;if(_minModalOpen())_updateMinutesLockUI();try{if(typeof resourceCurCat!=='undefined'&&resourceCurCat==='minutes')renderResourceList();}catch(e){}});
-  FB.watch('resources',function(cloud){try{autoArchiveMinutes();}catch(e){}try{renderMinutesHub();}catch(e){}try{renderHomeMinutes();}catch(e){}if(!_minModalOpen()||_minEditing||!currentMinutesId)return;var cd=(cloud||[]).find(function(x){return x&&x.id===currentMinutesId;});if(!cd)return;if(_minSerialize()!==_minWithAgenda(cd.content,'')){var _ed=document.getElementById('minutes-viewer-content');var _sc=_ed?_ed.scrollTop:0;_minRender(_minParse(_minWithAgenda(cd.content,'')),false);if(_ed)_ed.scrollTop=_sc;_renderMinutesMeta(cd);var _ti=document.getElementById('minutes-viewer-title');if(_ti&&_ti.value!==cd.title)_ti.value=cd.title;}try{_renderMinAgenda(cd);}catch(e){}});
+  FB.watch('resources',function(cloud){try{autoArchiveMinutes();}catch(e){}try{renderMinutesHub();}catch(e){}try{renderHomeMinutes();}catch(e){}try{var _sh=document.getElementById('screen-home');if(_sh&&_sh.classList.contains('active')){try{renderTeacherWeek();}catch(e){}try{renderHomeMiniCal();}catch(e){}}}catch(e){}if(!_minModalOpen()||_minEditing||!currentMinutesId)return;var cd=(cloud||[]).find(function(x){return x&&x.id===currentMinutesId;});if(!cd)return;if(_minSerialize()!==_minWithAgenda(cd.content,'')){var _ed=document.getElementById('minutes-viewer-content');var _sc=_ed?_ed.scrollTop:0;_minRender(_minParse(_minWithAgenda(cd.content,'')),false);if(_ed)_ed.scrollTop=_sc;_renderMinutesMeta(cd);var _ti=document.getElementById('minutes-viewer-title');if(_ti&&_ti.value!==cd.title)_ti.value=cd.title;}try{_renderMinAgenda(cd);}catch(e){}});
 });}
 window.addEventListener('beforeunload',function(){try{if(currentMinutesId&&_minEditing)_releaseLock();}catch(e){}});
 let attachBuf={write:{imgs:[],docs:[]},aw:{imgs:[],docs:[]},gallery:{imgs:[],docs:[]},event:{imgs:[],docs:[]},rw:{imgs:[],docs:[]},wn:{imgs:[],docs:[]}};
@@ -4326,6 +4326,23 @@ function renderHomeMiniCal(){
   }catch(e){}
 }
 function _openCalDay(ds){window._miniSel=ds;try{renderHomeMiniCal();}catch(e){}}
+function _homePlanRetry(){
+  try{clearInterval(window._homePlanIv);}catch(e){}
+  var tries=0;
+  window._homePlanIv=setInterval(function(){
+    tries++;
+    var sh=document.getElementById('screen-home');
+    if(!sh||!sh.classList.contains('active')||tries>16){try{clearInterval(window._homePlanIv);}catch(e){}return;}
+    try{
+      var ds=window._miniSel;if(!ds)return;
+      try{_hydrateYP();}catch(e){}
+      var l=litFor(ds)||{};
+      var has=!!(_dayLabel(ds)||l.optype||l.form||l.owner||l.detail||l.liturgyTeam||l.choir||l.progress);
+      _renderCalPreview(ds);
+      if(has){try{clearInterval(window._homePlanIv);}catch(e){}}
+    }catch(e){}
+  },500);
+}
 function _renderCalPreview(ds){
   var el=document.getElementById('home-cal-preview');if(!el)return;
   var evs=(calEvents||[]).filter(function(e){return e.date===ds&&(e.isRecurring||e.visibility!=='private'||e.authorId===G.id);});
@@ -4711,6 +4728,7 @@ function renderTeacherWeek(){
 
   if(!html)html='<div style="padding:22px;text-align:center"><div style="font-size:28px">📅</div><div style="font-size:13px;color:var(--text-light);margin-top:6px">이번 주는 일정도 할 일도 없어요</div></div>';
   el.innerHTML=html;
+  try{if(window._miniSel&&document.getElementById('home-cal-preview'))_renderCalPreview(window._miniSel);}catch(e){}
 }
 function renderHomeReminders(){const el=document.getElementById('home-reminder-list');if(!el)return;const active=reminderData.filter(r=>!r.done).slice(0,3);if(!active.length){el.innerHTML='<div class="card" style="font-size:13px;color:var(--text-light);text-align:center;padding:18px">등록된 리마인더가 없어요</div>';return;}el.innerHTML=active.map(r=>`<div class="card" style="margin-bottom:8px;display:flex;align-items:center;gap:10px"><input type="checkbox" onchange="toggleReminder('${r.id}',this)" style="width:18px;height:18px;accent-color:var(--primary);flex-shrink:0;cursor:pointer"><div style="flex:1"><div style="font-size:13px;font-weight:600">${r.content}</div>${r.date?`<div style="font-size:10px;color:var(--text-light);margin-top:2px">${r.date}</div>`:''}</div></div>`).join('');}
 
