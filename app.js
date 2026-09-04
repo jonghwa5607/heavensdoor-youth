@@ -370,7 +370,7 @@ function switchTab(tab){if(tab==='activity'&&G.role==='student'&&G.graduated){op
       }catch(e){}
       renderCalendar();
       try{renderCalDayEvents(selectedCalDate);}catch(e){}
-    }if(tab==='activity')renderDeptInfo();if(tab==='home'){checkImportantNotices();try{updateVerseEditUI();}catch(e){}try{checkThursdayNotice();}catch(e){}renderHomeSchedule();try{renderTeacherWeek();}catch(e){}try{renderHomeMiniCal();}catch(e){}try{renderHomeMinutes();}catch(e){}applySeason(appConfig.season||'ordinary');try{renderBdayBannerAuto();}catch(e){}try{_homePlanRetry();}catch(e){}}if(tab==='teacher'){autoArchiveMinutes();renderResourceList();}}catch(e){console.error('switchTab render error:',e);}try{maybeCoach(tab);}catch(e){}}
+    }if(tab==='activity')renderDeptInfo();if(tab==='home'){checkImportantNotices();try{updateVerseEditUI();}catch(e){}try{checkThursdayNotice();}catch(e){}renderHomeSchedule();try{renderTeacherWeek();}catch(e){}try{renderHomeSmart();}catch(e){}try{renderHomeWeek();}catch(e){}try{renderHomeMiniCal();}catch(e){}try{renderHomeMinutes();}catch(e){}applySeason(appConfig.season||'ordinary');try{renderBdayBannerAuto();}catch(e){}try{_homePlanRetry();}catch(e){}}if(tab==='teacher'){autoArchiveMinutes();renderResourceList();}}catch(e){console.error('switchTab render error:',e);}try{maybeCoach(tab);}catch(e){}}
 function show(id,v){const e=document.getElementById(id);if(e)e.style.display=v?'':'none';}
 function showToast(msg,dur=2200){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
 function openModal(id){const m=document.getElementById(id);if(m)m.classList.add('open');}
@@ -2555,7 +2555,7 @@ function _writeLock(){var id=currentMinutesId;if(!id||!(window.FB&&FB.enabled())
 function _releaseLock(){var id=currentMinutesId;if(!id)return;var l=_minutesLocks[id];if(l&&l.uid&&l.uid!==G.id)return;/* 남의 락은 건드리지 않음 */try{if(window.FB&&FB.enabled())FB.remove('minutesLocks',id);}catch(e){}delete _minutesLocks[id];}
 if(window.FB&&FB.enabled()){FB.ready(function(){
   FB.watch('minutesLocks',function(arr){var m={};(arr||[]).forEach(function(l){if(l&&l.id)m[l.id]=l;});_minutesLocks=m;if(_minModalOpen())_updateMinutesLockUI();try{if(typeof resourceCurCat!=='undefined'&&resourceCurCat==='minutes')renderResourceList();}catch(e){}});
-  FB.watch('resources',function(cloud){try{autoArchiveMinutes();}catch(e){}try{renderMinutesHub();}catch(e){}try{renderHomeMinutes();}catch(e){}try{var _sh=document.getElementById('screen-home');if(_sh&&_sh.classList.contains('active')){try{renderTeacherWeek();}catch(e){}try{renderHomeMiniCal();}catch(e){}}}catch(e){}if(!_minModalOpen()||_minEditing||!currentMinutesId)return;var cd=(cloud||[]).find(function(x){return x&&x.id===currentMinutesId;});if(!cd)return;if(_minSerialize()!==_minWithAgenda(cd.content,'')){var _ed=document.getElementById('minutes-viewer-content');var _sc=_ed?_ed.scrollTop:0;_minRender(_minParse(_minWithAgenda(cd.content,'')),false);if(_ed)_ed.scrollTop=_sc;_renderMinutesMeta(cd);var _ti=document.getElementById('minutes-viewer-title');if(_ti&&_ti.value!==cd.title)_ti.value=cd.title;}try{_renderMinAgenda(cd);}catch(e){}});
+  FB.watch('resources',function(cloud){try{autoArchiveMinutes();}catch(e){}try{renderMinutesHub();}catch(e){}try{renderHomeMinutes();}catch(e){}try{var _sh=document.getElementById('screen-home');if(_sh&&_sh.classList.contains('active')){try{renderHomeSmart();}catch(e){}try{renderHomeWeek();}catch(e){}try{renderHomeMiniCal();}catch(e){}}}catch(e){}if(!_minModalOpen()||_minEditing||!currentMinutesId)return;var cd=(cloud||[]).find(function(x){return x&&x.id===currentMinutesId;});if(!cd)return;if(_minSerialize()!==_minWithAgenda(cd.content,'')){var _ed=document.getElementById('minutes-viewer-content');var _sc=_ed?_ed.scrollTop:0;_minRender(_minParse(_minWithAgenda(cd.content,'')),false);if(_ed)_ed.scrollTop=_sc;_renderMinutesMeta(cd);var _ti=document.getElementById('minutes-viewer-title');if(_ti&&_ti.value!==cd.title)_ti.value=cd.title;}try{_renderMinAgenda(cd);}catch(e){}});
 });}
 window.addEventListener('beforeunload',function(){try{if(currentMinutesId&&_minEditing)_releaseLock();}catch(e){}});
 let attachBuf={write:{imgs:[],docs:[]},aw:{imgs:[],docs:[]},gallery:{imgs:[],docs:[]},event:{imgs:[],docs:[]},rw:{imgs:[],docs:[]},wn:{imgs:[],docs:[]}};
@@ -4321,7 +4321,7 @@ function renderHomeMiniCal(){
   try{
     var _selDs=window._miniSel;
     var _selOK=_selDs&&(function(){var _p=_selDs.split('-');return (+_p[0])===y&&(+_p[1])===(m+1);})();
-    if(!_selOK){var _s=currentSaturday();var _sd=new Date(_s+'T12:00:00');_selDs=(_sd.getFullYear()===y&&_sd.getMonth()===m)?_s:(y+'-'+pad2(m+1)+'-'+pad2(td));window._miniSel=_selDs;}
+    if(!_selOK){_selDs=y+'-'+pad2(m+1)+'-'+pad2(td);window._miniSel=_selDs;}
     _renderCalPreview(window._miniSel);
   }catch(e){}
 }
@@ -4338,11 +4338,63 @@ function _homePlanRetry(){
       try{_hydrateYP();}catch(e){}
       var wsat=(typeof currentSaturday==='function')?currentSaturday():ds;
       var l=litFor(wsat)||{};
-      var has=!!(_dayLabel(wsat)||l.optype||l.form||l.owner||l.detail||l.liturgyTeam||l.choir||l.progress);
-      _renderCalPreview(ds);
+      var has=!!(_dayLabel(wsat)||l.optype||l.form||l.owner||l.detail||l.liturgyTeam||l.choir||l.progress||(typeof isVacationDate==='function'&&isVacationDate(wsat))||(typeof isEduVacation==='function'&&isEduVacation(wsat)));
+      try{renderHomeWeek();}catch(e){}
+      try{renderHomeSmart();}catch(e){}
       if(has){try{clearInterval(window._homePlanIv);}catch(e){}}
     }catch(e){}
   },500);
+}
+var _SVG_QR='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v.01M14 21h.01M21 21v.01M17 21h1"/></svg>';
+var _SVG_SPK='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h3l4 4V6L7 10H4a1 1 0 0 0-1 1z"/><path d="M16 8a5 5 0 0 1 0 8"/></svg>';
+var _SVG_PHONE='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.4-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>';
+var _SVG_NOTE='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>';
+function _isFullAdminRole(){return G.type==='principal'||G.type==='admin'||G.isAdmin;}
+function _absentFlaggedCount(){try{var isFull=_isFullAdminRole();var sat=currentSaturday();return (pendingList||[]).filter(function(u){return u&&u.approved&&u.role==='student'&&!u.hidden&&!u.graduated&&(isFull||u.gradeKey===G.type)&&(typeof computeAbsentStreak==='function')&&computeAbsentStreak(u)>=3&&u.absentAckWeek!==sat;}).length;}catch(e){return 0;}}
+function goAttendance(){switchTab('admin');try{showAdminTab('attend');}catch(e){}}
+function goAbsentContacts(){switchTab('admin');try{showAdminTab('stats');}catch(e){}}
+function openThisWeekMinutes(){try{var ds=currentSaturday();try{_syncAgendaToMinutes(ds);}catch(e){}var mn=(resources||[]).find(function(x){return x&&x.cat==='minutes'&&!x.deleted&&x.mdate===ds;});if(!mn){var d=ds.split('-');mn={id:'rs'+Date.now()+Math.random().toString(36).slice(2,5),cat:'minutes',year:String(+d[0]),mdate:ds,title:(+d[1])+'월 '+(+d[2])+'일 회의록',content:'',authorId:G.id,authorName:G.displayName,date:_minDateStr(),updatedAt:_minDateStr(),updatedBy:G.displayName};resources.unshift(mn);try{if(typeof flushSync==='function')flushSync();}catch(e){}}openMinutesViewer(mn.id);}catch(e){}}
+function renderHomeSmart(){
+  var el=document.getElementById('home-smart');if(!el)return;
+  var isFull=_isFullAdminRole();var dow=new Date().getDay();var isSat=dow===6;
+  var big=(isFull&&(dow===4||dow===5))
+    ? {label:'주간공지 보내기',sub:'교감·교무 · 목·금',fn:'openWeeklyNotice()',svg:_SVG_SPK}
+    : {label:'출석관리',sub:isSat?'토요일 · QR 출석체크':'출석·QR 관리',fn:'goAttendance()',svg:_SVG_QR};
+  var absN=_absentFlaggedCount();
+  var html='<button onclick="'+big.fn+'" style="width:100%;border:none;background:var(--primary);color:#fff;border-radius:12px;padding:13px 14px;display:flex;align-items:center;gap:11px;text-align:left;cursor:pointer;font-family:inherit">'+big.svg+'<span style="flex:1;min-width:0"><span style="display:block;font-size:15px;font-weight:800">'+big.label+'</span><span style="display:block;font-size:12px;opacity:.9">'+big.sub+'</span></span><span style="font-size:20px;line-height:1">›</span></button>';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">';
+  html+='<button onclick="goAbsentContacts()" style="position:relative;background:var(--card);border:1px solid var(--border-light);border-radius:10px;padding:11px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;font-family:inherit"><span style="color:var(--text-sub);display:flex">'+_SVG_PHONE+'</span><span style="font-size:12.5px;font-weight:700;color:var(--text)">결석 연락</span>'+(absN?'<span style="position:absolute;top:7px;right:7px;background:var(--coral);color:#fff;font-size:10px;font-weight:800;border-radius:20px;min-width:16px;height:16px;padding:0 4px;display:flex;align-items:center;justify-content:center">'+absN+'</span>':'')+'</button>';
+  html+='<button onclick="openThisWeekMinutes()" style="background:var(--card);border:1px solid var(--border-light);border-radius:10px;padding:11px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;font-family:inherit"><span style="color:var(--text-sub);display:flex">'+_SVG_NOTE+'</span><span style="font-size:12.5px;font-weight:700;color:var(--text)">이번주 회의록</span></button>';
+  html+='</div>';
+  el.innerHTML=html;
+}
+function _planCardHtml(wsat){
+  try{_hydrateYP();}catch(e){}
+  var _fullVac=(typeof isVacationDate==='function')&&isVacationDate(wsat);
+  var _eduVac=(typeof isEduVacation==='function')&&isEduVacation(wsat);
+  if(_fullVac||_eduVac){
+    var _vt=_fullVac?'🏖️ 이번주 주일학교 방학':'📖 이번주 교리방학';
+    var _vb=_fullVac?'교리·학생미사·부서활동이 모두 없어요':'교리수업 없이 부서활동만 진행돼요';
+    return '<div style="background:var(--yellow-light);border-radius:8px;padding:10px 12px;margin-bottom:8px"><div style="font-size:12px;font-weight:800;color:#9A6A00;margin-bottom:3px">'+_vt+'</div><div style="font-size:12px;color:var(--text-sub);line-height:1.5">'+_vb+'</div></div>';
+  }
+  var _lp=litFor(wsat)||{};var _ph=_dayLabel(wsat);var pb=[];
+  if(_ph)pb.push(['전례시기',_ph]);if(_lp.optype)pb.push(['운영구분',_lp.optype]);if(_lp.form)pb.push(['교리',_lp.form]);if(_lp.owner)pb.push(['교안담당',_lp.owner]);if(_lp.detail)pb.push(['교리내용',_lp.detail]);if(_lp.liturgyTeam)pb.push(['전례부',_lp.liturgyTeam]);if(_lp.choir)pb.push(['성가대',_lp.choir]);if(_lp.progress)pb.push(['진행',_lp.progress]);
+  if(!pb.length)return '';
+  return '<div style="background:var(--primary-light);border-radius:8px;padding:9px 11px;margin-bottom:8px"><div style="font-size:10px;font-weight:800;color:var(--primary-dark);margin-bottom:4px">📋 이번주 운영계획</div>'+pb.map(function(b){return '<div style="font-size:12px;padding:1px 0;display:flex;gap:6px"><span style="color:var(--text-light);width:56px;flex-shrink:0">'+b[0]+'</span><span style="font-weight:600;color:var(--text-sub)">'+_esc(b[1])+'</span></div>';}).join('')+'</div>';
+}
+function renderHomeWeek(){
+  var el=document.getElementById('home-week-card');if(!el)return;
+  var wsat=currentSaturday();var q=wsat.split('-');
+  var plan=_planCardHtml(wsat);
+  var evs=(calEvents||[]).filter(function(e){return e.date===wsat&&(e.isRecurring||e.visibility!=='private'||e.authorId===G.id);});
+  var bf=(typeof bdayOn==='function')?bdayOn(wsat):{birth:[],feast:[]};
+  function row(color,txt){return '<div style="font-size:12px;padding:3px 0;display:flex;gap:7px;align-items:flex-start"><span style="width:5px;height:5px;border-radius:50%;background:'+color+';margin-top:6px;flex-shrink:0"></span><span style="line-height:1.5">'+txt+'</span></div>';}
+  var rows='';
+  evs.forEach(function(e){rows+=row('var(--mint)',_esc(e.title)+(e.time?' <span style="color:var(--text-light)">'+_esc(e.time)+'</span>':''));});
+  (bf.birth||[]).forEach(function(u){rows+=row('#E5806B','🎂 '+_esc(u.name+' '+u.baptism)+' 생일');});
+  (bf.feast||[]).forEach(function(u){rows+=row('#E5806B',_esc(u.name+' '+u.baptism)+' 축일');});
+  if(!rows)rows='<div style="font-size:12px;color:var(--text-light);padding:3px 0">이번 주 토요일 일정이 없어요</div>';
+  el.innerHTML='<div class="card" style="padding:12px">'+plan+'<div style="font-size:11px;font-weight:700;color:var(--text-light);margin-bottom:3px">'+(+q[1])+'월 '+(+q[2])+'일 (토)</div>'+rows+'</div>';
 }
 function _renderCalPreview(ds){
   var el=document.getElementById('home-cal-preview');if(!el)return;
@@ -4357,14 +4409,8 @@ function _renderCalPreview(ds){
   (bf.birth||[]).forEach(function(u){rows+=row('#E5806B','🎂 '+_esc(u.name+' '+u.baptism)+' 생일');});
   (bf.feast||[]).forEach(function(u){rows+=row('#E5806B',_esc(u.name+' '+u.baptism)+' 축일');});
   if(!rows)rows='<div style="font-size:12px;color:var(--text-light);padding:3px 0">일정이 없어요</div>';
-  /* 이번 주 운영계획 — 어느 날짜를 눌러도 항상 이번 주 토요일 계획을 고정 표시 */
-  var _planHtml='';
-  try{_hydrateYP();}catch(e){}
-  var _wsat=(typeof currentSaturday==='function')?currentSaturday():ds;
-  var _lp=litFor(_wsat)||{};var _ph=_dayLabel(_wsat);var pb=[];
-  if(_ph)pb.push(['전례시기',_ph]);if(_lp.optype)pb.push(['운영구분',_lp.optype]);if(_lp.form)pb.push(['교리',_lp.form]);if(_lp.owner)pb.push(['교안담당',_lp.owner]);if(_lp.detail)pb.push(['교리내용',_lp.detail]);if(_lp.liturgyTeam)pb.push(['전례부',_lp.liturgyTeam]);if(_lp.choir)pb.push(['성가대',_lp.choir]);if(_lp.progress)pb.push(['진행',_lp.progress]);
-  if(pb.length){_planHtml='<div style="background:var(--primary-light);border-radius:8px;padding:9px 11px;margin:10px 0 4px"><div style="font-size:10px;font-weight:800;color:var(--primary-dark);margin-bottom:4px">📋 이번주 운영계획</div>'+pb.map(function(b){return '<div style="font-size:12px;padding:1px 0;display:flex;gap:6px"><span style="color:var(--text-light);width:56px;flex-shrink:0">'+b[0]+'</span><span style="font-weight:600;color:var(--text-sub)">'+_esc(b[1])+'</span></div>';}).join('')+'</div>';}
-  el.innerHTML=_planHtml+'<div style="border-top:1px solid var(--border-light);margin-top:10px;padding-top:8px"><div style="font-size:12px;font-weight:800;margin-bottom:5px">'+(+q[1])+'월 '+(+q[2])+'일 <span style="color:var(--text-light);font-weight:600">('+dow+')</span></div>'+rows+'</div>';
+  if(!rows)rows='<div style="font-size:12px;color:var(--text-light);padding:3px 0">일정이 없어요</div>';
+  el.innerHTML='<div style="border-top:1px solid var(--border-light);margin-top:10px;padding-top:8px"><div style="font-size:12px;font-weight:800;margin-bottom:5px">'+(+q[1])+'월 '+(+q[2])+'일 <span style="color:var(--text-light);font-weight:600">('+dow+')</span></div>'+rows+'</div>';
 }
 function renderHomeSchedule(){const el=document.getElementById('teacher-schedule');if(!el)return;ensureWeeklyEvents();const n=new Date();const t0=n.getFullYear()+'-'+pad2(n.getMonth()+1)+'-'+pad2(n.getDate());const sat=currentSaturday();const end=sat>=t0?sat:t0;const evs=calEvents.filter(e=>e.date>=t0&&e.date<=end&&(e.isRecurring||e.visibility!=='private'||e.authorId===G.id)).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);if(!evs.length){el.innerHTML='<div class="empty" style="padding:20px"><div class="empty-emoji" style="font-size:28px">📅</div><div class="empty-title" style="font-size:13px">이번 주 일정이 없어요</div></div>';return;}el.innerHTML=evs.map(e=>{const[y,m,d]=e.date.split('-');const dow=['일','월','화','수','목','금','토'][new Date(e.date+'T12:00:00').getDay()];return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border-light);cursor:pointer" onclick="switchTab('calendar');selectedCalDate='${e.date}';renderCalendar()"><span class="chip ${e.isRecurring?'chip-mint':'chip-blue'}" style="flex-shrink:0">${parseInt(m)}/${parseInt(d)} (${dow})</span><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.title}</div>${(e.time||e.place)?`<div style="font-size:11px;color:var(--text-light)">${e.time||''}${e.place?' · '+e.place:''}</div>`:''}</div></div>`;}).join('');}
 function ensureWeeklyEvents(){if(!window._evReady)return;const sats=getUpcomingSaturdays(12);sats.forEach(d=>{if(!calEvents.some(e=>e.date===d&&e.isRecurring)){calEvents.push({id:'ce-week-'+d,title:'📌 주일학교',date:d,time:'',place:'',content:'매주 토요일 주일학교 모임입니다.',isRecurring:true,responses:{}});}});}
