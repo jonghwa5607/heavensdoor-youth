@@ -1775,17 +1775,18 @@ var _mhTimer=null;
 function closeMinutesHub(){clearInterval(_mhTimer);_mhTimer=null;closeModal('minutes-hub-modal');}
 function openMinutesHub(){minutesHubYear=String(LIVE_YEAR);renderMinutesHub();clearInterval(_mhTimer);_mhTimer=setInterval(function(){try{if(document.getElementById('minutes-hub-modal').classList.contains('open'))renderMinutesHub();else{clearInterval(_mhTimer);_mhTimer=null;}}catch(e){}},3000);openModal('minutes-hub-modal');}
 function selMinutesYear(y){minutesHubYear=y;renderMinutesHub();}
-/* 회의 안건 → 항목 분리: 괄호 안 쉼표는 자르지 않음(예: "축하(생미사, 선물)"는 통째로 유지) */
-function _agendaItems(agenda){var s=(agenda||'').replace(/\r/g,'');var out=[],buf='',depth=0;for(var i=0;i<s.length;i++){var c=s[i];if(c==='('||c==='（'||c==='['||c==='{')depth++;else if(c===')'||c==='）'||c===']'||c==='}')depth=Math.max(0,depth-1);if((c===','||c==='·'||c==='ㆍ'||c===';'||c==='\n')&&depth<=0){out.push(buf);buf='';continue;}buf+=c;}out.push(buf);return out.map(function(x){return x.trim();}).filter(Boolean);}
-function _agendaBlocks(agenda){return _agendaItems(agenda).map(function(x){return '## '+x;}).join('\n');}
-/* 안건을 회의록에 반영: 없으면 만들고, 손대지 않은 회의록이면 최신 안건으로 갱신(수동 수정본은 보존) */
+/* 회의 안건을 회의록 맨 위에 "회의안건: (내용 그대로)" 한 줄로 넣는다(분리 없음). 재편집·재저장에도 안전(본문 보존, 중복 없음). */
+function _agendaLine(ag){return (ag||'').replace(/\s*\n\s*/g,' ').trim();}
+function _agendaHeaderOf(content){var lines=(content||'').split('\n');var i=0;while(i<lines.length&&lines[i].trim()==='')i++;if(i<lines.length){var m=lines[i].trim().match(/^회의\s*안건\s*[:：]\s*(.*)$/);if(m)return (m[1]||'').trim();}return null;}
+function _minWithAgenda(content,ag){ag=_agendaLine(ag);var lines=(content||'').split('\n');var i=0;while(i<lines.length&&lines[i].trim()==='')i++;if(i<lines.length&&/^회의\s*안건\s*[:：]/.test(lines[i].trim())){lines.splice(0,i+1);if(lines.length&&lines[0].trim()==='')lines.shift();}var rest=lines.join('\n').replace(/^\n+/,'');if(!ag)return rest;return '회의안건: '+ag+(rest.trim()?'\n\n'+rest:'');}
+/* 안건을 회의록에 반영: 없으면 만들고, 있으면 맨 위 안건 줄만 최신으로 교체(아래 본문은 그대로) */
 function _syncAgendaToMinutes(ds){try{
-  var r=litFor(ds);if(!r)return false;var ag=(r.agenda||'').trim();if(!ag)return false;
-  var body=_agendaBlocks(ag);var d=ds.split('-');
+  var r=litFor(ds);if(!r)return false;var ag=_agendaLine(r.agenda);
   var mn=(resources||[]).find(function(x){return x&&x.cat==='minutes'&&!x.deleted&&x.mdate===ds;});
-  if(!mn){resources.unshift({id:'rs'+Date.now()+Math.random().toString(36).slice(2,5),cat:'minutes',year:String(+d[0]),mdate:ds,title:(+d[1])+'월 '+(+d[2])+'일 회의록',content:body,agendaSync:ag,authorId:G.id,authorName:G.displayName,date:_minDateStr(),updatedAt:_minDateStr(),updatedBy:G.displayName});return true;}
-  var cur=(mn.content||'').trim(),prev=_agendaBlocks(mn.agendaSync||'').trim();
-  if((!cur||cur===prev)&&mn.content!==body){mn.content=body;mn.agendaSync=ag;return true;}
+  if(!mn){if(!ag)return false;var d=ds.split('-');resources.unshift({id:'rs'+Date.now()+Math.random().toString(36).slice(2,5),cat:'minutes',year:String(+d[0]),mdate:ds,title:(+d[1])+'월 '+(+d[2])+'일 회의록',content:_minWithAgenda('',ag),agendaSync:ag,authorId:G.id,authorName:G.displayName,date:_minDateStr(),updatedAt:_minDateStr(),updatedBy:G.displayName});return true;}
+  if(_agendaHeaderOf(mn.content)===ag)return false;   /* 이미 최신이면 손대지 않음(불필요한 저장 방지) */
+  var nc=_minWithAgenda(mn.content,ag);
+  if(nc!==(mn.content||'')){mn.content=nc;mn.agendaSync=ag;return true;}
   return false;
 }catch(e){return false;}}
 function ensureWeeklyMinutes(){
@@ -1801,19 +1802,18 @@ function ensureWeeklyMinutes(){
     var sats=(typeof _satsInRange==='function')?_satsInRange(st,en):[];
     var made=0;
     sats.forEach(function(ds){
-      var ag=((litFor(ds)||{}).agenda||'').trim();
+      var ag=_agendaLine((litFor(ds)||{}).agenda);
       if(isVacationDate(ds)&&!ag)return;        /* 방학 토요일 제외(단, 안건 있으면 회의록 생성) */
       var ex=(resources||[]).find(function(r){return r.cat==='minutes'&&!r.deleted&&r.mdate===ds;});
       var d=ds.split('-');
       var title=(+d[1])+'월 '+(+d[2])+'일 회의록';
-      var body=ag?_agendaBlocks(ag):'';
       if(ex){
         if(ex.title!==title){ex.title=title;made++;}
-        if(ag){var cur=(ex.content||'').trim(),prev=_agendaBlocks(ex.agendaSync||'').trim();if((!cur||cur===prev)&&ex.content!==body){ex.content=body;ex.agendaSync=ag;made++;}}
+        if(_agendaHeaderOf(ex.content)!==ag){var nc=_minWithAgenda(ex.content,ag);if(nc!==(ex.content||'')){ex.content=nc;ex.agendaSync=ag;made++;}}
         return;
       }
       resources.unshift({id:'rs'+Date.now()+Math.random().toString(36).slice(2,5),cat:'minutes',year:String(+d[0]),mdate:ds,
-        title:title,content:body,agendaSync:(ag||''),authorId:G.id,authorName:G.displayName,date:_minDateStr(),updatedAt:_minDateStr(),updatedBy:G.displayName});
+        title:title,content:_minWithAgenda('',ag),agendaSync:(ag||''),authorId:G.id,authorName:G.displayName,date:_minDateStr(),updatedAt:_minDateStr(),updatedBy:G.displayName});
       made++;
     });
     if(made){try{if(typeof flushSync==='function')flushSync();}catch(e){}}
