@@ -4412,7 +4412,7 @@ function _planCardHtml(wsat){
   var _lp=litFor(wsat)||{};var _ph=_dayLabel(wsat);var pb=[];
   if(_ph)pb.push(['전례시기',_ph]);if(_lp.optype)pb.push(['운영구분',_lp.optype]);if(_lp.form)pb.push(['교리',_lp.form]);if(_lp.owner)pb.push(['교안담당',_lp.owner]);if(_lp.detail)pb.push(['교리내용',_lp.detail]);if(_lp.liturgyTeam)pb.push(['전례부',_lp.liturgyTeam]);if(_lp.choir)pb.push(['성가대',_lp.choir]);if(_lp.progress)pb.push(['진행',_lp.progress]);
   if(!pb.length)return '';
-  return '<div style="background:var(--primary-light);border-radius:8px;padding:9px 11px;margin-bottom:8px"><div style="font-size:10px;font-weight:800;color:var(--primary-dark);margin-bottom:4px">📋 이번주 운영계획</div>'+pb.map(function(b){return '<div style="font-size:12px;padding:1px 0;display:flex;gap:6px"><span style="color:var(--text-light);width:56px;flex-shrink:0">'+b[0]+'</span><span style="font-weight:600;color:var(--text-sub)">'+_esc(b[1])+'</span></div>';}).join('')+'</div>';
+  return '<div style="font-size:11.5px;font-weight:800;color:var(--primary-dark);margin-bottom:8px;display:flex;align-items:center;gap:6px"><span style="width:3px;height:13px;background:var(--primary);border-radius:2px"></span>이번주 운영계획</div>'+pb.map(function(b){return '<div style="font-size:12.5px;padding:2px 0;display:flex;gap:8px"><span style="color:var(--text-light);width:58px;flex-shrink:0">'+b[0]+'</span><span style="font-weight:600;color:var(--text)">'+_esc(b[1])+'</span></div>';}).join('');
 }
 function renderHomeWeek(){
   var el=document.getElementById('home-week-card');if(!el)return;

@@ -21,7 +21,6 @@
 #minutes-viewer-content .mb-txt[data-ph]::before,#minutes-viewer-content .mb-txt[data-ph]:empty:focus::before{content:none!important;display:none!important}
 /* 홈 스탬프 카드 컴팩트화 (여백·요소 축소) */
 #home-teacher .teacher-banner{min-height:150px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center}
-#home-teacher #home-minutes-list .card{box-shadow:none;border:1px solid var(--border-light);padding:9px 10px;margin-bottom:7px}
 .home-banner .banner-name{display:flex;flex-wrap:wrap;align-items:center;column-gap:5px;white-space:normal;overflow:visible;text-overflow:clip;word-break:keep-all}
 
 /* 연간 운영 계획 — 상단 버튼 크기 정리 + 헤더와 표 사이 빈틈(뒷배경 비침) 제거로 연결 */
@@ -327,17 +326,19 @@
       <div id="home-week-card"></div>
     </div>
     <div class="section">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;align-items:start">
-        <div class="card" style="padding:11px 9px;min-width:0">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px"><span style="font-size:12.5px;font-weight:800;display:flex;align-items:center;gap:5px">📅 달력</span><span onclick="switchTab('calendar')" style="font-size:10px;color:var(--primary);font-weight:800;cursor:pointer">전체</span></div>
-          <div id="home-mini-cal"></div>
-          <div id="home-cal-preview"></div>
+      <div class="section-header"><span class="section-title"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg> 회의록</span><button class="section-more" onclick="openMinutesHub()">전체 보기</button></div>
+      <div id="home-minutes-alert"></div>
+      <div id="home-minutes-list"></div>
+    </div>
+    <div class="section">
+      <div class="section-header"><span class="section-title"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> 달력</span><button class="section-more" onclick="switchTab('calendar')">전체 보기</button></div>
+      <div class="card" style="padding:12px"><div id="home-mini-cal"></div>
+        <div style="display:flex;gap:12px;justify-content:center;margin-top:10px;font-size:10px;color:var(--text-light)">
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:var(--mint)"></span>일정</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:#F5A623"></span>리마인더</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:#E5806B"></span>생일</span>
         </div>
-        <div class="card" style="padding:11px 10px;min-width:0">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px"><span style="font-size:12.5px;font-weight:800;display:flex;align-items:center;gap:5px">📝 회의록</span><span onclick="openMinutesHub()" style="font-size:10px;color:var(--primary);font-weight:800;cursor:pointer">전체</span></div>
-          <div id="home-minutes-alert"></div>
-          <div id="home-minutes-list"></div>
-        </div>
+        <div id="home-cal-preview"></div>
       </div>
     </div>
     <div id="teacher-schedule" style="display:none"></div>
