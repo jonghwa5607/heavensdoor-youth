@@ -20,20 +20,8 @@
 /* 회의록: 플레이스홀더는 커서가 있는 빈 줄에만 표시 */
 #minutes-viewer-content .mb-txt[data-ph]::before,#minutes-viewer-content .mb-txt[data-ph]:empty:focus::before{content:none!important;display:none!important}
 /* 홈 스탬프 카드 컴팩트화 (여백·요소 축소) */
-#home-student .stamp-banner{padding:14px 14px 12px}
-#home-student .stamp-row{margin-bottom:2px}
-#home-student .banner-label{font-size:9px;letter-spacing:1.5px;margin-bottom:1px}
-#home-student .banner-name{font-size:17px}
 #home-teacher .teacher-banner{min-height:150px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center}
 .home-banner .banner-name{display:flex;flex-wrap:wrap;align-items:center;column-gap:5px;white-space:normal;overflow:visible;text-overflow:clip;word-break:keep-all}
-#home-student .stamp-card{padding:12px 8px;margin-top:2px}
-#home-student .stamp-progress{margin-bottom:10px}
-#home-student .stamp-progress-labels{font-size:11px;margin-bottom:4px}
-#home-student .stamp-dots{padding:14px 10px;gap:10px;justify-content:space-evenly;justify-items:center;place-content:center;margin:0;width:100%;box-sizing:border-box}
-#home-student .stamp-dot{width:54px;height:54px}
-#home-student .stamp-footer{margin-top:10px;padding-top:9px;font-size:12px}
-#home-student .stamp-card>button{margin-top:10px!important;padding:11px!important;font-size:14px!important}
-#home-student #stamp-rank{margin-top:7px!important;padding:8px!important}
 
 /* 연간 운영 계획 — 상단 버튼 크기 정리 + 헤더와 표 사이 빈틈(뒷배경 비침) 제거로 연결 */
 #yearplan-modal .modal-sheet{display:flex;flex-direction:column;background:#fff}
@@ -297,32 +285,31 @@
   <!-- ② 역할별 배너 -->
   <!-- 학생: 스탬프 -->
   <div id="home-student" style="display:none">
-    <div class="stamp-banner home-banner">
-      <div class="stamp-row">
-        <div><div class="banner-label">ATTENDANCE STAMP</div><div class="banner-name" id="stamp-name"></div></div>
-        <div class="stamp-level" id="stamp-level" onclick="openBadgeInfo()" style="cursor:pointer">🌱 씨앗</div>
-      </div>
-      <div class="stamp-card">
-      <div class="stamp-progress">
-        <div class="stamp-progress-labels"><span>다음 보상까지</span><span id="stamp-prog-txt">0/10</span></div>
-        <div class="stamp-progress-bar"><div class="stamp-progress-fill" id="stamp-fill" style="width:0%"></div></div>
-      </div>
-      <div class="stamp-dots" id="stamp-dots"></div>
-      <div id="stamp-pager" style="display:none;align-items:center;justify-content:center;gap:14px;margin-top:8px">
-        <button onclick="stampPage(-1)" style="background:rgba(255,255,255,0.22);border:none;color:#fff;width:28px;height:28px;border-radius:50%;font-size:15px;cursor:pointer;font-family:inherit;line-height:1">‹</button>
-        <span id="stamp-page-txt" style="font-size:11px;color:rgba(255,255,255,0.92);font-weight:700;min-width:74px;text-align:center"></span>
-        <button onclick="stampPage(1)" style="background:rgba(255,255,255,0.22);border:none;color:#fff;width:28px;height:28px;border-radius:50%;font-size:15px;cursor:pointer;font-family:inherit;line-height:1">›</button>
-      </div>
-      <div class="stamp-footer">
-        <span>누적 <strong id="stamp-total" style="color:#FFD166">0</strong>회</span>
-        <span>이번 달 <strong id="stamp-month">0</strong>회</span>
-        <span>연속 <strong id="stamp-streak" style="color:#8EE3D0">0</strong>주</span>
-      </div>
-      <button onclick="switchTab('attend');showAttendTab('scan')" style="width:100%;margin-top:14px;padding:13px;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.45);border-radius:13px;color:white;font-size:15px;font-weight:800;font-family:'Noto Sans KR',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3"/><rect x="18" y="14" width="3" height="3"/><rect x="14" y="18" width="3" height="3"/><rect x="18" y="18" width="3" height="3"/></svg>
-        QR 출석체크
-      </button>
-      <div id="stamp-rank" onclick="switchTab('attend');showAttendTab('rank')" style="display:none;cursor:pointer;margin-top:10px;font-size:12px;font-weight:800;color:#fff;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.32);padding:9px;border-radius:12px;text-align:center"></div>
+    <div style="padding:16px 16px 8px">
+      <div id="student-greet" style="font-size:22px;font-weight:800;color:var(--text)">안녕! 👋</div>
+      <div style="font-size:13px;color:var(--text-light);margin-top:3px;display:flex;align-items:center;gap:7px;flex-wrap:wrap"><span id="student-greet-sub"></span><span id="student-greet-grade" style="font-size:11px;font-weight:800;background:var(--primary-light);color:var(--primary-dark);padding:2px 9px;border-radius:20px"></span></div>
+    </div>
+    <div class="section">
+      <div class="card" style="padding:15px 16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <span style="font-size:14px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:6px">🌱 출석 성장</span>
+          <span id="stamp-level" onclick="openBadgeInfo()" style="font-size:12px;font-weight:800;color:var(--primary-dark);background:var(--primary-light);padding:3px 11px;border-radius:20px;cursor:pointer">🌱 씨앗</span>
+        </div>
+        <div id="growth-stages" style="display:flex;align-items:flex-start;justify-content:space-between;gap:1px;margin-bottom:15px"></div>
+        <div id="growth-next" style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:7px">다음 성장까지</div>
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:15px">
+          <div style="flex:1;height:9px;background:var(--bg);border-radius:20px;overflow:hidden"><div class="stamp-progress-fill" id="stamp-fill" style="height:100%;width:0%;background:var(--primary);border-radius:20px;transition:width .5s"></div></div>
+          <span id="stamp-prog-txt" style="font-size:12px;font-weight:800;color:var(--text-sub);min-width:52px;text-align:right">0/10</span>
+        </div>
+        <div style="display:flex;text-align:center;border-top:1px solid var(--border-light);border-bottom:1px solid var(--border-light);padding:12px 0;margin-bottom:15px">
+          <div style="flex:1"><div style="font-size:11px;color:var(--text-light);margin-bottom:2px">누적</div><div style="font-size:17px;font-weight:800;color:var(--text)"><span id="stamp-total">0</span>회</div></div>
+          <div style="flex:1;border-left:1px solid var(--border-light);border-right:1px solid var(--border-light)"><div style="font-size:11px;color:var(--text-light);margin-bottom:2px">이번 달</div><div style="font-size:17px;font-weight:800;color:var(--text)"><span id="stamp-month">0</span>회</div></div>
+          <div style="flex:1"><div style="font-size:11px;color:var(--text-light);margin-bottom:2px">연속</div><div style="font-size:17px;font-weight:800;color:var(--primary)">🔥<span id="stamp-streak">0</span>주</div></div>
+        </div>
+        <div style="display:flex;gap:9px">
+          <button onclick="switchTab('attend');showAttendTab('scan')" style="flex:1.3;padding:13px;background:var(--primary);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3"/><rect x="18" y="18" width="3" height="3"/></svg>QR 출석체크</button>
+          <button id="stamp-rank" onclick="switchTab('attend');showAttendTab('rank')" style="flex:1;padding:13px;background:var(--card);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px">🏆 나의 순위</button>
+        </div>
       </div>
     </div>
   </div>
