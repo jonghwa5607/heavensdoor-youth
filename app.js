@@ -751,7 +751,7 @@ function startSession(u){
   show('qr-manage-section',isT);if(isT)syncQRUI();show('cal-add-btn',isT);
   if(isS){const gl=G.grade||({m1:'중1',m2:'중2',m3:'중3',h:'고등부'}[G.gradeKey]||'');G.displayName=G.name+' '+G.baptism+(gl?' ('+gl+')':'');document.getElementById('role-badge').textContent=G.graduated?'졸업생':gl;const sn=document.getElementById('stamp-name');if(sn)sn.textContent=G.displayName+crownMark(G);const mad=document.getElementById('my-attend-detail');if(mad)mad.textContent='이번 달 '+monthAttendCount(G)+'회 출석';initStamps();filterBoardStudent(G.gradeKey);}
   else if(isP){const cs=(u.children||[]).map(c=>c.name||c).join(', ');G.displayName=G.name+' '+G.baptism+(cs?'('+cs+')':'')+' 학부모';document.getElementById('role-badge').textContent=G.isJabumoPresident?'학부모·자부모회장':'학부모';const phn=document.getElementById('parent-home-name');if(phn){phn.textContent=G.displayName+'님';phn.innerHTML=phn.innerHTML+'<br>안녕하세요 👋';}filterBoardParent();renderParentChildCards(u.children||[]);}
-  else{const POS={m1:'중1 담당',m2:'중2 담당',m3:'중3 담당',h:'고등 담당',principal:'교감',admin:'교무',etc:'기타'};G.displayName='교사 '+G.name+' '+G.baptism;document.getElementById('role-badge').textContent=POS[G.type]||G.grade||'교사';const thn=document.getElementById('teacher-home-name');if(thn)thn.textContent=G.displayName+(G.grade?' T('+G.grade+')':' T')+' ✝️';const thd=document.getElementById('teacher-home-desc');if(thd)thd.textContent=isFull?(G.grade?G.grade+' 담당 · 전체 관리 권한이 있어요.':'전체 학년을 총괄합니다. 관리 탭에서 확인하세요.'):G.grade+' 담당 선생님, 오늘도 좋은 교리를 전해주세요 🙏';renderAdminGrid(isFull);renderGovSection();updatePendingUI();filterBoardTeacher();}
+  else{const POS={m1:'중1 담당',m2:'중2 담당',m3:'중3 담당',h:'고등 담당',principal:'교감',admin:'교무',etc:'기타'};G.displayName='교사 '+G.name+' '+G.baptism;document.getElementById('role-badge').textContent=POS[G.type]||G.grade||'교사';const thn=document.getElementById('teacher-home-name');if(thn)thn.innerHTML='<span style="min-width:0">'+_esc(G.displayName+(G.grade?' T('+G.grade+')':' T'))+'</span><span style="flex-shrink:0" aria-hidden="true">✝️</span>';const thd=document.getElementById('teacher-home-desc');if(thd)thd.textContent=isFull?(G.grade?G.grade+' 담당 · 전체 관리 권한이 있어요.':'전체 학년을 총괄합니다. 관리 탭에서 확인하세요.'):G.grade+' 담당 선생님, 오늘도 좋은 교리를 전해주세요 🙏';renderAdminGrid(isFull);renderGovSection();updatePendingUI();filterBoardTeacher();}
   setMyProfile();checkBirthday();checkNewCoupons();checkImportantNotices();renderHomeNotices();renderHomeSchedule();renderEventBanner();renderStoryRow();renderGradLetterEntry();checkAbsentNotifications();updateNotifDot();if(!previewMode){try{localStorage.setItem('hd-session-id',G.id);localStorage.setItem('hd-session-pwv',String((u&&u.pwv)||0));}catch(e){}}if(window._restoring){window._restoring=false;var lt='home';try{lt=localStorage.getItem('hd-last-tab')||'home';}catch(e){}goScreen(lt);switchTab(lt);}else{goScreen('home');switchTab('home');showToast('환영합니다, '+G.name+' '+G.baptism+'님 😊');}
 try{initPush();_bindForeground();}catch(e){}try{setTimeout(cleanOrphanVac,1200);}catch(e){}try{checkForcedPwChange();}catch(e){}}
 
@@ -764,7 +764,7 @@ function paintTeacherHome(){
     var rb=document.getElementById('role-badge');
     if(rb)rb.textContent=POS[G.type]||G.grade||'교사';
     var thn=document.getElementById('teacher-home-name');
-    if(thn)thn.textContent=G.displayName+(G.grade?' T('+G.grade+')':' T')+' ✝️';
+    if(thn)thn.innerHTML='<span style="min-width:0">'+_esc(G.displayName+(G.grade?' T('+G.grade+')':' T'))+'</span><span style="flex-shrink:0" aria-hidden="true">✝️</span>';
     var isFull=G.type==='principal'||G.type==='admin'||G.isAdmin;
     var thd=document.getElementById('teacher-home-desc');
     if(thd)thd.textContent=isFull?(G.grade?G.grade+' 담당 · 전체 관리 권한이 있어요.':'전체 학년을 총괄합니다. 관리 탭에서 확인하세요.'):(G.grade||'담당')+' 담당 선생님, 오늘도 좋은 교리를 전해주세요 🙏';
@@ -2890,7 +2890,7 @@ function syncSessionFromRec(){
   }catch(e){console.warn('[SESSION]',e);}
 }
 function _posHolder(pos,exceptId){return pendingList.find(function(x){return x.role==='teacher'&&x.approved&&!x.hidden&&x.teacherType===pos&&x.id!==exceptId;});}
-function _applyMyRec(u){if(!adminRec()&&(u===ADMIN||u.id===ADMIN.id)){ADMIN.teacherType=u.teacherType;ADMIN.type=u.teacherType;ADMIN.gradeLabel=u.gradeLabel;if(typeof appConfig!=='undefined')appConfig.adminPos={t:u.teacherType,l:u.gradeLabel};}if(G.id===u.id){G.type=u.teacherType||'';G.grade=u.gradeLabel||'';const POS={m1:'중1 담당',m2:'중2 담당',m3:'중3 담당',h:'고등 담당',principal:'교감',admin:'교무',etc:'기타'};const isFull=G.type==='principal'||G.type==='admin'||G.isAdmin;const rb=document.getElementById('role-badge');if(rb)rb.textContent=POS[G.type]||G.grade||'교사';const thn=document.getElementById('teacher-home-name');if(thn)thn.textContent=G.displayName+(G.grade?' T('+G.grade+')':' T')+' ✝️';const thd=document.getElementById('teacher-home-desc');if(thd)thd.textContent=isFull?(G.grade?G.grade+' 담당 · 전체 관리 권한이 있어요.':'전체 학년을 총괄합니다. 관리 탭에서 확인하세요.'):G.grade+' 담당 선생님, 오늘도 좋은 교리를 전해주세요 🙏';show('cal-add-btn',true);try{filterBoardTeacher();}catch(e){}}try{setMyProfile();}catch(e){}try{renderAdminGrid(G.type==='principal'||G.type==='admin'||G.isAdmin);}catch(e){}try{renderGovSection();}catch(e){}try{updatePendingUI();}catch(e){}try{_renderPosStatus();}catch(e){}}
+function _applyMyRec(u){if(!adminRec()&&(u===ADMIN||u.id===ADMIN.id)){ADMIN.teacherType=u.teacherType;ADMIN.type=u.teacherType;ADMIN.gradeLabel=u.gradeLabel;if(typeof appConfig!=='undefined')appConfig.adminPos={t:u.teacherType,l:u.gradeLabel};}if(G.id===u.id){G.type=u.teacherType||'';G.grade=u.gradeLabel||'';const POS={m1:'중1 담당',m2:'중2 담당',m3:'중3 담당',h:'고등 담당',principal:'교감',admin:'교무',etc:'기타'};const isFull=G.type==='principal'||G.type==='admin'||G.isAdmin;const rb=document.getElementById('role-badge');if(rb)rb.textContent=POS[G.type]||G.grade||'교사';const thn=document.getElementById('teacher-home-name');if(thn)thn.innerHTML='<span style="min-width:0">'+_esc(G.displayName+(G.grade?' T('+G.grade+')':' T'))+'</span><span style="flex-shrink:0" aria-hidden="true">✝️</span>';const thd=document.getElementById('teacher-home-desc');if(thd)thd.textContent=isFull?(G.grade?G.grade+' 담당 · 전체 관리 권한이 있어요.':'전체 학년을 총괄합니다. 관리 탭에서 확인하세요.'):G.grade+' 담당 선생님, 오늘도 좋은 교리를 전해주세요 🙏';show('cal-add-btn',true);try{filterBoardTeacher();}catch(e){}}try{setMyProfile();}catch(e){}try{renderAdminGrid(G.type==='principal'||G.type==='admin'||G.isAdmin);}catch(e){}try{renderGovSection();}catch(e){}try{updatePendingUI();}catch(e){}try{_renderPosStatus();}catch(e){}}
 var POS_LBL={m1:'중1',m2:'중2',m3:'중3',h:'고등',principal:'교감',admin:'교무',etc:'기타'};
 function _renderPosStatus(msg){var u=_myTeacherRec();var el=document.getElementById('tp-status');if(!el)return;if(msg){el.style.display='block';el.innerHTML='<div style="background:var(--mint-light);color:#2D9E8F;border-radius:10px;padding:11px 12px;font-size:12.5px;font-weight:700;margin-bottom:12px">✅ '+msg+'</div>';return;}var cur=(u&&u.teacherType)||G.type||'';var curHtml=cur?'<div style="background:var(--bg);border-radius:10px;padding:10px 12px;font-size:12px;margin-bottom:12px">지금 담당 · <b>'+(POS_LBL[cur]||cur)+'</b></div>':'';if(u&&u.posRequest){var lbl=POS_LBL[u.posRequest]||u.posRequest;el.style.display='block';el.innerHTML='<div style="background:var(--yellow-light);border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.6;margin-bottom:12px">⏳ <b>'+lbl+'</b> 요청 대기 중 · 현재 담당자 승인을 기다리고 있어요<br><button onclick="cancelMyPosReq()" style="margin-top:4px;background:none;border:none;color:var(--coral);font-weight:700;cursor:pointer;font-family:inherit;text-decoration:underline;padding:0">요청 취소</button></div>';}else{el.style.display=curHtml?'block':'none';el.innerHTML=curHtml;}}
 function openMyPositionModal(){
@@ -4358,13 +4358,14 @@ function renderHomeSmart(){
   var el=document.getElementById('home-smart');if(!el)return;
   var isFull=_isFullAdminRole();var dow=new Date().getDay();var isSat=dow===6;
   var big=(isFull&&(dow===4||dow===5))
-    ? {label:'주간공지 보내기',sub:'교감·교무 · 목·금',fn:'openWeeklyNotice()',svg:_SVG_SPK}
+    ? {label:'주간공지 보내기',sub:'',fn:'openWeeklyNotice()',svg:_SVG_SPK}
     : {label:'출석관리',sub:isSat?'토요일 · QR 출석체크':'출석·QR 관리',fn:'goAttendance()',svg:_SVG_QR};
   var absN=_absentFlaggedCount();
-  var html='<button onclick="'+big.fn+'" style="width:100%;border:none;background:var(--primary);color:#fff;border-radius:12px;padding:13px 14px;display:flex;align-items:center;gap:11px;text-align:left;cursor:pointer;font-family:inherit">'+big.svg+'<span style="flex:1;min-width:0"><span style="display:block;font-size:15px;font-weight:800">'+big.label+'</span><span style="display:block;font-size:12px;opacity:.9">'+big.sub+'</span></span><span style="font-size:20px;line-height:1">›</span></button>';
+  var _lab='<span style="display:block;font-size:15px;font-weight:800">'+big.label+'</span>'+(big.sub?'<span style="display:block;font-size:12px;opacity:.9">'+big.sub+'</span>':'');
+  var html='<button onclick="'+big.fn+'" style="width:100%;border:none;background:var(--primary);color:#fff;border-radius:12px;padding:15px 14px;display:flex;align-items:center;gap:11px;text-align:left;cursor:pointer;font-family:inherit">'+big.svg+'<span style="flex:1;min-width:0">'+_lab+'</span><span style="font-size:20px;line-height:1">›</span></button>';
   html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">';
-  html+='<button onclick="goAbsentContacts()" style="position:relative;background:var(--card);border:1px solid var(--border-light);border-radius:10px;padding:11px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;font-family:inherit"><span style="color:var(--text-sub);display:flex">'+_SVG_PHONE+'</span><span style="font-size:12.5px;font-weight:700;color:var(--text)">결석 연락</span>'+(absN?'<span style="position:absolute;top:7px;right:7px;background:var(--coral);color:#fff;font-size:10px;font-weight:800;border-radius:20px;min-width:16px;height:16px;padding:0 4px;display:flex;align-items:center;justify-content:center">'+absN+'</span>':'')+'</button>';
-  html+='<button onclick="openThisWeekMinutes()" style="background:var(--card);border:1px solid var(--border-light);border-radius:10px;padding:11px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;font-family:inherit"><span style="color:var(--text-sub);display:flex">'+_SVG_NOTE+'</span><span style="font-size:12.5px;font-weight:700;color:var(--text)">이번주 회의록</span></button>';
+  html+='<button onclick="goAbsentContacts()" style="position:relative;background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:11px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;font-family:inherit"><span style="color:var(--text-sub);display:flex">'+_SVG_PHONE+'</span><span style="font-size:12.5px;font-weight:700;color:var(--text)">결석 연락</span>'+(absN?'<span style="position:absolute;top:7px;right:7px;background:var(--coral);color:#fff;font-size:10px;font-weight:800;border-radius:20px;min-width:16px;height:16px;padding:0 4px;display:flex;align-items:center;justify-content:center">'+absN+'</span>':'')+'</button>';
+  html+='<button onclick="openThisWeekMinutes()" style="background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:11px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;font-family:inherit"><span style="color:var(--text-sub);display:flex">'+_SVG_NOTE+'</span><span style="font-size:12.5px;font-weight:700;color:var(--text)">이번주 회의록</span></button>';
   html+='</div>';
   el.innerHTML=html;
 }
@@ -4384,17 +4385,10 @@ function _planCardHtml(wsat){
 }
 function renderHomeWeek(){
   var el=document.getElementById('home-week-card');if(!el)return;
-  var wsat=currentSaturday();var q=wsat.split('-');
+  var wsat=currentSaturday();
   var plan=_planCardHtml(wsat);
-  var evs=(calEvents||[]).filter(function(e){return e.date===wsat&&(e.isRecurring||e.visibility!=='private'||e.authorId===G.id);});
-  var bf=(typeof bdayOn==='function')?bdayOn(wsat):{birth:[],feast:[]};
-  function row(color,txt){return '<div style="font-size:12px;padding:3px 0;display:flex;gap:7px;align-items:flex-start"><span style="width:5px;height:5px;border-radius:50%;background:'+color+';margin-top:6px;flex-shrink:0"></span><span style="line-height:1.5">'+txt+'</span></div>';}
-  var rows='';
-  evs.forEach(function(e){rows+=row('var(--mint)',_esc(e.title)+(e.time?' <span style="color:var(--text-light)">'+_esc(e.time)+'</span>':''));});
-  (bf.birth||[]).forEach(function(u){rows+=row('#E5806B','🎂 '+_esc(u.name+' '+u.baptism)+' 생일');});
-  (bf.feast||[]).forEach(function(u){rows+=row('#E5806B',_esc(u.name+' '+u.baptism)+' 축일');});
-  if(!rows)rows='<div style="font-size:12px;color:var(--text-light);padding:3px 0">이번 주 토요일 일정이 없어요</div>';
-  el.innerHTML='<div class="card" style="padding:12px">'+plan+'<div style="font-size:11px;font-weight:700;color:var(--text-light);margin-bottom:3px">'+(+q[1])+'월 '+(+q[2])+'일 (토)</div>'+rows+'</div>';
+  if(!plan)plan='<div style="font-size:12px;color:var(--text-light);padding:4px 2px">이번 주 운영계획이 아직 없어요</div>';
+  el.innerHTML='<div class="card" style="padding:12px">'+plan+'</div>';
 }
 function _renderCalPreview(ds){
   var el=document.getElementById('home-cal-preview');if(!el)return;
