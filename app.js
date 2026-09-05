@@ -2566,6 +2566,22 @@ function _writeLock(){var id=currentMinutesId;if(!id||!(window.FB&&FB.enabled())
 function _releaseLock(){var id=currentMinutesId;if(!id)return;var l=_minutesLocks[id];if(l&&l.uid&&l.uid!==G.id)return;/* 남의 락은 건드리지 않음 */try{if(window.FB&&FB.enabled())FB.remove('minutesLocks',id);}catch(e){}delete _minutesLocks[id];}
 if(window.FB&&FB.enabled()){FB.ready(function(){
   FB.watch('minutesLocks',function(arr){var m={};(arr||[]).forEach(function(l){if(l&&l.id)m[l.id]=l;});_minutesLocks=m;if(_minModalOpen())_updateMinutesLockUI();try{if(typeof resourceCurCat!=='undefined'&&resourceCurCat==='minutes')renderResourceList();}catch(e){}});
+  FB.watch('members',function(cloud){try{
+    if(!Array.isArray(cloud)||!cloud.length)return;
+    var idx={};for(var i=0;i<pendingList.length;i++){var u=pendingList[i];if(u&&u.id)idx[u.id]=i;}
+    var changed=false;
+    cloud.forEach(function(cu){
+      if(!cu||!cu.id||cu.id===G.id)return;              /* 내 계정은 로컬 상태 유지 */
+      if(idx[cu.id]!=null){
+        if(JSON.stringify(pendingList[idx[cu.id]])!==JSON.stringify(cu)){pendingList[idx[cu.id]]=cu;changed=true;}
+      }else{pendingList.push(cu);idx[cu.id]=pendingList.length-1;changed=true;}
+    });
+    if(!changed)return;
+    try{updatePendingUI();}catch(e){}
+    try{var _mt=document.getElementById('admin-members-tab');if(_mt&&_mt.style.display!=='none')renderMembersList();}catch(e){}
+    try{renderAdminGrid(G.type==='principal'||G.type==='admin'||G.isAdmin);}catch(e){}
+    try{updateNotifDot();}catch(e){}
+  }catch(e){}});
   FB.watch('resources',function(cloud){try{autoArchiveMinutes();}catch(e){}try{renderMinutesHub();}catch(e){}try{renderHomeMinutes();}catch(e){}try{var _sh=document.getElementById('screen-home');if(_sh&&_sh.classList.contains('active')){try{renderHomeSmart();}catch(e){}try{renderHomeWeek();}catch(e){}try{renderHomeMiniCal();}catch(e){}}}catch(e){}if(!_minModalOpen()||_minEditing||!currentMinutesId)return;var cd=(cloud||[]).find(function(x){return x&&x.id===currentMinutesId;});if(!cd)return;if(_minSerialize()!==_minWithAgenda(cd.content,'')){var _ed=document.getElementById('minutes-viewer-content');var _sc=_ed?_ed.scrollTop:0;_minRender(_minParse(_minWithAgenda(cd.content,'')),false);if(_ed)_ed.scrollTop=_sc;_renderMinutesMeta(cd);var _ti=document.getElementById('minutes-viewer-title');if(_ti&&_ti.value!==cd.title)_ti.value=cd.title;}try{_renderMinAgenda(cd);}catch(e){}});
 });}
 window.addEventListener('beforeunload',function(){try{if(currentMinutesId&&_minEditing)_releaseLock();}catch(e){}});
