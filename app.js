@@ -853,8 +853,16 @@ function renderStudentGrowth(){try{
   var nextEl=document.getElementById('growth-next');
   if(nextEl)nextEl.innerHTML=nx?('다음 성장까지 <strong style="color:var(--primary-dark);font-weight:800">'+(nx.n-t)+'회</strong>!'):'최고 등급 달성! 👑';
   var ag=document.getElementById('attend-growth');
-  if(ag){var curLv=null;ATTEND_LEVELS.forEach(function(L){if(t>=L.n)curLv=L;});var cE=curLv?curLv.l.split(' ')[0]:'🌱';var cN=curLv?(curLv.l.split(' ')[1]||''):'씨앗';var pct=nx?Math.min(100,Math.max(3,Math.round((t-pv)/((nx.n-pv)||1)*100))):100;
-    ag.innerHTML='<div class="card" style="padding:12px 14px;display:flex;align-items:center;gap:13px"><div style="font-size:32px;line-height:1;flex-shrink:0">'+cE+'</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:800;color:var(--text)">'+cN+' 등급</div><div style="font-size:11px;color:var(--text-light);margin:3px 0 6px">'+(nx?('다음 등급까지 <b style="color:var(--primary-dark)">'+(nx.n-t)+'회</b>'):'최고 등급 달성 👑')+'</div><div style="height:7px;background:var(--bg);border-radius:20px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:var(--primary);border-radius:20px;transition:width .5s"></div></div></div><div style="text-align:center;flex-shrink:0"><div style="font-size:18px;font-weight:800;color:var(--primary)">'+t+'</div><div style="font-size:10px;color:var(--text-light)">누적</div></div></div>';}
+  if(ag){var curLv=null;ATTEND_LEVELS.forEach(function(L){if(t>=L.n)curLv=L;});var cLabel=curLv?curLv.l:'🌱 씨앗';var mth=(typeof monthAttendCount==='function')?monthAttendCount(G):0;
+    ag.innerHTML='<div class="card" style="padding:16px;text-align:left;background:linear-gradient(120deg,var(--mint-light),var(--primary-light))">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div style="min-width:0"><div style="font-size:17px;font-weight:800;color:var(--text)">안녕, '+_esc(G.baptism||G.name||'')+'! 👋</div><div style="font-size:12px;color:var(--text-sub);margin-top:4px">오늘도 꾸준히 성장하고 있어요</div></div><span style="flex-shrink:0;font-size:11px;font-weight:800;color:var(--primary-dark);background:#fff;padding:5px 11px;border-radius:20px">'+cLabel+'</span></div>'
+      +'<div style="display:flex;background:rgba(255,255,255,.72);border-radius:12px;margin-top:13px;text-align:center;padding:11px 0">'
+        +'<div style="flex:1"><div style="font-size:10px;color:var(--text-light);margin-bottom:2px">이번 달</div><div style="font-size:16px;font-weight:800;color:var(--text)">'+mth+'회</div></div>'
+        +'<div style="flex:1;border-left:1px solid var(--border-light);border-right:1px solid var(--border-light)"><div style="font-size:10px;color:var(--text-light);margin-bottom:2px">연속</div><div style="font-size:16px;font-weight:800;color:var(--gold)">🔥'+(G.streak||0)+'주</div></div>'
+        +'<div style="flex:1"><div style="font-size:10px;color:var(--text-light);margin-bottom:2px">누적</div><div style="font-size:16px;font-weight:800;color:var(--primary)">'+t+'회</div></div>'
+      +'</div>'
+      +'<div style="font-size:11.5px;color:var(--text-sub);margin-top:11px;text-align:center">'+(nx?('다음 등급까지 <b style="color:var(--primary-dark)">'+(nx.n-t)+'회</b>'):'최고 등급 달성 👑')+'</div>'
+    +'</div>';}
 }catch(e){}}
 
 function toggleCfgSec(btn){btn.parentElement.classList.toggle('open');}
