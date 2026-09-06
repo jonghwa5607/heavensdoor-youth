@@ -34,7 +34,7 @@
 #yearplan-modal .pg-acts{flex:0 0 auto;display:flex;gap:5px}
 #yearplan-modal .pg-acts .btn{white-space:nowrap!important;flex:0 0 auto;padding:6px 9px!important;font-size:11px!important;line-height:1.1}
 #yearplan-modal #yp-period{flex:0 0 auto;margin:0}
-#yearplan-modal .pg-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff;margin:0}
+#yearplan-modal .pg-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fff;margin:0;padding-top:0}
 #yearplan-modal #yp-body{background:#fff}
 /* 잠금 토글 스위치 */
 #yearplan-modal #yp-lock-toggle{display:none}
@@ -1425,7 +1425,7 @@
       <span class="pg-title">📋 연간 운영 계획</span>
       <div class="pg-acts"><button class="btn btn-sm" id="yp-paste-btn" style="width:auto;padding:6px 11px;font-size:11px;font-weight:800;background:var(--primary-light);color:var(--primary-dark)" onclick="openPlanPaste()">붙여넣기</button><button class="btn btn-sm" id="yp-save-btn" style="width:auto;padding:6px 11px;font-size:11px;font-weight:800;background:var(--primary-light);color:var(--primary-dark);display:none" onclick="savePlan()">저장</button><span id="yp-lock-toggle" role="switch" aria-checked="false" onclick="toggleLitLock()" style="display:none;align-items:center;gap:6px;cursor:pointer;user-select:none;flex:0 0 auto"><span id="yp-lock-label" style="font-size:11px;font-weight:800;color:var(--text-sub);white-space:nowrap">잠금</span><span class="yp-switch" id="yp-lock-switch"><span class="yp-switch-knob"></span></span></span></div>
     </div>
-    <div class="pg-scroll" style="overflow-x:auto"><div style="min-width:1240px"><div style="position:sticky;top:0;z-index:5;background:#fff"><div id="yp-period" style="padding:10px 14px;border-bottom:1px solid var(--border-light);background:#fff"></div><div id="yp-thead" style="background:#fff;border-bottom:2px solid var(--border);box-shadow:0 2px 6px rgba(0,0,0,.08)"></div></div><div id="yp-body"></div></div></div>
+    <div class="pg-scroll" style="overflow-x:auto"><div style="min-width:1240px"><div style="position:sticky;top:0;z-index:20;background:#fff"><div id="yp-period" style="padding:10px 14px;border-bottom:1px solid var(--border-light);background:#fff"></div><div id="yp-thead" style="background:#fff;border-bottom:2px solid var(--border);box-shadow:0 2px 6px rgba(0,0,0,.08)"></div></div><div id="yp-body"></div></div></div>
   </div>
 </div>
 
