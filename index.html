@@ -24,8 +24,8 @@
 :root{--card:#FFFFFF}
 #yearplan-modal .pg-head{background:#fff}
 #yearplan-modal .yp-row{background:#fff}
-#screen-attend .tab-bar,#screen-board .tab-bar{padding:0;justify-content:center;overflow-x:visible}
-#screen-attend .tab-bar .tab-btn,#screen-board .tab-bar .tab-btn{flex:1;text-align:center;padding:13px 4px}
+#screen-attend .tab-bar,#screen-board .tab-bar,#screen-activity .tab-bar{padding:0;justify-content:center;overflow-x:visible}
+#screen-attend .tab-bar .tab-btn,#screen-board .tab-bar .tab-btn,#screen-activity .tab-bar .tab-btn{flex:1;text-align:center;padding:13px 4px}
 .home-banner .banner-name{display:flex;flex-wrap:wrap;align-items:center;column-gap:5px;white-space:normal;overflow:visible;text-overflow:clip;word-break:keep-all}
 
 /* 연간 운영 계획 — 상단 버튼 크기 정리 + 헤더와 표 사이 빈틈(뒷배경 비침) 제거로 연결 */
@@ -794,11 +794,12 @@
       <div class="cfg-sec-body">
         <div style="font-size:11px;color:var(--text-light);margin-bottom:10px">저장 이후 새로 발급되는 쿠폰부터 적용됩니다 (이미 발급된 쿠폰은 유지)</div>
         <div style="display:flex;flex-direction:column;gap:8px">
-          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;width:92px;flex-shrink:0">🌱 씨앗 (1회)</span><input class="form-input" type="text" id="cfg-reward-1" placeholder="예: 축하 스티커" style="flex:1"></div>
-          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;width:92px;flex-shrink:0">🌿 새싹 (5회)</span><input class="form-input" type="text" id="cfg-reward-5" placeholder="예: 간식 교환권" style="flex:1"></div>
-          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;width:92px;flex-shrink:0">🌸 꽃망울 (10회)</span><input class="form-input" type="text" id="cfg-reward-10" placeholder="예: 음료 교환권" style="flex:1"></div>
-          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;width:92px;flex-shrink:0">☀️ 햇살 (20회)</span><input class="form-input" type="text" id="cfg-reward-20" placeholder="예: 문화상품권 5천원" style="flex:1"></div>
-          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;width:92px;flex-shrink:0">👑 왕관 (40회)</span><input class="form-input" type="text" id="cfg-reward-40" placeholder="예: 문화상품권 1만원" style="flex:1"></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;width:100px;flex-shrink:0">🌱 씨앗 (1회)</span><input class="form-input" type="text" id="cfg-reward-1" placeholder="예: 축하 스티커" style="flex:1"></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;width:100px;flex-shrink:0">🌿 새싹 (5회)</span><input class="form-input" type="text" id="cfg-reward-5" placeholder="예: 간식 교환권" style="flex:1"></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;width:100px;flex-shrink:0">🪴 어린나무 (10회)</span><input class="form-input" type="text" id="cfg-reward-10" placeholder="예: 음료 교환권" style="flex:1"></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;width:100px;flex-shrink:0">🌳 큰나무 (20회)</span><input class="form-input" type="text" id="cfg-reward-20" placeholder="예: 문화상품권 5천원" style="flex:1"></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;width:100px;flex-shrink:0">🌸 꽃 (35회)</span><input class="form-input" type="text" id="cfg-reward-35" placeholder="예: 문화상품권 1만원" style="flex:1"></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;width:100px;flex-shrink:0">🍎 열매 (45회)</span><input class="form-input" type="text" id="cfg-reward-45" placeholder="예: 문화상품권 2만원" style="flex:1"></div>
           <div style="display:flex;align-items:center;gap:8px;border-top:1px dashed var(--border-light);padding-top:8px"><span style="font-size:12px;font-weight:700;width:92px;flex-shrink:0">🎂 생일 쿠폰</span><input class="form-input" type="text" id="cfg-reward-bday" placeholder="예: 생일 축하 간식 세트" style="flex:1"></div>
         </div>
         <div style="font-size:11px;color:var(--text-light);margin-top:8px">🎂 생일 쿠폰은 학생 생일 당일에 자동 발급됩니다 (연 1회). 축일은 쿠폰 없이 축하 알림만 전송됩니다.</div>
