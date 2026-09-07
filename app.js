@@ -877,7 +877,7 @@ function renderStudentGrowth(){try{
   var t=G.attendTotal||0;var nx=null;for(var i=0;i<ATTEND_LEVELS.length;i++){if(t<ATTEND_LEVELS[i].n){nx=ATTEND_LEVELS[i];break;}}var pv=0;ATTEND_LEVELS.forEach(function(L){if(t>=L.n)pv=L.n;});
   var _stage=-1;for(var _si=0;_si<ATTEND_LEVELS.length;_si++){if(t>=ATTEND_LEVELS[_si].n)_stage=_si;}
   var stg=document.getElementById('growth-stages');
-  if(stg){stg.innerHTML='<div style="display:flex;justify-content:center;padding:4px 0">'+_treeSVG(_stage,150)+'</div>';}
+  if(stg){stg.innerHTML=_treeSVG(_stage,108);}
   var nextEl=document.getElementById('growth-next');
   if(nextEl)nextEl.innerHTML=nx?('다음 성장까지 <strong style="color:var(--primary-dark);font-weight:800">'+(nx.n-t)+'회</strong>!'):'최고 등급(열매) 달성! 🍎';
   var ag=document.getElementById('attend-growth');
