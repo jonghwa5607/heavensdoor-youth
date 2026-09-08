@@ -3675,24 +3675,27 @@ function filterStudentCards(grade,btn){document.querySelectorAll('#student-grade
 /* 앱 도입 전 기록을 직접 넣기 */
 function openPastRecord(){
   var u=pendingList.find(function(x){return x.id===currentDetailStudentId;});if(!u)return;
-  document.getElementById('pr-term').value='';
-  document.getElementById('pr-grade').value='';
+  var sel=document.getElementById('pr-term');
+  if(sel){var cur=_curSchoolYr();var start=(u.cohort||cur);if(start>cur)start=cur;var opts='';for(var y=cur;y>=start;y--){var gl=(typeof _gradeLabelForYear==='function')?_gradeLabelForYear(u,y):'';opts+='<option value="'+y+'">'+y+'학년도'+(gl?' · '+gl:'')+'</option>';}sel.innerHTML=opts;}
+  try{_prYearChange();}catch(e){}
   document.getElementById('pr-count').value='';
   document.getElementById('pr-from').value='';
   document.getElementById('pr-to').value='';
   _prDates=null;renderPastDates();renderPastList();
   openModal('past-record-modal');
 }
+function _prYearChange(){var u=pendingList.find(function(x){return x.id===currentDetailStudentId;});if(!u)return;var sel=document.getElementById('pr-term'),g=document.getElementById('pr-grade');if(sel&&g){var y=parseInt(sel.value,10)||_curSchoolYr();g.value=((typeof _gradeLabelForYear==='function')?_gradeLabelForYear(u,y):'')||u.gradeLabel||'';}}
 function renderPastList(){
   var el=document.getElementById('pr-list');if(!el)return;
   var u=pendingList.find(function(x){return x.id===currentDetailStudentId;});if(!u){el.innerHTML='';return;}
-  var man=(u.history||[]).map(function(h,i){return {h:h,i:i};}).filter(function(x){return x.h.manual;});
-  el.innerHTML=man.length?('<div style="font-size:11px;font-weight:700;color:var(--text-sub);margin-bottom:6px">직접 넣은 기록</div>'
+  var man=(u.history||[]).map(function(h,i){return {h:h,i:i};});
+  el.innerHTML=man.length?('<div style="font-size:11px;font-weight:700;color:var(--text-sub);margin-bottom:6px">저장된 지난 기록 (누르면 삭제)</div>'
     +man.map(function(x){
+      var lbl=(x.h.term||((x.h.year||'')+'학년도'));
       return '<div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:9px;padding:8px 10px;margin-bottom:5px">'
-        +'<span style="flex:1;font-size:12px;font-weight:700">'+_esc(x.h.term||'')+' · '+_esc(x.h.grade||'-')+' · '+(x.h.attendTotal||0)+'회</span>'
+        +'<span style="flex:1;font-size:12px;font-weight:700">'+_esc(lbl)+' · '+_esc(x.h.grade||'-')+' · '+(x.h.attendTotal||0)+'회'+(x.h.manual?'':' <span style="color:var(--text-light);font-size:10px;font-weight:500">(자동)</span>')+'</span>'
         +'<button onclick="delPastRecord('+x.i+')" style="border:none;background:var(--coral-light);color:#D95F50;border-radius:7px;width:26px;height:26px;font-size:14px;cursor:pointer">×</button></div>';
-    }).join('')):'';
+    }).join('')):'<div style="font-size:11px;color:var(--text-light);text-align:center;padding:8px">저장된 지난 기록이 없어요</div>';
 }
 var _prDates=null;   /* {날짜: 'full'|'half'|'absent'} */
 function loadPastDates(){
@@ -3735,12 +3738,11 @@ function cyclePastDate(w){
 }
 function savePastRecord(){
   var u=pendingList.find(function(x){return x.id===currentDetailStudentId;});if(!u)return;
-  var term=(document.getElementById('pr-term').value||'').trim();
-  var grade=(document.getElementById('pr-grade').value||'').trim();
-  var _fromD=document.getElementById('pr-from').value||'';
-  if(!term&&_fromD){var _fy=+_fromD.slice(0,4),_fm=+_fromD.slice(5,7);var _sy=(_fm>=3)?_fy:_fy-1;term=_sy+'학년도';}
+  var _sel=document.getElementById('pr-term');
+  var _year=parseInt(_sel&&_sel.value,10)||_curSchoolYr();
+  var term=_year+'학년도';
+  var grade=(document.getElementById('pr-grade').value||'').trim()||((typeof _gradeLabelForYear==='function')?_gradeLabelForYear(u,_year):'')||u.gradeLabel||'';
   var cnt=parseFloat(document.getElementById('pr-count').value||'0')||0;
-  if(!term){showToast('기간(시작일)을 고르거나 학년도를 입력해주세요');return;}
   var wk=[],hw=[];
   if(_prDates){
     Object.keys(_prDates).sort().forEach(function(w){
@@ -3754,9 +3756,9 @@ function savePastRecord(){
   u.history=u.history||[];
   u.history.push({term:term,grade:grade,attendTotal:cnt,level:lv,weeks:wk,halfWeeks:hw,
     from:document.getElementById('pr-from').value||'',to:document.getElementById('pr-to').value||'',
-    year:parseInt(term,10)||new Date().getFullYear(),manual:!wk.length});
+    year:_year,manual:!wk.length});
   try{if(typeof flushSync==='function')flushSync();}catch(e){}
-  document.getElementById('pr-term').value='';document.getElementById('pr-grade').value='';document.getElementById('pr-count').value='';
+  document.getElementById('pr-count').value='';try{_prYearChange();}catch(e){}
   _prDates=null;renderPastDates();
   var sel=document.getElementById('detail-attend-term');if(sel)delete sel.dataset.uid;
   renderPastList();renderDetailAttend();
