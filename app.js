@@ -3833,6 +3833,7 @@ function renderDetailAttend(){
           return '<div style="text-align:center"><div style="background:'+(isH?'var(--yellow-light)':'var(--mint-light)')+';color:'+(isH?'#B37A00':'#2D9E8F')+';border-radius:9px;padding:7px 0;font-size:14px;font-weight:800;line-height:1">'+(isH?'◐':'○')+'</div><div style="font-size:9px;color:var(--text-light);margin-top:3px">'+(+d[1])+'/'+(+d[2])+'</div></div>';
         }).join('')+'</div>':'<div style="font-size:12px;color:var(--text-light);text-align:center;padding:10px 0">출석한 주가 없어요</div>')
       +(_termRange(h)?'<div style="font-size:10px;color:var(--text-light);text-align:center;margin-top:9px">'+_esc(_termRange(h))+' · 보관된 기록</div>':'')
+      +'<button onclick="delPastRecord('+(u.history.length-1-parseInt(pick,10))+')" style="width:100%;margin-top:12px;padding:10px;border:1px solid var(--coral);background:var(--coral-light);color:#D95F50;border-radius:10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">🗑 이 학년도 기록 삭제</button>'
       +'</div>';
     return;
   }
