@@ -740,7 +740,7 @@ function startSession(u){
   G.isAdmin=u.isAdmin||false;G.isJabumo=u.isJabumo||false;G.isJabumoPresident=u.isJabumoPresident||false;G.graduated=u.graduated||false;
   G.birthMonth=u.birthMonth||0;G.birthDay=u.birthDay||0;
   G.feastMonth=u.feastMonth||0;G.feastDay=u.feastDay||0;
-  G.attendTotal=u.attendTotal||0;G.streak=u.streak||0;G.history=u.history||[];G.attendedWeeks=u.attendedWeeks||[];G.halfWeeks=u.halfWeeks||[];G.qrScanAt=u.qrScanAt||{};if(u.avatar)G.avatar=u.avatar;G.statusMsg=u.statusMsg||'';
+  G.attendTotal=u.attendTotal||0;G.streak=u.streak||0;G.history=u.history||[];G.attendedWeeks=u.attendedWeeks||[];G.halfWeeks=u.halfWeeks||[];G.qrScanAt=u.qrScanAt||{};G.avatar=u.avatar||'';G.statusMsg=u.statusMsg||'';
   document.getElementById('bottom-nav').style.display='flex';
   const isS=G.role==='student',isP=G.role==='parent',isT=G.role==='teacher';
   const isFull=isT&&(G.type==='principal'||G.type==='admin'||G.isAdmin);
