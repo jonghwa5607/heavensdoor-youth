@@ -1640,7 +1640,7 @@
     </div>
     <div class="form-group">
       <label class="form-label">안내 <span style="font-weight:400;color:var(--text-light)">(한 줄에 하나씩 · 앞에 ✔ 가 붙어요)</span></label>
-      <textarea class="form-input" id="wn-lines" rows="6" style="resize:none;line-height:1.8" placeholder="이번주는 통합 교리가 진행됩니다.&#10;학생들 모두 대교리실로 모여주세요.&#10;셔틀탑승 : 5시 45분 홈플러스앞&#10;묵주 및 봉헌금 챙겨주세요"></textarea>
+      <textarea class="form-input" id="wn-lines" rows="6" style="resize:none;line-height:1.8" placeholder="한 줄에 하나씩 · &quot;항목: 내용&quot; 형식이면 아이콘 카드로 예쁘게 표시돼요&#10;이번주: 통합 교리가 진행됩니다&#10;장소: 모두 대교리실로 모여주세요&#10;셔틀버스: 5시 45분 홈플러스 앞&#10;일정: 교리 18:00 · 부서활동 18:40 · 미사 19:30"></textarea>
     </div>
     <div class="form-group">
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;cursor:pointer">
@@ -1722,8 +1722,8 @@
     <div class="modal-handle"></div>
     <div class="modal-title-row"><span class="modal-title">＋ 지난 학년도 기록</span><button class="modal-close" onclick="closeModal('past-record-modal')">✕</button></div>
     <div style="font-size:11px;color:var(--text-light);line-height:1.6;margin-bottom:12px">앱을 쓰기 전에 종이·엑셀로 관리하던 기록을 넣어두면, 학생카드와 졸업 출력물에 함께 남아요.</div>
-    <div class="form-group"><label class="form-label">학년도</label><input class="form-input" id="pr-term" placeholder="비우면 날짜로 자동 (예: 2026학년도)"></div>
-    <div class="form-group"><label class="form-label">학년</label><input class="form-input" id="pr-grade" placeholder="예: 중2"></div>
+    <div class="form-group"><label class="form-label">학년도</label><select class="form-input" id="pr-term" onchange="_prYearChange()"></select></div>
+    <div class="form-group"><label class="form-label">학년 <span style="font-size:10px;color:var(--text-light);font-weight:400">· 연도 선택 시 자동</span></label><input class="form-input" id="pr-grade" readonly style="background:var(--bg)"></div>
     <div style="display:flex;gap:8px">
       <div class="form-group" style="flex:1"><label class="form-label">시작일</label><input class="form-input" type="date" id="pr-from"></div>
       <div class="form-group" style="flex:1"><label class="form-label">종료일</label><input class="form-input" type="date" id="pr-to"></div>
@@ -2038,14 +2038,20 @@
 
 <!-- ══ 모달: 중요 공지 팝업 ══ -->
 <div class="modal-overlay" id="important-notice-modal">
-  <div class="modal-sheet" style="text-align:center">
+  <div class="modal-sheet">
     <div class="modal-handle"></div>
-    <div style="font-size:32px;margin-bottom:8px">🚨</div>
-    <div style="font-size:11px;font-weight:700;color:var(--coral);letter-spacing:.5px;margin-bottom:6px">중요 공지</div>
-    <div style="font-size:16px;font-weight:800;margin-bottom:10px" id="important-notice-title"></div>
-    <div style="font-size:13px;color:var(--text-sub);line-height:1.6;margin-bottom:16px;text-align:left;max-height:200px;overflow-y:auto" id="important-notice-content"></div>
-    <button class="btn btn-primary" onclick="closeImportantNotice()">확인했습니다</button>
+    <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:4px">
+      <div style="width:46px;height:46px;border-radius:13px;background:var(--primary-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--primary-dark)"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h3l4 4V6L7 10H4a1 1 0 0 0-1 1z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18 6a9 9 0 0 1 0 12"/></svg></div>
+      <div style="flex:1;min-width:0;padding-top:2px"><div style="font-size:11px;font-weight:800;color:var(--primary-dark);letter-spacing:.3px;margin-bottom:3px">중요 공지</div><div style="font-size:19px;font-weight:800;line-height:1.25" id="important-notice-title"></div></div>
+      <button onclick="closeImportantNotice()" style="border:none;background:none;font-size:24px;color:var(--text-light);cursor:pointer;line-height:1;flex-shrink:0">×</button>
+    </div>
+    <div style="font-size:12.5px;color:var(--text-light);margin:2px 0 14px" id="important-notice-sub">이번 주 주요 일정과 안내사항을 확인해 주세요.</div>
+    <div id="important-notice-cards" style="max-height:50vh;overflow-y:auto"></div>
+    <div id="important-notice-content" style="display:none"></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="closeImportantNotice()">확인했습니다</button>
+    <div style="font-size:11px;color:var(--text-light);text-align:center;margin-top:10px">자세한 내용은 공지사항에서 확인할 수 있어요.</div>
   </div>
+</div>
 </div>
 
 <!-- ══ 모달: 게시글 댓글 ══ -->

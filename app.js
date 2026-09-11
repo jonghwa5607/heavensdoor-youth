@@ -379,7 +379,30 @@ function showToast(msg,dur=2200){const t=document.getElementById('toast');if(!t)
 function openModal(id){const m=document.getElementById(id);if(m)m.classList.add('open');}
 function closeModal(id){const m=document.getElementById(id);if(m)m.classList.remove('open');}
 let currentImportantId=null;
-function checkImportantNotices(){try{const _jt=(typeof _joinTs==='function')?_joinTs():0;const important=posts.filter(p=>p.isImportant&&(!_jt||!p.ts||p.ts>=_jt)&&(p.target==='all'||p.target===G.role)&&(p.target!=='student'||p.grade==='all-s'||p.grade===G.gradeKey)&&!(p.popupUntil&&Date.now()>p.popupUntil)&&!(p.popupDays&&p.ts&&Date.now()>p.ts+p.popupDays*86400000));for(const p of important){const key='dismissed-important-'+p.id+'-'+G.id;let dismissed=false;try{dismissed=!!localStorage.getItem(key);}catch(e){dismissed=false;}if(!dismissed){currentImportantId=p.id;document.getElementById('important-notice-title').textContent=p.title;document.getElementById('important-notice-content').textContent=p.content||'';openModal('important-notice-modal');break;}}}catch(e){console.error('checkImportantNotices error:',e);}}
+function _noticeIcon(label){
+  var L=(label||'');var p='<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">';
+  if(/이번\s*주|주간|안내|공지/.test(L))return p+'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+  if(/일정|날짜|스케줄/.test(L))return p+'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>';
+  if(/장소|위치|모임|모여|교실|성당|본당/.test(L))return p+'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+  if(/셔틀|버스|차량|탑승|출발/.test(L))return p+'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+  if(/학생|참석|대상/.test(L))return p+'<path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 3 2.5 6 2.5s6-1.5 6-2.5v-5"/></svg>';
+  if(/시간|봉헌|헌금|미사|교리|활동/.test(L))return p+'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+  return p+'<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>';
+}
+function _renderNoticeCards(content){
+  var box=document.getElementById('important-notice-cards');if(!box)return;
+  var lines=(content||'').split(/\r?\n/).map(function(s){return s.trim();}).filter(Boolean);
+  if(!lines.length){box.innerHTML='<div style="font-size:13px;color:var(--text-sub);line-height:1.7;padding:4px 2px">'+_esc(content||'')+'</div>';return;}
+  box.innerHTML='<div style="background:var(--bg);border-radius:14px;padding:6px 14px">'+lines.map(function(ln,i){
+    var m=ln.match(/^([^:：]{1,10})\s*[:：]\s*(.+)$/);
+    var label=m?m[1].trim():'';var text=m?m[2].trim():ln;
+    var head=label?('<div style="font-size:13.5px;font-weight:800;color:var(--text);margin-bottom:2px">'+_esc(label)+'</div>'):'';
+    return '<div style="display:flex;gap:12px;align-items:flex-start;padding:12px 0'+(i<lines.length-1?';border-bottom:1px solid var(--border-light)':'')+'">'
+      +'<div style="width:38px;height:38px;border-radius:11px;background:var(--primary-light);color:var(--primary-dark);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+_noticeIcon(label||text)+'</div>'
+      +'<div style="flex:1;min-width:0;padding-top:1px">'+head+'<div style="font-size:13px;color:var(--text-sub);line-height:1.55">'+_esc(text)+'</div></div></div>';
+  }).join('')+'</div>';
+}
+function checkImportantNotices(){try{const _jt=(typeof _joinTs==='function')?_joinTs():0;const important=posts.filter(p=>p.isImportant&&(!_jt||!p.ts||p.ts>=_jt)&&(p.target==='all'||p.target===G.role)&&(p.target!=='student'||p.grade==='all-s'||p.grade===G.gradeKey)&&!(p.popupUntil&&Date.now()>p.popupUntil)&&!(p.popupDays&&p.ts&&Date.now()>p.ts+p.popupDays*86400000));for(const p of important){const key='dismissed-important-'+p.id+'-'+G.id;let dismissed=false;try{dismissed=!!localStorage.getItem(key);}catch(e){dismissed=false;}if(!dismissed){currentImportantId=p.id;document.getElementById('important-notice-title').textContent=p.title;document.getElementById('important-notice-content').textContent=p.content||'';try{_renderNoticeCards(p.content||'');}catch(e){}try{var _sub=document.getElementById('important-notice-sub');if(_sub)_sub.textContent=(p.id&&p.id.indexOf('wn-')===0)?'이번 주 주요 일정과 안내사항을 확인해 주세요.':'꼭 확인해 주세요.';}catch(e){}openModal('important-notice-modal');break;}}}catch(e){console.error('checkImportantNotices error:',e);}}
 function closeImportantNotice(){try{if(currentImportantId)localStorage.setItem('dismissed-important-'+currentImportantId+'-'+G.id,'1');}catch(e){console.error('important notice dismiss error:',e);}closeModal('important-notice-modal');}
 let _notifReadSnap=null;
 function openNotifModal(){
