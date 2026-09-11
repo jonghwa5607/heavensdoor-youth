@@ -96,19 +96,14 @@ function openWeeklyNotice(){
       ? '🔒 주간공지는 <b>교감·교무</b>가 작성합니다'
       : (ex?('✅ <b>'+_esc(ex.authorName||'')+'</b> 님이 이미 올렸어요 · 수정은 작성자만 할 수 있어요'):'');
   }
-  ['wn-lines','wn-time','wn-time-on'].forEach(function(id){var e=document.getElementById(id);if(e){e.disabled=readOnly;e.style.opacity=readOnly?'.6':'';}});
+  ['wn-c-week','wn-c-plan','wn-c-place','wn-c-shuttle','wn-c-etc'].forEach(function(id){var e=document.getElementById(id);if(e){e.disabled=readOnly;e.style.opacity=readOnly?'.6':'';}});
   var bar=document.getElementById('wn-fill-bar');if(bar)bar.style.display=readOnly?'none':'flex';
-  var t=document.getElementById('wn-time');
-  t.value=(appConfig&&appConfig.wnTime)||WN_TIME_DEFAULT;
-  var ta=document.getElementById('wn-lines');
   if(ex){
     var parsed=_wnParse(ex.content||'');
-    ta.value=parsed.lines.join('\n');
-    document.getElementById('wn-time-on').checked=!!parsed.time;
-    if(parsed.time)t.value=parsed.time;
+    WN_CATS.forEach(function(c){var el=document.getElementById(c[1]);if(el)el.value=parsed[c[0]]||'';});
   }else{
-    ta.value='';
-    document.getElementById('wn-time-on').checked=true;
+    WN_CATS.forEach(function(c){var el=document.getElementById(c[1]);if(el)el.value='';});
+    var _pl=document.getElementById('wn-c-plan');if(_pl)_pl.value=(appConfig&&appConfig.wnTime)||WN_TIME_DEFAULT;
     if(isVacationDate(sat)||isEduVacation(sat))wnFillVacation();
     else wnFillLast();
   }
@@ -117,48 +112,40 @@ function openWeeklyNotice(){
   var _wpu=document.getElementById('wn-popup-until');if(_wpu)_wpu.value=_defaultPopupUntil();
   openModal('weekly-notice-modal');
 }
-/* 저장된 공지 본문에서 안내 줄과 시간표를 되읽기 */
+var WN_CATS=[['이번주','wn-c-week'],['일정','wn-c-plan'],['장소','wn-c-place'],['셔틀버스','wn-c-shuttle'],['기타','wn-c-etc']];
+/* 저장된 공지 본문에서 카테고리별 내용 되읽기 (구버전 ✔/- 형식도 흡수) */
 function _wnParse(txt){
-  var lines=[],time='';
+  var vals={'이번주':'','일정':'','장소':'','셔틀버스':'','기타':''};
   String(txt||'').split(/\r?\n/).forEach(function(l){
     l=l.trim();if(!l)return;
-    if(l.indexOf('- ')===0){time=l.slice(2).trim();return;}
-    lines.push(l.replace(/^✔\s*/,''));
+    l=l.replace(/^✔\s*/,'').replace(/^-\s*/,'');
+    var m=l.match(/^([^:：]{1,10})\s*[:：]\s*(.+)$/);
+    if(m&&vals.hasOwnProperty(m[1].trim())){vals[m[1].trim()]=m[2].trim();}
+    else{vals['기타']=(vals['기타']?vals['기타']+' · ':'')+l;}
   });
-  return {lines:lines,time:time};
+  return vals;
+}
+function _wnBuild(){
+  return WN_CATS.map(function(c){var el=document.getElementById(c[1]);var v=el?(el.value||'').trim():'';return v?(c[0]+': '+v):'';}).filter(Boolean).join('\n');
 }
 function wnFillLast(){
   var prev=posts.filter(function(p){return p.id&&p.id.indexOf('wn-')===0&&p.id!==_wnId();})
     .sort(function(a,b){return (b.ts||0)-(a.ts||0)})[0];
   if(!prev){showToast('불러올 지난 공지가 없어요');return;}
-  var pr=_wnParse(prev.content||'');
-  document.getElementById('wn-lines').value=pr.lines.join('\n');
-  if(pr.time)document.getElementById('wn-time').value=pr.time;
+  var pr=_wnParse(prev.content||'');WN_CATS.forEach(function(c){var el=document.getElementById(c[1]);if(el)el.value=pr[c[0]]||'';});
   wnPreview();
 }
 function wnFillVacation(){
   var sat=_wnSat(), edu=isEduVacation(sat);
-  var vm=(appConfig&&appConfig.vacMsg)||{};
-  var body=edu?'이번주는 교리방학입니다. 부서활동만 진행됩니다.':'이번주는 주일학교 방학입니다. 교리와 미사가 없습니다.';
-  document.getElementById('wn-lines').value=body;
-  document.getElementById('wn-time-on').checked=!edu;
+  WN_CATS.forEach(function(c){var el=document.getElementById(c[1]);if(el)el.value='';});
+  var w=document.getElementById('wn-c-week');if(w)w.value=edu?'이번주는 교리방학입니다. 부서활동만 진행됩니다.':'이번주는 주일학교 방학입니다. 교리와 미사가 없습니다.';
   wnPreview();
-}
-function _wnBuild(){
-  var lines=(document.getElementById('wn-lines').value||'').split(/\r?\n/)
-    .map(function(l){return l.trim();}).filter(Boolean);
-  var out=lines.map(function(l){return '✔ '+l;}).join('\n');
-  if(document.getElementById('wn-time-on').checked){
-    var t=(document.getElementById('wn-time').value||'').trim();
-    if(t)out+=(out?'\n\n':'')+'- '+t;
-  }
-  return out;
 }
 function wnPreview(){
   var el=document.getElementById('wn-preview');if(!el)return;
   var b=_wnBuild();
-  el.textContent=b||'안내를 입력하면 여기에 보여요';
-  el.style.color=b?'var(--text)':'var(--text-light)';
+  if(!b){el.innerHTML='<div style="font-size:12px;color:var(--text-light)">내용을 입력하면 여기에 미리보기가 나와요</div>';return;}
+  _renderNoticeCards(b,el);
 }
 function submitWeeklyNotice(){
   if(!_canWriteWeekly()){showToast('교감·교무만 올릴 수 있어요');return;}
@@ -168,7 +155,7 @@ function submitWeeklyNotice(){
   if(!body){showToast('안내 내용을 입력해주세요');return;}
   var sat=_wnSat(), id=_wnId(sat), title=_wnTitle(sat), ex=_wnPost(sat);
   var _wnPuEl=document.getElementById('wn-popup-until');var _wnPopupUntil=_wnPuEl&&_wnPuEl.value?_endOfDayMs(_wnPuEl.value):0;
-  var n=(document.getElementById('wn-time').value||'').trim();
+  var n=(document.getElementById('wn-c-plan').value||'').trim();
   if(n)appConfig.wnTime=n;
   var _wsdt=_schedDT('wn');if(_wsdt===false)return;
   if(_wsdt){
@@ -389,8 +376,8 @@ function _noticeIcon(label){
   if(/시간|봉헌|헌금|미사|교리|활동/.test(L))return p+'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
   return p+'<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>';
 }
-function _renderNoticeCards(content){
-  var box=document.getElementById('important-notice-cards');if(!box)return;
+function _renderNoticeCards(content,boxEl){
+  var box=(boxEl&&boxEl.nodeType)?boxEl:document.getElementById(boxEl||'important-notice-cards');if(!box)return;
   var lines=(content||'').split(/\r?\n/).map(function(s){return s.trim();}).filter(Boolean);
   if(!lines.length){box.innerHTML='<div style="font-size:13px;color:var(--text-sub);line-height:1.7;padding:4px 2px">'+_esc(content||'')+'</div>';return;}
   box.innerHTML='<div style="background:var(--bg);border-radius:14px;padding:6px 14px">'+lines.map(function(ln,i){

@@ -1639,14 +1639,14 @@
       <button class="btn btn-sm btn-outline" style="flex:1" onclick="wnFillVacation()">🏖️ 방학 안내</button>
     </div>
     <div class="form-group">
-      <label class="form-label">안내 <span style="font-weight:400;color:var(--text-light)">(한 줄에 하나씩 · 앞에 ✔ 가 붙어요)</span></label>
-      <textarea class="form-input" id="wn-lines" rows="6" style="resize:none;line-height:1.8" placeholder="한 줄에 하나씩 · &quot;항목: 내용&quot; 형식이면 아이콘 카드로 예쁘게 표시돼요&#10;이번주: 통합 교리가 진행됩니다&#10;장소: 모두 대교리실로 모여주세요&#10;셔틀버스: 5시 45분 홈플러스 앞&#10;일정: 교리 18:00 · 부서활동 18:40 · 미사 19:30"></textarea>
-    </div>
-    <div class="form-group">
-      <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;cursor:pointer">
-        <input type="checkbox" id="wn-time-on" checked onchange="wnPreview()" style="width:17px;height:17px;accent-color:var(--primary)"> 시간표 넣기
-      </label>
-      <input class="form-input" id="wn-time" style="margin-top:7px" oninput="wnPreview()" placeholder="교리 18:00 | 부서활동 18:40 | 미사 19:30">
+      <label class="form-label">항목별 안내 <span style="font-weight:400;color:var(--text-light)">(내용만 입력 · 빈 칸은 표시 안 돼요)</span></label>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:9px"><span style="width:64px;flex-shrink:0;font-size:12.5px;font-weight:800;color:var(--primary-dark)">이번주</span><input class="form-input" id="wn-c-week" oninput="wnPreview()" placeholder="예: 통합 교리가 진행됩니다"></div>
+        <div style="display:flex;align-items:center;gap:9px"><span style="width:64px;flex-shrink:0;font-size:12.5px;font-weight:800;color:var(--primary-dark)">일정</span><input class="form-input" id="wn-c-plan" oninput="wnPreview()" placeholder="예: 교리 18:00 · 부서활동 18:40 · 미사 19:30"></div>
+        <div style="display:flex;align-items:center;gap:9px"><span style="width:64px;flex-shrink:0;font-size:12.5px;font-weight:800;color:var(--primary-dark)">장소</span><input class="form-input" id="wn-c-place" oninput="wnPreview()" placeholder="예: 모두 대교리실로 모여주세요"></div>
+        <div style="display:flex;align-items:center;gap:9px"><span style="width:64px;flex-shrink:0;font-size:12.5px;font-weight:800;color:var(--primary-dark)">셔틀버스</span><input class="form-input" id="wn-c-shuttle" oninput="wnPreview()" placeholder="예: 5시 45분 홈플러스 앞"></div>
+        <div style="display:flex;align-items:center;gap:9px"><span style="width:64px;flex-shrink:0;font-size:12.5px;font-weight:800;color:var(--primary-dark)">기타</span><input class="form-input" id="wn-c-etc" oninput="wnPreview()" placeholder="예: 묵주 및 봉헌금 지참"></div>
+      </div>
     </div>
     <div class="form-group">
       <button class="attach-file-btn" style="width:100%" onclick="document.getElementById('wn-img-input').click()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> 사진 추가<br><span style="font-size:10px;opacity:.7">최대 10장</span></button>
