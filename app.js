@@ -360,7 +360,7 @@ function switchTab(tab){if(tab==='activity'&&G.role==='student'&&G.graduated){op
       }catch(e){}
       renderCalendar();
       try{renderCalDayEvents(selectedCalDate);}catch(e){}
-    }if(tab==='activity')renderDeptInfo();if(tab==='home'){checkImportantNotices();try{updateVerseEditUI();}catch(e){}try{checkThursdayNotice();}catch(e){}try{_refreshTeacherDesc();}catch(e){}renderHomeSchedule();try{renderTeacherWeek();}catch(e){}try{renderHomeSmart();}catch(e){}try{renderHomeWeek();}catch(e){}try{renderHomeMiniCal();}catch(e){}try{renderHomeMinutes();}catch(e){}applySeason(appConfig.season||'ordinary');try{renderBdayBannerAuto();}catch(e){}try{_homePlanRetry();}catch(e){}}if(tab==='teacher'){autoArchiveMinutes();renderResourceList();}}catch(e){console.error('switchTab render error:',e);}try{maybeCoach(tab);}catch(e){}}
+    }if(tab==='activity')renderDeptInfo();if(tab==='home'){checkImportantNotices();try{updateVerseEditUI();}catch(e){}try{checkThursdayNotice();}catch(e){}try{_refreshTeacherDesc();}catch(e){}renderHomeSchedule();try{renderTeacherWeek();}catch(e){}try{renderHomeSmart();}catch(e){}try{renderHomeWeek();}catch(e){}try{renderHomeMiniCal();}catch(e){}try{renderHomeMinutes();}catch(e){}applySeason(appConfig.season||'ordinary');try{renderBdayBannerAuto();}catch(e){}try{_homePlanRetry();}catch(e){}try{setTimeout(function(){if(!document.querySelector('#important-notice-modal.open'))checkUnreadMinutes();},900);}catch(e){}}if(tab==='teacher'){autoArchiveMinutes();renderResourceList();}}catch(e){console.error('switchTab render error:',e);}try{maybeCoach(tab);}catch(e){}}
 function show(id,v){const e=document.getElementById(id);if(e)e.style.display=v?'':'none';}
 function showToast(msg,dur=2200){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
 function openModal(id){const m=document.getElementById(id);if(m)m.classList.add('open');}
@@ -371,7 +371,7 @@ function _noticeIcon(label){
   if(/이번\s*주|주간|안내|공지/.test(L))return p+'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
   if(/일정|날짜|스케줄/.test(L))return p+'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>';
   if(/장소|위치|모임|모여|교실|성당|본당/.test(L))return p+'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>';
-  if(/셔틀|버스|차량|탑승|출발/.test(L))return p+'<path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M4 10h16"/><circle cx="8" cy="17.5" r="1.6"/><circle cx="16" cy="17.5" r="1.6"/><path d="M7 20v1M17 20v1"/></svg>';
+  if(/셔틀|버스|차량|탑승|출발/.test(L))return p+'<rect x="5" y="4" width="14" height="13" rx="2"/><path d="M5 10h14"/><path d="M9 4V2h6v2"/><circle cx="8.5" cy="13.5" r="1"/><circle cx="15.5" cy="13.5" r="1"/><path d="M7 20l1-3M17 20l-1-3"/></svg>';
   if(/학생|참석|대상/.test(L))return p+'<path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 3 2.5 6 2.5s6-1.5 6-2.5v-5"/></svg>';
   if(/시간|봉헌|헌금|미사|교리|활동/.test(L))return p+'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
   return p+'<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>';
@@ -384,7 +384,7 @@ function _renderNoticeCards(content,boxEl){
   box.innerHTML='<div style="background:var(--bg);border-radius:14px;padding:6px 14px">'+lines.map(function(ln,i){
     var m=ln.match(/^([^:：]{1,10})\s*[:：]\s*(.+)$/);
     var label=m?m[1].trim():'';var text=m?m[2].trim():ln;
-    var head=label?('<div style="font-size:13.5px;font-weight:800;color:var(--text);margin-bottom:2px">'+_esc(label)+'</div>'):'';
+    var head=(label&&label!=='기타')?('<div style="font-size:13.5px;font-weight:800;color:var(--text);margin-bottom:2px">'+_esc(label)+'</div>'):'';
     return '<div style="display:flex;gap:12px;align-items:flex-start;padding:12px 0'+(i<lines.length-1?';border-bottom:1px solid var(--border-light)':'')+'">'
       +'<div style="width:38px;height:38px;border-radius:11px;background:var(--primary-light);color:var(--primary-dark);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+_noticeIcon(label||text)+'</div>'
       +'<div style="flex:1;min-width:0;padding-top:1px">'+head+'<div style="font-size:13px;color:var(--text-sub);line-height:1.55">'+_esc(text)+'</div></div></div>';
@@ -1889,14 +1889,22 @@ function ensureWeeklyMinutes(){
     var today=_today();
     var sats=(typeof _satsInRange==='function')?_satsInRange(st,en):[];
     var made=0;
+    var _lim=(typeof _dateStrOffset==='function')?_dateStrOffset(28):'9999-12-31';
     sats.forEach(function(ds){
       var ag=_agendaLine((litFor(ds)||{}).agenda);
+      if(ds>_lim){ /* 4주 뒤 이후: 자동 생성 안 함 + 비어있는 자동 회의록은 정리 */
+        var exF=(resources||[]).find(function(r){return r.cat==='minutes'&&!r.deleted&&r.mdate===ds;});
+        if(exF&&String(exF.id).indexOf('wm')===0&&!(exF.content||'').trim()&&!(exF.agendaText||'').trim()){exF.deleted=true;try{if(window.FB&&FB.enabled()&&FB.remove)FB.remove('resources',exF.id);}catch(e){}made++;}
+        return;
+      }
       if(isVacationDate(ds)&&!ag)return;        /* 방학 토요일 제외(단, 안건 있으면 회의록 생성) */
       var ex=(resources||[]).find(function(r){return r.cat==='minutes'&&!r.deleted&&r.mdate===ds;});
       var d=ds.split('-');
       var title=(+d[1])+'월 '+(+d[2])+'일 회의록';
       if(ex){
         if(ex.title!==title){ex.title=title;made++;}
+        var _agSrc=ag||((litFor(ds)||{}).agenda||'');
+        if(_agSrc&&(ex.content||'').trim()){var _oldB=_agSrc.split(/[,·;\n]/).map(function(x){return x.trim();}).filter(Boolean).map(function(x){return '## '+x;}).join('\n').trim();if((ex.content||'').trim()===_oldB){ex.content='';made++;}}
         var cleaned=_minWithAgenda(ex.content,'');if(cleaned!==(ex.content||'')){ex.content=cleaned;made++;}
         if((ex.agendaText||'')!==ag){ex.agendaText=ag;made++;}
         return;
@@ -1956,7 +1964,7 @@ function renderMinutesHub(){
   if(!live&&list.length)html+='<div style="background:var(--bg);border-radius:var(--radius-sm);padding:9px 11px;margin-bottom:9px;font-size:11px;color:var(--text-light)">🔒 '+minutesHubYear+'년 회의록은 보관되어 읽기 전용이에요.</div>';
   if(list.length)html+='<div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn btn-sm btn-outline" style="width:auto" onclick="exportMinutesYear()">⬇ '+minutesHubYear+'년 전체 PDF</button></div>';
   var _n=_mSel?Object.keys(_mSel).length:0;
-  html+=list.length?list.map(_resCard).join(''):_resEmpty('📝','회의록이 없어요',live?'＋ 새 회의록을 눌러 바로 시작해요':'이 해에는 작성된 회의록이 없어요');
+  html+=list.length?(function(){var _td=_today();var _dd=new Date();var _tdl=(_dd.getMonth()+1)+'월 '+_dd.getDate()+'일';var _shownLine=false;var out=list.map(function(r){var pre='';if(live&&!_shownLine&&(r.mdate||'')>=_td){_shownLine=true;pre='<div style="display:flex;align-items:center;gap:9px;margin:16px 2px 12px"><div style="flex:1;height:2px;background:var(--primary);border-radius:2px;opacity:.5"></div><span style="font-size:11px;font-weight:800;color:var(--primary-dark);white-space:nowrap">오늘 · '+_tdl+' ▾ 예정</span><div style="flex:1;height:2px;background:var(--primary);border-radius:2px;opacity:.5"></div></div>';}return pre+_resCard(r);}).join('');return out;})():_resEmpty('📝','회의록이 없어요',live?'＋ 새 회의록을 눌러 바로 시작해요':'이 해에는 작성된 회의록이 없어요');
   if(live&&appConfig.notionUrl){
     html+='<div style="margin-top:16px;padding-top:13px;border-top:1px dashed var(--border-light)"></div>'
       +_resSecLabel('📓 예전 노션 회의록 (열람용)')
@@ -1971,6 +1979,20 @@ function renderMinutesHub(){
 /* ══ 회의록 발행 · 확인 ══ */
 function _teacherRoster(){return (pendingList||[]).filter(function(t){return t.approved&&t.role==='teacher'&&!t.hidden;});}
 function _isAcked(r,uid){return !!((r&&r.acks||[]).some(function(a){return a&&a.id===uid;}));}
+var _unreadMinShown=false;
+function checkUnreadMinutes(){
+  try{
+    if(G.role!=='teacher'||_unreadMinShown)return;
+    var un=(typeof _unackedMinutes==='function')?_unackedMinutes():[];
+    if(!un.length)return;
+    _unreadMinShown=true;
+    un=un.slice().sort(function(a,b){return (a.mdate||'')<(b.mdate||'')?1:-1;});
+    var el=document.getElementById('um-list');
+    if(el)el.innerHTML=un.map(function(r){return '<div onclick="closeModal(\'unread-min-modal\');openMinutesViewer(\''+r.id+'\')" style="display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:11px;padding:12px 13px;margin-bottom:8px;cursor:pointer"><span style="width:8px;height:8px;border-radius:50%;background:var(--coral);flex-shrink:0"></span><div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700">'+_esc(r.title||'회의록')+'</div><div style="font-size:11px;color:var(--text-light);margin-top:2px">'+_esc(r.publishedAt||r.updatedAt||'')+' 발행</div></div><span style="font-size:18px;color:var(--text-light)">›</span></div>';}).join('');
+    var tt=document.getElementById('um-title');if(tt)tt.textContent='안 읽은 회의록 '+un.length+'건';
+    openModal('unread-min-modal');
+  }catch(e){}
+}
 function _unackedMinutes(){
   var yr=String(LIVE_YEAR);
   return (resources||[]).filter(function(r){return r.cat==='minutes'&&!r.deleted&&r.year===yr&&r.published&&!_isAcked(r,G.id);});
