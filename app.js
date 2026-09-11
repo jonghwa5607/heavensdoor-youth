@@ -1876,6 +1876,7 @@ function _dedupMinutes(){
     return true;
   }catch(e){return false;}
 }
+function _minRealBody(r){try{if(!r)return '';var c=r.content||'';c=_minWithAgenda(c,'');var ag=(r.agendaText||'')||((litFor(r.mdate)||{}).agenda||'');if(ag){var ob=ag.split(/[,·;\n]/).map(function(x){return x.trim();}).filter(Boolean).map(function(x){return '## '+x;}).join('\n').trim();if(c.trim()===ob)c='';}return c.trim();}catch(e){return (r&&r.content||'').trim();}}
 function ensureWeeklyMinutes(){
   try{_hydrateYP();}catch(e){}
   var _dd=false;try{_dd=_dedupMinutes();}catch(e){}
@@ -1894,7 +1895,7 @@ function ensureWeeklyMinutes(){
       var ag=_agendaLine((litFor(ds)||{}).agenda);
       if(ds>_lim){ /* 4주 뒤 이후: 자동 생성 안 함 + 비어있는 자동 회의록은 정리 */
         var exF=(resources||[]).find(function(r){return r.cat==='minutes'&&!r.deleted&&r.mdate===ds;});
-        if(exF&&String(exF.id).indexOf('wm')===0&&!(exF.content||'').trim()&&!(exF.agendaText||'').trim()){exF.deleted=true;try{if(window.FB&&FB.enabled()&&FB.remove)FB.remove('resources',exF.id);}catch(e){}made++;}
+        if(exF&&!_minRealBody(exF)){exF.deleted=true;try{if(window.FB&&FB.enabled()&&FB.remove)FB.remove('resources',exF.id);}catch(e){}made++;}
         return;
       }
       if(isVacationDate(ds)&&!ag)return;        /* 방학 토요일 제외(단, 안건 있으면 회의록 생성) */
@@ -1903,8 +1904,7 @@ function ensureWeeklyMinutes(){
       var title=(+d[1])+'월 '+(+d[2])+'일 회의록';
       if(ex){
         if(ex.title!==title){ex.title=title;made++;}
-        var _agSrc=ag||((litFor(ds)||{}).agenda||'');
-        if(_agSrc&&(ex.content||'').trim()){var _oldB=_agSrc.split(/[,·;\n]/).map(function(x){return x.trim();}).filter(Boolean).map(function(x){return '## '+x;}).join('\n').trim();if((ex.content||'').trim()===_oldB){ex.content='';made++;}}
+        if((ex.content||'').trim()&&!_minRealBody(ex)){ex.content='';made++;}
         var cleaned=_minWithAgenda(ex.content,'');if(cleaned!==(ex.content||'')){ex.content=cleaned;made++;}
         if((ex.agendaText||'')!==ag){ex.agendaText=ag;made++;}
         return;
@@ -2646,8 +2646,8 @@ function onMinutesPaste(e){
 }
 function onMinutesInput(){if(!_minEditing)return;clearTimeout(_minSaveTimer);_minSaveTimer=setTimeout(_saveMinutesNow,250);}
 function _saveMinutesNow(){if(window._minComposing)return;const r=resources.find(r=>r.id===currentMinutesId);if(!r)return;const v=_minSerialize();if(v===r.content)return;r.content=v;r.updatedAt=_minDateStr();r.updatedBy=G.displayName;r.updatedById=G.id;_renderMinutesMeta(r);try{if(typeof flushSync==='function')flushSync();}catch(e){}}
-function _updateMinutesLockUI(){var b=document.getElementById('minutes-lock-banner');if(!b)return;var badge=document.getElementById('minutes-edit-badge');if(badge)badge.style.display='none';var eb=document.getElementById('minutes-edit-btn');var other=_otherLock(currentMinutesId);var _ar=resources.find(function(x){return x.id===currentMinutesId;});if(_isArchivedMinutes(_ar)){b.style.display='';b.style.background='var(--bg)';b.style.color='var(--text-light)';b.textContent='🔒 보관된 회의록 · 읽기 전용';show('minutes-edit-btn',false);show('minutes-save-btn',false);return;}if(_minEditing){b.style.display='none';if(badge)badge.style.display='';}else if(other){b.style.display='';b.style.background='var(--coral-light)';b.style.color='#D95F50';b.textContent='🔴 '+other.name+' 선생님이 실시간 편집 중 · 화면이 자동 갱신돼요';if(eb){eb.disabled=true;eb.style.opacity='.4';}}else{b.style.display='none';if(eb){eb.disabled=false;eb.style.opacity='';}}}
-function startMinutesEdit(){var _r=resources.find(function(x){return x.id===currentMinutesId;});if(_isArchivedMinutes(_r)){showToast('보관된 지난해 회의록은 수정할 수 없어요');return;}var other=_otherLock(currentMinutesId);if(other){showToast(other.name+' 작성 중이에요');return;}_minEditing=true;setMinutesEditing(true);_writeLock();_updateMinutesLockUI();clearInterval(_minHbTimer);_minHbTimer=setInterval(_writeLock,8000);clearInterval(_minLiveTimer);_minLiveTimer=setInterval(function(){try{_saveMinutesNow();}catch(e){}},600);var ed=document.getElementById('minutes-viewer-content');var f=ed&&ed.querySelector('.mb-txt');if(f)_minCaretEnd(f);}
+function _updateMinutesLockUI(){var b=document.getElementById('minutes-lock-banner');if(!b)return;var badge=document.getElementById('minutes-edit-badge');if(badge)badge.style.display='none';var eb=document.getElementById('minutes-edit-btn');var other=_otherLock(currentMinutesId);var _ar=resources.find(function(x){return x.id===currentMinutesId;});if(_isArchivedMinutes(_ar)){b.style.display='';b.style.background='var(--bg)';b.style.color='var(--text-light)';b.textContent='🔒 보관된 회의록 · 읽기 전용';show('minutes-edit-btn',false);show('minutes-save-btn',false);return;}if(_ar&&_ar.published){b.style.display='none';show('minutes-edit-btn',false);show('minutes-save-btn',false);return;}if(_minEditing){b.style.display='none';if(badge)badge.style.display='';}else if(other){b.style.display='';b.style.background='var(--coral-light)';b.style.color='#D95F50';b.textContent='🔴 '+other.name+' 선생님이 실시간 편집 중 · 화면이 자동 갱신돼요';if(eb){eb.disabled=true;eb.style.opacity='.4';}}else{b.style.display='none';if(eb){eb.disabled=false;eb.style.opacity='';}}}
+function startMinutesEdit(){var _r=resources.find(function(x){return x.id===currentMinutesId;});if(_isArchivedMinutes(_r)){showToast('보관된 지난해 회의록은 수정할 수 없어요');return;}if(_r&&_r.published){showToast('발행된 회의록은 수정할 수 없어요');return;}var other=_otherLock(currentMinutesId);if(other){showToast(other.name+' 작성 중이에요');return;}_minEditing=true;setMinutesEditing(true);_writeLock();_updateMinutesLockUI();clearInterval(_minHbTimer);_minHbTimer=setInterval(_writeLock,8000);clearInterval(_minLiveTimer);_minLiveTimer=setInterval(function(){try{_saveMinutesNow();}catch(e){}},600);var ed=document.getElementById('minutes-viewer-content');var f=ed&&ed.querySelector('.mb-txt');if(f)_minCaretEnd(f);}
 function stopMinutesEdit(){clearTimeout(_minSaveTimer);_saveMinutesNow();_minEditing=false;clearInterval(_minHbTimer);_minHbTimer=null;clearInterval(_minLiveTimer);_minLiveTimer=null;_releaseLock();setMinutesEditing(false);_updateMinutesLockUI();try{renderResourceList();}catch(e){}try{renderMinutesHub();}catch(e){}try{renderHomeMinutes();}catch(e){}showToast('저장되었습니다');}
 function closeMinutesViewer(){clearInterval(_minViewTimer);_minViewTimer=null;if(_minEditing){stopMinutesEdit();}else{_releaseLock();}closeModal('minutes-viewer-modal');}
 function saveMinutesEdit(){_saveMinutesNow();stopMinutesEdit();}   /* 옛 호출 호환 */
