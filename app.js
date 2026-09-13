@@ -1894,9 +1894,9 @@ function ensureWeeklyMinutes(){
     var _lim=(typeof _dateStrOffset==='function')?_dateStrOffset(28):'9999-12-31';
     sats.forEach(function(ds){
       var ag=_agendaLine((litFor(ds)||{}).agenda);
-      if(ds>_lim){ /* 4주 뒤 이후: 자동 생성 안 함 + 비어있는 자동 회의록은 정리 */
+      if(ds>_lim){ /* 4주 뒤 이후: 자동 생성 안 함 + 완전히 빈(미발행) 자동 회의록만 정리 */
         var exF=(resources||[]).find(function(r){return r.cat==='minutes'&&!r.deleted&&r.mdate===ds;});
-        if(exF&&!_minRealBody(exF)){exF.deleted=true;try{if(window.FB&&FB.enabled()&&FB.remove)FB.remove('resources',exF.id);}catch(e){}made++;}
+        if(exF&&!exF.published&&!(exF.content||'').trim()&&!(exF.agendaText||'').trim()){exF.deleted=true;try{if(window.FB&&FB.enabled()&&FB.remove)FB.remove('resources',exF.id);}catch(e){}made++;}
         return;
       }
       if(isVacationDate(ds)&&!ag)return;        /* 방학 토요일 제외(단, 안건 있으면 회의록 생성) */
@@ -1905,8 +1905,6 @@ function ensureWeeklyMinutes(){
       var title=(+d[1])+'월 '+(+d[2])+'일 회의록';
       if(ex){
         if(ex.title!==title){ex.title=title;made++;}
-        if((ex.content||'').trim()&&!_minRealBody(ex)){ex.content='';made++;}
-        var cleaned=_minWithAgenda(ex.content,'');if(cleaned!==(ex.content||'')){ex.content=cleaned;made++;}
         if((ex.agendaText||'')!==ag){ex.agendaText=ag;made++;}
         return;
       }
