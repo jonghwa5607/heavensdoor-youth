@@ -1863,23 +1863,33 @@ function _refreshTeacherDesc(){try{var thd=document.getElementById('teacher-home
 function _dedupMinutes(){
   try{
     var seen={},drops=[];
-    var score=function(x){return ((x.content||'').trim().length)*1000+((x.agendaText||'').trim().length)*3+(String(x.id).indexOf('wm')===0?1:0);};
+    var hasBody=function(x){return !!((x.content||'').trim()||(x.agendaText||'').trim()||x.published);};
+    var score=function(x){return ((x.content||'').trim().length)*1000+((x.agendaText||'').trim().length)*3+(x.published?5000000:0)+(String(x.id).indexOf('wm')===0?1:0);};
     (resources||[]).forEach(function(r){
       if(!r||r.cat!=='minutes'||r.deleted||!r.mdate)return;
       var cur=seen[r.mdate];
       if(!cur){seen[r.mdate]=r;return;}
-      if(score(r)>score(cur)){drops.push(cur);seen[r.mdate]=r;}else{drops.push(r);}
+      var keep=score(r)>score(cur)?r:cur, drop=(keep===r)?cur:r;
+      seen[r.mdate]=keep;
+      /* 내용/안건/발행이 있는 회의록은 절대 삭제하지 않음 — 데이터 보존 최우선 */
+      if(hasBody(drop))return;
+      drops.push(drop);
     });
     if(!drops.length)return false;
-    var dropIds={};
-    drops.forEach(function(x){dropIds[x.id]=1;x.deleted=true;try{if(window.FB&&FB.enabled()&&FB.remove)FB.remove('resources',x.id);}catch(e){}});
-    resources=resources.filter(function(r){return !(r&&r.cat==='minutes'&&dropIds[r.id]);});
+    /* 소프트 삭제만 (휴지통으로) · 클라우드 영구삭제(FB.remove) 절대 금지 */
+    drops.forEach(function(x){x.deleted=true;x.deletedAt=Date.now();x.deletedBy='자동정리(빈 중복)';});
     return true;
   }catch(e){return false;}
 }
 function _minRealBody(r){try{if(!r)return '';var c=r.content||'';c=_minWithAgenda(c,'');var ag=(r.agendaText||'')||((litFor(r.mdate)||{}).agenda||'');if(ag){var ob=ag.split(/[,·;\n]/).map(function(x){return x.trim();}).filter(Boolean).map(function(x){return '## '+x;}).join('\n').trim();if(c.trim()===ob)c='';}return c.trim();}catch(e){return (r&&r.content||'').trim();}}
+function _backupMinutes(){try{if(!window.localStorage)return;var mins=(resources||[]).filter(function(r){return r&&r.cat==='minutes'&&!r.deleted&&((r.content||'').trim()||(r.agendaText||'').trim());}).map(function(r){return {id:r.id,mdate:r.mdate,title:r.title,content:r.content||'',agendaText:r.agendaText||'',published:!!r.published,year:r.year||''};});var prev=[];try{prev=(JSON.parse(localStorage.getItem('hd_min_backup')||'{}').minutes)||[];}catch(e){}
+  /* 백업은 '내용 있는 회의록 수'가 줄지 않을 때만 갱신 → 사고로 비워진 상태가 좋은 백업을 덮어쓰지 않음 */
+  if(mins.length>=prev.length){localStorage.setItem('hd_min_backup',JSON.stringify({ts:Date.now(),minutes:mins}));}
+}catch(e){}}
+function restoreMinutesBackup(){try{var bk={};try{bk=JSON.parse(localStorage.getItem('hd_min_backup')||'{}');}catch(e){}var mins=bk.minutes||[];if(!mins.length){showToast('백업이 없어요');return;}var n=0;mins.forEach(function(b){var r=(resources||[]).find(function(x){return x.id===b.id;});if(r){if(!(r.content||'').trim()&&(b.content||'').trim()){r.content=b.content;n++;}if(!(r.agendaText||'').trim()&&(b.agendaText||'').trim())r.agendaText=b.agendaText;if(r.deleted&&((b.content||'').trim()||(b.agendaText||'').trim())){r.deleted=false;}}else{resources.unshift({id:b.id,cat:'minutes',mdate:b.mdate,title:b.title||'회의록',content:b.content||'',agendaText:b.agendaText||'',published:!!b.published,year:b.year||String((b.mdate||'').slice(0,4)),authorId:G.id,authorName:G.displayName,date:_minDateStr(),updatedAt:_minDateStr(),updatedBy:G.displayName});n++;}});if(n){try{if(typeof flushSync==='function')flushSync();}catch(e){}try{renderMinutesHub();}catch(e){}try{renderResourceList();}catch(e){}}showToast(n?('백업에서 '+n+'건 복원했어요'):'복원할 내용이 없어요(이미 최신)');}catch(e){showToast('복원 실패');}}
 function ensureWeeklyMinutes(){
   try{_hydrateYP();}catch(e){}
+  try{_backupMinutes();}catch(e){}
   var _dd=false;try{_dd=_dedupMinutes();}catch(e){}
   try{
     if(G.role!=='teacher')return false;
@@ -1896,7 +1906,7 @@ function ensureWeeklyMinutes(){
       var ag=_agendaLine((litFor(ds)||{}).agenda);
       if(ds>_lim){ /* 4주 뒤 이후: 자동 생성 안 함 + 완전히 빈(미발행) 자동 회의록만 정리 */
         var exF=(resources||[]).find(function(r){return r.cat==='minutes'&&!r.deleted&&r.mdate===ds;});
-        if(exF&&!exF.published&&!(exF.content||'').trim()&&!(exF.agendaText||'').trim()){exF.deleted=true;try{if(window.FB&&FB.enabled()&&FB.remove)FB.remove('resources',exF.id);}catch(e){}made++;}
+        if(exF&&!exF.published&&!(exF.content||'').trim()&&!(exF.agendaText||'').trim()){exF.deleted=true;exF.deletedAt=Date.now();exF.deletedBy='자동정리';made++;}
         return;
       }
       if(isVacationDate(ds)&&!ag)return;        /* 방학 토요일 제외(단, 안건 있으면 회의록 생성) */
@@ -2009,7 +2019,7 @@ function publishMinutes(){
       time:'방금',ts:Date.now(),pushed:false,readBy:[],forRole:'teacher',minutesId:r.id});
     updateNotifDot();
   }catch(e){}
-  try{if(typeof flushSync==='function')flushSync();}catch(e){}
+  try{if(typeof flushSync==='function')flushSync();}catch(e){}try{_backupMinutes();}catch(e){}
   _renderMinutesMeta(r);renderMinutesAck();_updateMinutesLockUI();
   try{renderMinutesHub();}catch(e){}try{renderHomeMinutes();}catch(e){}
   showToast('발행되었습니다 · 교사 전원에게 알림이 갔어요');
@@ -2431,7 +2441,21 @@ function onMinKeydown(e){
     e.preventDefault();
     var c=txt?txt.innerText:'';
     if((t==='ul'||t==='ol'||t==='todo')&&!c.trim()){ _minSetType(blk,'p'); return; }
-    _minNewBlock(blk,(t==='ul'||t==='ol'||t==='todo')?t:'p');
+    var before=c, after='';
+    try{
+      var _sel=getSelection();
+      if(txt&&_sel&&_sel.rangeCount&&txt.contains(_sel.getRangeAt(0).endContainer)){
+        var _rng=_sel.getRangeAt(0);
+        var _pre=document.createRange();_pre.selectNodeContents(txt);_pre.setEnd(_rng.endContainer,_rng.endOffset);before=_pre.toString();
+        var _post=document.createRange();_post.selectNodeContents(txt);_post.setStart(_rng.endContainer,_rng.endOffset);after=_post.toString();
+      }
+    }catch(e2){}
+    if(txt)txt.innerText=before;
+    var _nb=_minNewBlock(blk,(t==='ul'||t==='ol'||t==='todo')?t:'p');
+    var _ntx=_nb&&_nb.querySelector('.mb-txt');
+    if(_ntx){ _ntx.innerText=after;
+      try{var _r2=document.createRange(),_s2=getSelection();_r2.selectNodeContents(_ntx);_r2.collapse(true);_s2.removeAllRanges();_s2.addRange(_r2);_ntx.focus();}catch(e3){}
+    }
     onMinutesInput();return;
   }
   if(e.key==='Backspace'&&_minAtStart()){
@@ -2644,7 +2668,7 @@ function onMinutesPaste(e){
   }catch(err){}
 }
 function onMinutesInput(){if(!_minEditing)return;clearTimeout(_minSaveTimer);_minSaveTimer=setTimeout(_saveMinutesNow,250);}
-function _saveMinutesNow(){if(window._minComposing)return;const r=resources.find(r=>r.id===currentMinutesId);if(!r)return;const v=_minSerialize();if(v===r.content)return;r.content=v;r.updatedAt=_minDateStr();r.updatedBy=G.displayName;r.updatedById=G.id;_renderMinutesMeta(r);try{if(typeof flushSync==='function')flushSync();}catch(e){}}
+function _saveMinutesNow(){if(window._minComposing)return;const r=resources.find(r=>r.id===currentMinutesId);if(!r)return;const v=_minSerialize();if(v===r.content)return;r.content=v;r.updatedAt=_minDateStr();r.updatedBy=G.displayName;r.updatedById=G.id;_renderMinutesMeta(r);try{if(typeof flushSync==='function')flushSync();}catch(e){}try{_backupMinutes();}catch(e){}}
 function _updateMinutesLockUI(){var b=document.getElementById('minutes-lock-banner');if(!b)return;var badge=document.getElementById('minutes-edit-badge');if(badge)badge.style.display='none';var eb=document.getElementById('minutes-edit-btn');var other=_otherLock(currentMinutesId);var _ar=resources.find(function(x){return x.id===currentMinutesId;});if(_isArchivedMinutes(_ar)){b.style.display='';b.style.background='var(--bg)';b.style.color='var(--text-light)';b.textContent='🔒 보관된 회의록 · 읽기 전용';show('minutes-edit-btn',false);show('minutes-save-btn',false);return;}if(_ar&&_ar.published){b.style.display='none';show('minutes-edit-btn',false);show('minutes-save-btn',false);return;}if(_minEditing){b.style.display='none';if(badge)badge.style.display='';}else if(other){b.style.display='';b.style.background='var(--coral-light)';b.style.color='#D95F50';b.textContent='🔴 '+other.name+' 선생님이 실시간 편집 중 · 화면이 자동 갱신돼요';if(eb){eb.disabled=true;eb.style.opacity='.4';}}else{b.style.display='none';if(eb){eb.disabled=false;eb.style.opacity='';}}}
 function startMinutesEdit(){var _r=resources.find(function(x){return x.id===currentMinutesId;});if(_isArchivedMinutes(_r)){showToast('보관된 지난해 회의록은 수정할 수 없어요');return;}if(_r&&_r.published){showToast('발행된 회의록은 수정할 수 없어요');return;}var other=_otherLock(currentMinutesId);if(other){showToast(other.name+' 작성 중이에요');return;}_minEditing=true;setMinutesEditing(true);_writeLock();_updateMinutesLockUI();clearInterval(_minHbTimer);_minHbTimer=setInterval(_writeLock,8000);clearInterval(_minLiveTimer);_minLiveTimer=setInterval(function(){try{_saveMinutesNow();}catch(e){}},600);var ed=document.getElementById('minutes-viewer-content');var f=ed&&ed.querySelector('.mb-txt');if(f)_minCaretEnd(f);}
 function stopMinutesEdit(){clearTimeout(_minSaveTimer);_saveMinutesNow();_minEditing=false;clearInterval(_minHbTimer);_minHbTimer=null;clearInterval(_minLiveTimer);_minLiveTimer=null;_releaseLock();setMinutesEditing(false);_updateMinutesLockUI();try{renderResourceList();}catch(e){}try{renderMinutesHub();}catch(e){}try{renderHomeMinutes();}catch(e){}showToast('저장되었습니다');}
