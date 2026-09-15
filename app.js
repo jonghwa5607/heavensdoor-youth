@@ -2309,19 +2309,47 @@ function _minBlockHtml(b,editable,idx){
   var d=_mt(b.t),mk='',ind=parseInt(b.ind,10)||0;
   var hd=editable?'<button class="mb-h" contenteditable="false" onclick="openBlockMenu(this)" tabindex="-1">⋮⋮</button>':'';
   var st=' style="margin-left:'+(ind*18)+'px"';
-  if(b.t==='ul')mk='<span class="mb-mk">•</span>';
-  else if(b.t==='ol')mk='<span class="mb-mk">'+(idx||1)+'.</span>';
-  else if(b.t==='todo')mk='<input type="checkbox" class="mb-ck"'+(b.done?' checked':'')+(editable?'':' disabled')+' onclick="onMinToggle(this)">';
-  else if(b.t==='callout')mk='<span class="mb-mk">💡</span>';
-  if(b.t==='div')return '<div class="mb" data-t="div" data-ind="'+ind+'"'+st+'>'+hd+'<hr style="border:none;border-top:2.5px solid #9AA6BC;margin:11px 0;border-radius:2px"><span class="mb-txt" style="display:none"></span></div>';
+  if(b.t==='ul')mk='<span class="mb-mk" contenteditable="false">•</span>';
+  else if(b.t==='ol')mk='<span class="mb-mk" contenteditable="false">'+(idx||1)+'.</span>';
+  else if(b.t==='todo')mk='<input type="checkbox" class="mb-ck" contenteditable="false"'+(b.done?' checked':'')+(editable?'':' disabled')+' onclick="onMinToggle(this)">';
+  else if(b.t==='callout')mk='<span class="mb-mk" contenteditable="false">💡</span>';
+  if(b.t==='div')return '<div class="mb" data-t="div" data-ind="'+ind+'"'+st+'>'+hd+'<hr contenteditable="false" style="border:none;border-top:2.5px solid #9AA6BC;margin:11px 0;border-radius:2px"><span class="mb-txt" style="display:none"></span></div>';
   return '<div class="mb'+(b.t==='todo'&&b.done?' done':'')+'" data-t="'+b.t+'" data-ind="'+ind+'"'+st+'>'+hd+mk
-    +'<div class="mb-txt" data-ph="'+_esc(d.ph)+'"'+(editable?' contenteditable="true"':'')+'>'+_mdInline(b.c)+'</div></div>';
+    +'<div class="mb-txt" data-ph="'+_esc(d.ph)+'">'+_mdInline(b.c)+'</div></div>';
 }
 function _minRender(blocks,editable){
   var ed=document.getElementById('minutes-viewer-content');if(!ed)return;
   var n=0;
   ed.innerHTML=blocks.map(function(b){ if(b.t==='ol')n++;else n=0; return _minBlockHtml(b,editable,n); }).join('');
+  ed.contentEditable=editable?'true':'false';
   ed.oncopy=onMinutesCopy;
+  ed.onbeforeinput=editable?_minGuardBeforeInput:null;
+}
+function _blkOf(node){var n=node;if(n&&n.nodeType===3)n=n.parentNode;return (n&&n.closest)?n.closest('.mb'):null;}
+function _minCaretAtOffset(el,off){try{el.focus();var tn=el.firstChild;var r=document.createRange(),s=getSelection();if(!tn||tn.nodeType!==3){r.selectNodeContents(el);r.collapse(true);}else{off=Math.max(0,Math.min(off,tn.textContent.length));r.setStart(tn,off);r.collapse(true);}s.removeAllRanges();s.addRange(r);}catch(e){}}
+function _minDeleteRange(r,sb,eb){
+  var stx=sb.querySelector('.mb-txt'), etx=eb.querySelector('.mb-txt');
+  var before='',after='';
+  try{if(stx){var bR=document.createRange();bR.selectNodeContents(stx);bR.setEnd(r.startContainer,r.startOffset);before=bR.toString();}}catch(e){}
+  try{if(etx){var aR=document.createRange();aR.selectNodeContents(etx);aR.setStart(r.endContainer,r.endOffset);after=aR.toString();}}catch(e){}
+  var cur=sb.nextElementSibling; while(cur&&cur!==eb){var nx=cur.nextElementSibling;cur.remove();cur=nx;}
+  if(eb!==sb)eb.remove();
+  if(stx){stx.innerText=before+after;_minRenumber();_minCaretAtOffset(stx,before.length);}
+}
+function _minGuardBeforeInput(e){
+  try{
+    if(!_minEditing)return;
+    var sel=getSelection(); if(!sel||sel.rangeCount===0)return;
+    var r=sel.getRangeAt(0);
+    var sb=_blkOf(r.startContainer), eb=_blkOf(r.endContainer);
+    if(!sb||!eb||sb===eb)return; /* 한 블록 안: 브라우저 기본 처리 */
+    var it=e.inputType||'';
+    e.preventDefault();
+    _minDeleteRange(r,sb,eb);
+    if(it==='insertText'&&e.data){try{document.execCommand('insertText',false,e.data);}catch(e2){}}
+    else if(it.indexOf('insert')===0){var t=(e.dataTransfer&&e.dataTransfer.getData)?e.dataTransfer.getData('text/plain'):(e.data||'');if(t){try{document.execCommand('insertText',false,String(t).replace(/\r?\n/g,' '));}catch(e3){}}}
+    onMinutesInput();
+  }catch(err){}
 }
 function _minRenumber(){
   var ed=document.getElementById('minutes-viewer-content');if(!ed)return;var n=0;
@@ -2629,8 +2657,7 @@ function setMinutesEditing(editing){
   if(ti){ti.readOnly=!editing;ti.style.borderBottom=editing?'1px dashed var(--border)':'none';}
   const ed=document.getElementById('minutes-viewer-content');
   if(ed){
-    Array.prototype.forEach.call(ed.querySelectorAll('.mb-txt'),function(x){ if(editing)x.setAttribute('contenteditable','true'); else x.removeAttribute('contenteditable'); });
-    Array.prototype.forEach.call(ed.querySelectorAll('.mb-ck'),function(x){x.disabled=false;});
+    try{var _cur=_minSerialize();_minRender(_minParse(_cur),editing);}catch(e){}
     ed.onkeydown=editing?onMinKeydown:null;
     ed.oninput=editing?onMinutesInputRaw:null;
     ed.onpaste=editing?onMinutesPaste:null;
