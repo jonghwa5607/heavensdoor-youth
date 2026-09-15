@@ -1807,7 +1807,7 @@ function exportMinutesYear(y){
     var _agTxt=_minAgendaText(r);
     var blocks=_minParse(_minWithAgenda(r.content||'','')),n=0;
     var inner=blocks.map(function(b){
-      if(b.t==='div')return '<hr>';
+      if(b.t==='div')return '<hr style="border:none;border-top:2.5px solid #9AA6BC;margin:11px 0;border-radius:2px">';
       var c=_mdInline(b.c);var im=(parseInt(b.ind,10)||0)*14;var sty=im?' style="margin-left:'+im+'px"':'';
       if(b.t==='h1')return '<h2>'+c+'</h2>';
       if(b.t==='h2')return '<h3>'+c+'</h3>';
@@ -2313,7 +2313,7 @@ function _minBlockHtml(b,editable,idx){
   else if(b.t==='ol')mk='<span class="mb-mk">'+(idx||1)+'.</span>';
   else if(b.t==='todo')mk='<input type="checkbox" class="mb-ck"'+(b.done?' checked':'')+(editable?'':' disabled')+' onclick="onMinToggle(this)">';
   else if(b.t==='callout')mk='<span class="mb-mk">💡</span>';
-  if(b.t==='div')return '<div class="mb" data-t="div" data-ind="'+ind+'"'+st+'>'+hd+'<hr><span class="mb-txt" style="display:none"></span></div>';
+  if(b.t==='div')return '<div class="mb" data-t="div" data-ind="'+ind+'"'+st+'>'+hd+'<hr style="border:none;border-top:2.5px solid #9AA6BC;margin:11px 0;border-radius:2px"><span class="mb-txt" style="display:none"></span></div>';
   return '<div class="mb'+(b.t==='todo'&&b.done?' done':'')+'" data-t="'+b.t+'" data-ind="'+ind+'"'+st+'>'+hd+mk
     +'<div class="mb-txt" data-ph="'+_esc(d.ph)+'"'+(editable?' contenteditable="true"':'')+'>'+_mdInline(b.c)+'</div></div>';
 }
@@ -2332,6 +2332,7 @@ function _minRenumber(){
 function _minCaretEnd(el){ if(!el)return; el.focus(); try{var r=document.createRange();r.selectNodeContents(el);r.collapse(false);var sel=getSelection();sel.removeAllRanges();sel.addRange(r);}catch(e){} }
 function _minCurBlock(){ var sel=getSelection();if(!sel||!sel.anchorNode)return null;var n=sel.anchorNode;if(n.nodeType===3)n=n.parentNode;return n.closest?n.closest('.mb'):null; }
 function _minAtStart(){ var sel=getSelection();return !!(sel&&sel.isCollapsed&&sel.anchorOffset===0); }
+function _minAtEnd(){try{var s=getSelection();if(!s||!s.rangeCount||!s.isCollapsed)return false;var b=_minCurBlock();var tx=b&&b.querySelector('.mb-txt');if(!tx)return false;var r=s.getRangeAt(0);var er=document.createRange();er.selectNodeContents(tx);er.setStart(r.endContainer,r.endOffset);return er.toString().length===0;}catch(e){return false;}}
 function _minSetType(blk,t){
   if(!blk)return;
   var txt=blk.querySelector('.mb-txt'), c=txt?txt.innerText:'';
@@ -2382,6 +2383,20 @@ function onMinKeydown(e){
       }
     }
   }
+  /* 방향키 좌/우로 블록 경계 넘어 이동 */
+  if(e.key==='ArrowLeft'||e.key==='ArrowRight'){
+    var _cb=_minCurBlock();var _s0=getSelection();
+    if(_cb&&_s0&&_s0.isCollapsed){
+      if(e.key==='ArrowLeft'&&_minAtStart()){
+        var _pv=_cb.previousElementSibling;while(_pv&&!_pv.querySelector('.mb-txt'))_pv=_pv.previousElementSibling;
+        var _pt=_pv&&_pv.querySelector('.mb-txt');if(_pt){e.preventDefault();_minCaretEnd(_pt);return;}
+      }
+      if(e.key==='ArrowRight'&&_minAtEnd()){
+        var _nx=_cb.nextElementSibling;while(_nx&&!_nx.querySelector('.mb-txt'))_nx=_nx.nextElementSibling;
+        var _nt=_nx&&_nx.querySelector('.mb-txt');if(_nt){e.preventDefault();_minCaretStart(_nt);return;}
+      }
+    }
+  }
   /* Delete 키: 줄 끝에서 다음 줄 합치기 / 다음이 구분선이면 삭제 */
   if(e.key==='Delete'){
     var b2=_minCurBlock(), tx2=b2&&b2.querySelector('.mb-txt');
@@ -2403,6 +2418,8 @@ function onMinKeydown(e){
   if(e.key==='Tab'){ e.preventDefault(); _minIndent(blk,e.shiftKey?-1:1); return; }
   if(e.ctrlKey||e.metaKey){
     var k=(e.key||'').toLowerCase();
+    if(k==='z'&&!e.shiftKey){ e.preventDefault(); _minUndoDo(); return; }
+    if(k==='y'||(k==='z'&&e.shiftKey)){ e.preventDefault(); _minRedoDo(); return; }
     if(k==='b'||k==='i'||k==='u'){
       e.preventDefault();
       try{document.execCommand(k==='b'?'bold':k==='i'?'italic':'strikeThrough',false,null);}catch(err){}
@@ -2472,7 +2489,12 @@ function onMinKeydown(e){
       if(_ct){_ct.focus();try{var r0=document.createRange(),s0=getSelection();r0.selectNodeContents(_ct);r0.collapse(true);s0.removeAllRanges();s0.addRange(r0);}catch(e2){}}
       return; }
     var prev=blk.previousElementSibling;
-    if(prev&&prev.dataset&&prev.dataset.t==='div'){ e.preventDefault(); prev.remove(); _minRenumber(); onMinutesInput(); return; }
+    if(prev&&prev.dataset&&prev.dataset.t==='div'){ e.preventDefault();
+      var _c3=((blk.querySelector('.mb-txt')||{}).innerText||'');
+      var _bd=prev.previousElementSibling; var _bt=_bd&&_bd.querySelector('.mb-txt');
+      if(!_c3.trim()){ blk.remove(); _minRenumber(); if(_bt)_minCaretEnd(_bt); onMinutesInput(); }
+      else if(_bt){ _minCaretEnd(_bt); }
+      return; }
     if(prev){
       var ptx=prev.querySelector('.mb-txt'); if(!ptx)return;
       e.preventDefault();
@@ -2667,10 +2689,17 @@ function onMinutesPaste(e){
     onMinutesInput();
   }catch(err){}
 }
-function onMinutesInput(){if(!_minEditing)return;clearTimeout(_minSaveTimer);_minSaveTimer=setTimeout(_saveMinutesNow,250);}
+var _minUndo=[],_minRedo=[],_minUndoT=null;
+function _minSnap(){try{return _minSerialize();}catch(e){return null;}}
+function _minUndoInit(){_minUndo=[];_minRedo=[];var s=_minSnap();if(s!=null)_minUndo.push(s);}
+function _minCommitUndo(){var s=_minSnap();if(s==null)return;if(!_minUndo.length||s!==_minUndo[_minUndo.length-1]){_minUndo.push(s);if(_minUndo.length>150)_minUndo.shift();_minRedo=[];}}
+function _minRestoreState(s){if(s==null)return;try{var ed=document.getElementById('minutes-viewer-content');var sc=ed?ed.scrollTop:0;_minRender(_minParse(s),true);if(ed)ed.scrollTop=sc;clearTimeout(_minSaveTimer);_minSaveTimer=setTimeout(_saveMinutesNow,250);}catch(e){}}
+function _minUndoDo(){_minCommitUndo();if(_minUndo.length<2)return;var cur=_minUndo.pop();_minRedo.push(cur);_minRestoreState(_minUndo[_minUndo.length-1]);}
+function _minRedoDo(){if(!_minRedo.length)return;var nx=_minRedo.pop();_minUndo.push(nx);_minRestoreState(nx);}
+function onMinutesInput(){if(!_minEditing)return;clearTimeout(_minSaveTimer);_minSaveTimer=setTimeout(_saveMinutesNow,250);clearTimeout(_minUndoT);_minUndoT=setTimeout(_minCommitUndo,350);}
 function _saveMinutesNow(){if(window._minComposing)return;const r=resources.find(r=>r.id===currentMinutesId);if(!r)return;const v=_minSerialize();if(v===r.content)return;r.content=v;r.updatedAt=_minDateStr();r.updatedBy=G.displayName;r.updatedById=G.id;_renderMinutesMeta(r);try{if(typeof flushSync==='function')flushSync();}catch(e){}try{_backupMinutes();}catch(e){}}
 function _updateMinutesLockUI(){var b=document.getElementById('minutes-lock-banner');if(!b)return;var badge=document.getElementById('minutes-edit-badge');if(badge)badge.style.display='none';var eb=document.getElementById('minutes-edit-btn');var other=_otherLock(currentMinutesId);var _ar=resources.find(function(x){return x.id===currentMinutesId;});if(_isArchivedMinutes(_ar)){b.style.display='';b.style.background='var(--bg)';b.style.color='var(--text-light)';b.textContent='🔒 보관된 회의록 · 읽기 전용';show('minutes-edit-btn',false);show('minutes-save-btn',false);return;}if(_ar&&_ar.published){b.style.display='none';show('minutes-edit-btn',false);show('minutes-save-btn',false);return;}if(_minEditing){b.style.display='none';if(badge)badge.style.display='';}else if(other){b.style.display='';b.style.background='var(--coral-light)';b.style.color='#D95F50';b.textContent='🔴 '+other.name+' 선생님이 실시간 편집 중 · 화면이 자동 갱신돼요';if(eb){eb.disabled=true;eb.style.opacity='.4';}}else{b.style.display='none';if(eb){eb.disabled=false;eb.style.opacity='';}}}
-function startMinutesEdit(){var _r=resources.find(function(x){return x.id===currentMinutesId;});if(_isArchivedMinutes(_r)){showToast('보관된 지난해 회의록은 수정할 수 없어요');return;}if(_r&&_r.published){showToast('발행된 회의록은 수정할 수 없어요');return;}var other=_otherLock(currentMinutesId);if(other){showToast(other.name+' 작성 중이에요');return;}_minEditing=true;setMinutesEditing(true);_writeLock();_updateMinutesLockUI();clearInterval(_minHbTimer);_minHbTimer=setInterval(_writeLock,8000);clearInterval(_minLiveTimer);_minLiveTimer=setInterval(function(){try{_saveMinutesNow();}catch(e){}},600);var ed=document.getElementById('minutes-viewer-content');var f=ed&&ed.querySelector('.mb-txt');if(f)_minCaretEnd(f);}
+function startMinutesEdit(){var _r=resources.find(function(x){return x.id===currentMinutesId;});if(_isArchivedMinutes(_r)){showToast('보관된 지난해 회의록은 수정할 수 없어요');return;}if(_r&&_r.published){showToast('발행된 회의록은 수정할 수 없어요');return;}var other=_otherLock(currentMinutesId);if(other){showToast(other.name+' 작성 중이에요');return;}_minEditing=true;setMinutesEditing(true);_writeLock();_updateMinutesLockUI();clearInterval(_minHbTimer);_minHbTimer=setInterval(_writeLock,8000);clearInterval(_minLiveTimer);_minLiveTimer=setInterval(function(){try{_saveMinutesNow();}catch(e){}},600);var ed=document.getElementById('minutes-viewer-content');var f=ed&&ed.querySelector('.mb-txt');if(f)_minCaretEnd(f);try{_minUndoInit();}catch(e){}}
 function stopMinutesEdit(){clearTimeout(_minSaveTimer);_saveMinutesNow();_minEditing=false;clearInterval(_minHbTimer);_minHbTimer=null;clearInterval(_minLiveTimer);_minLiveTimer=null;_releaseLock();setMinutesEditing(false);_updateMinutesLockUI();try{renderResourceList();}catch(e){}try{renderMinutesHub();}catch(e){}try{renderHomeMinutes();}catch(e){}showToast('저장되었습니다');}
 function closeMinutesViewer(){clearInterval(_minViewTimer);_minViewTimer=null;if(_minEditing){stopMinutesEdit();}else{_releaseLock();}closeModal('minutes-viewer-modal');}
 function saveMinutesEdit(){_saveMinutesNow();stopMinutesEdit();}   /* 옛 호출 호환 */
