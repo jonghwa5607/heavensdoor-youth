@@ -2106,10 +2106,13 @@ function _minPlainPreview(t){
 }
 function newMinutesFromHub(){resourceCurYear=minutesHubYear;newMinutes();}
 /* 노션처럼: 버튼 누르면 곧바로 새 회의록이 생기고 바로 편집 상태로 열림 (제출 모달 없음) */
+function _mdateFromTitle(t,yr){var m=String(t||'').match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);if(!m)return '';return yr+'-'+('0'+m[1]).slice(-2)+'-'+('0'+m[2]).slice(-2);}
 function newMinutes(){
   if(!_isLiveYear(resourceCurYear)){showToast('새 회의록은 '+LIVE_YEAR+'년 탭에서 만들어주세요');return;}
   var n=new Date();
-  var r={id:'rs'+Date.now(),cat:'minutes',year:resourceCurYear,title:(n.getMonth()+1)+'월 '+n.getDate()+'일 회의록',content:'',
+  var _title=(n.getMonth()+1)+'월 '+n.getDate()+'일 회의록';
+  var _iso=n.getFullYear()+'-'+('0'+(n.getMonth()+1)).slice(-2)+'-'+('0'+n.getDate()).slice(-2);
+  var r={id:'rs'+Date.now(),cat:'minutes',year:resourceCurYear,mdate:_iso,title:_title,content:'',
          authorId:G.id,authorName:G.displayName,date:_minDateStr(),updatedAt:_minDateStr(),updatedBy:G.displayName};
   resources.unshift(r);
   try{if(typeof flushSync==='function')flushSync();}catch(e){}
@@ -2124,8 +2127,9 @@ function renameMinutes(){
   if(!v){document.getElementById('minutes-viewer-title').value=r.title;return;}
   if(v===r.title)return;
   r.title=v;r.updatedAt=_minDateStr();r.updatedBy=G.displayName;
+  var _md=_mdateFromTitle(v,(r.year||resourceCurYear));if(_md)r.mdate=_md;
   try{if(typeof flushSync==='function')flushSync();}catch(e){}
-  try{renderResourceList();}catch(e){}
+  try{renderResourceList();}catch(e){}try{renderMinutesHub();}catch(e){}
 }
 function selResourceCat(cat,btn){_embedOpen={};selCatTab(btn);if(btn&&btn.scrollIntoView)btn.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});resourceCurCat=cat;renderResourceList();}
 function selResourceYear(year,btn){if(btn)try{selYear(btn);}catch(e){}resourceCurYear=year;renderYearTabs();renderResourceList();}
