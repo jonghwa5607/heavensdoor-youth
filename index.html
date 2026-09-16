@@ -33,8 +33,8 @@
 #liturgy-week-card{--primary:#4B5DB6;--primary-dark:#4B5DB6;--primary-light:#DAD1F3}
 @keyframes deptSlideR{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
 @keyframes deptSlideL{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
-.dept-seg{position:relative;display:flex;margin:16px;background:var(--bg);border-radius:14px;padding:5px}
-.dept-seg-ind{position:absolute;top:5px;left:5px;width:calc(50% - 5px);height:calc(100% - 10px);background:#F2C5AF;border-radius:11px;box-shadow:0 1px 4px rgba(0,0,0,.10);transition:transform .34s cubic-bezier(.4,0,.2,1),background .34s}
+.dept-seg{position:relative;display:flex;margin:16px;background:var(--bg);border:1px solid var(--border-light);border-radius:14px;padding:5px;box-shadow:inset 0 1px 2px rgba(0,0,0,.05)}
+.dept-seg-ind{position:absolute;top:5px;left:5px;width:calc(50% - 5px);height:calc(100% - 10px);background:#F2C5AF;border:1px solid #E3A488;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.12);transition:transform .34s cubic-bezier(.4,0,.2,1),background .34s,border-color .34s}
 .dept-seg-btn{position:relative;z-index:1;flex:1;border:none;background:none;padding:12px 0;font-size:14px;font-weight:700;color:var(--text-sub);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;transition:color .3s}
 #dt-choir.active{color:#8F4F40}
 #dt-liturgy.active{color:#39458A}
@@ -307,9 +307,12 @@
   <!-- ② 역할별 배너 -->
   <!-- 학생: 스탬프 -->
   <div id="home-student" style="display:none">
-    <div style="padding:16px 16px 8px">
-      <div id="student-greet" style="font-size:22px;font-weight:800;color:var(--text)">안녕! 👋</div>
-      <div style="font-size:13px;color:var(--text-light);margin-top:3px;display:flex;align-items:center;gap:7px;flex-wrap:wrap"><span id="student-greet-sub"></span><span id="student-greet-grade" style="font-size:11px;font-weight:800;background:var(--primary-light);color:var(--primary-dark);padding:2px 9px;border-radius:20px"></span></div>
+    <div style="padding:16px 16px 8px;display:flex;align-items:flex-start;gap:10px">
+      <div style="flex:1;min-width:0">
+        <div id="student-greet" style="font-size:22px;font-weight:800;color:var(--text)">안녕! 👋</div>
+        <div style="font-size:13px;color:var(--text-light);margin-top:3px;display:flex;align-items:center;gap:7px;flex-wrap:wrap"><span id="student-greet-sub"></span><span id="student-greet-grade" style="font-size:11px;font-weight:800;background:var(--primary-light);color:var(--primary-dark);padding:2px 9px;border-radius:20px"></span></div>
+      </div>
+      <button onclick="openProfileEdit()" title="프로필 설정" style="flex-shrink:0;background:var(--card);border:1px solid var(--border-light);border-radius:12px;padding:8px 12px;color:var(--text-sub);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit;box-shadow:var(--shadow-sm)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>프로필</button>
     </div>
     <div class="section">
       <div class="card" style="padding:15px 16px">
@@ -572,13 +575,15 @@
     <button class="dept-seg-btn active" id="dt-choir" onclick="selDept('choir',this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2.6"/><circle cx="17" cy="16" r="2.6"/><path d="M8.6 18V5.2l11-2v12.6"/><path d="M8.6 8.6l11-2"/></svg>성가대</button>
     <button class="dept-seg-btn" id="dt-liturgy" onclick="selDept('liturgy',this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M7 8h10"/></svg>전례부</button>
   </div>
+  <div id="dept-stage-wrap" style="overflow:hidden">
+  <div id="dept-stage" style="display:flex;width:200%;align-items:flex-start;transition:transform .36s cubic-bezier(.4,0,.2,1)">
   <!-- 성가대 -->
-  <div id="dept-choir">
-    <div class="dept-banner dept-banner-choir" style="margin:0 16px 16px">
-      <div style="font-size:11px;opacity:.75;letter-spacing:1px;margin-bottom:3px">CHOIR</div>
-      <div style="font-size:17px;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:7px"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2.6"/><circle cx="17" cy="16" r="2.6"/><path d="M8.6 18V5.2l11-2v12.6"/><path d="M8.6 8.6l11-2"/></svg>성가대</div>
-      <div style="font-size:12px;opacity:.9" id="choir-info">담당교사 미정</div>
-      <div class="dept-stats"><div class="dept-stat-pill">매주 토요일 오후 6시 40분</div></div>
+  <div id="dept-choir" style="width:50%;flex-shrink:0">
+    <div class="dept-banner dept-banner-choir" style="margin:0 16px 16px;position:relative;overflow:hidden">
+      <div style="font-size:10.5px;letter-spacing:1px;opacity:.85;margin-bottom:10px" id="choir-week-label">THIS WEEK · 성가대</div>
+      <div style="font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:600;line-height:1.1;letter-spacing:.3px">With One Voice</div>
+      <div style="font-size:12px;opacity:.92;margin-top:10px" id="choir-info">담당교사 미정</div>
+      <svg width="56" height="56" viewBox="0 0 70 70" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5" style="position:absolute;right:14px;top:16px"><path d="M6 64 Q6 20 50 16"/><path d="M52 26l3.5 8 8 3.5-8 3.5-3.5 8-3.5-8-8-3.5 8-3.5z" fill="rgba(255,255,255,.55)" stroke="none"/></svg>
     </div>
     <div id="choir-week-card" style="margin:0 16px 16px;background:white;border-radius:var(--radius-lg);border:1px solid var(--border-light);box-shadow:var(--shadow-sm);padding:16px 18px"></div>
     <div class="tab-bar">
@@ -586,15 +591,15 @@
       <button class="tab-btn" onclick="selCatTab(this);renderDeptPosts('choir','notice')">공지</button>
       <button class="tab-btn" onclick="selCatTab(this);renderDeptPosts('choir','material')">악보/자료</button>
     </div>
-    <div id="choir-posts" class="post-list"><div class="empty"><div class="empty-emoji">🎵</div><div class="empty-title">아직 게시물이 없어요</div></div></div>
+    <div id="choir-posts" class="post-list"><div class="empty"><div class="empty-emoji"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2.6"/><circle cx="17" cy="16" r="2.6"/><path d="M8.6 18V5.2l11-2v12.6"/><path d="M8.6 8.6l11-2"/></svg></div><div class="empty-title">아직 게시물이 없어요</div></div></div>
   </div>
   <!-- 전례부 -->
-  <div id="dept-liturgy" style="display:none">
-    <div class="dept-banner dept-banner-liturgy" style="margin:0 16px 16px">
-      <div style="font-size:11px;opacity:.75;letter-spacing:1px;margin-bottom:3px">LITURGY</div>
-      <div style="font-size:17px;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:7px"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M7 8h10"/></svg>전례부</div>
-      <div style="font-size:12px;opacity:.9" id="liturgy-info">담당교사 미정</div>
-      <div class="dept-stats"><div class="dept-stat-pill">매주 토요일 오후 6시 40분</div></div>
+  <div id="dept-liturgy" style="width:50%;flex-shrink:0">
+    <div class="dept-banner dept-banner-liturgy" style="margin:0 16px 16px;position:relative;overflow:hidden">
+      <div style="font-size:10.5px;letter-spacing:1px;opacity:.85;margin-bottom:10px" id="liturgy-week-label">THIS WEEK · 전례부</div>
+      <div style="font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:600;line-height:1.1;letter-spacing:.3px">Pray · Read · Live</div>
+      <div style="font-size:12px;opacity:.92;margin-top:10px" id="liturgy-info">담당교사 미정</div>
+      <svg width="56" height="56" viewBox="0 0 70 70" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5" style="position:absolute;right:16px;top:16px"><path d="M30 8v54M14 26h32"/></svg>
     </div>
     <div id="liturgy-week-card" style="margin:0 16px 16px;background:white;border-radius:var(--radius-lg);border:1px solid var(--border-light);box-shadow:var(--shadow-sm);padding:16px 18px"></div>
     <div class="tab-bar">
@@ -602,7 +607,9 @@
       <button class="tab-btn" onclick="selCatTab(this);renderDeptPosts('liturgy','notice')">공지</button>
       <button class="tab-btn" onclick="selCatTab(this);renderDeptPosts('liturgy','material')">전례자료</button>
     </div>
-    <div id="liturgy-posts" class="post-list"><div class="empty"><div class="empty-emoji">✝️</div><div class="empty-title">아직 게시물이 없어요</div></div></div>
+    <div id="liturgy-posts" class="post-list"><div class="empty"><div class="empty-emoji"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M7 8h10"/></svg></div><div class="empty-title">아직 게시물이 없어요</div></div></div>
+  </div>
+  </div>
   </div>
 </div>
 
