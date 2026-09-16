@@ -631,14 +631,6 @@ input[type="date"].form-input,input[type="time"].form-input{-webkit-appearance:n
 .notif-time{font-size:10px;color:var(--text-light);}
 
 /* ── 부서활동 ── */
-.dept-tabs{display:flex;padding:0 16px;gap:10px;margin:16px 0;}
-.dept-tab{flex:1;padding:16px 12px;background:white;border:2px solid var(--border-light);border-radius:var(--radius);display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;transition:all .2s;box-shadow:var(--shadow-sm);}
-.dept-tab .dept-icon{font-size:28px;}
-.dept-tab .dept-name{font-size:13px;font-weight:700;color:var(--text-sub);}
-.dept-tab.active-choir{border-color:#C9785F;background:#F2C5AF;}
-.dept-tab.active-choir .dept-name{color:#8F4F40;}
-.dept-tab.active-liturgy{border-color:#4B5DB6;background:#DAD1F3;}
-.dept-tab.active-liturgy .dept-name{color:#39458A;}
 .dept-banner{border-radius:var(--radius-lg);padding:20px;color:white;margin:0 16px 16px;}
 .dept-banner-choir{background:#C9785F;}
 .dept-banner-liturgy{background:#4B5DB6;}
