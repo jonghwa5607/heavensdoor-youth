@@ -1373,8 +1373,16 @@
   <div class="modal" style="width:94vw;max-width:560px;max-height:82vh;overflow-y:auto">
     <div class="modal-title-row"><span class="modal-title">🗑 회의록 휴지통</span><button class="modal-close" onclick="closeModal('minutes-trash-modal')">✕</button></div>
     <div style="font-size:11px;color:var(--text-light);margin-bottom:10px;line-height:1.6">삭제한 회의록은 여기 보관돼요. 복구하거나 영구 삭제할 수 있어요.</div>
-    <button class="btn btn-sm" style="width:100%;margin-bottom:12px;background:var(--mint-light);color:#2D9E8F;font-weight:700" onclick="restoreMinutesBackup()">💾 백업에서 내용 복원 (내용이 비었거나 사라진 회의록 되살리기)</button>
+    <button class="btn btn-sm" style="width:100%;margin-bottom:12px;background:#EAF3FF;color:#2A6BB0;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:7px" onclick="openMinutesBackups()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 17.6A4.5 4.5 0 0 0 18 9h-1.3A7 7 0 1 0 5 15.7"/><path d="M12 12v9"/><path d="m8 17 4-4 4 4"/></svg>백업에서 복원 (다른 기기 백업까지)</button>
     <div id="minutes-trash-body"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="minutes-backups-modal" style="z-index:9100">
+  <div class="modal" style="width:94vw;max-width:560px;max-height:82vh;overflow-y:auto">
+    <div class="modal-title-row"><span class="modal-title" style="display:inline-flex;align-items:center;gap:7px"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 17.6A4.5 4.5 0 0 0 18 9h-1.3A7 7 0 1 0 5 15.7"/></svg>클라우드 백업</span><button class="modal-close" onclick="closeModal('minutes-backups-modal')">✕</button></div>
+    <div style="font-size:11px;color:var(--text-light);margin-bottom:10px;line-height:1.6">회의록을 저장·발행할 때마다 클라우드에 하루 1개씩 자동 백업돼요(최근 14일). 어느 기기에서든 복원할 수 있어요. 복원해도 이미 내용이 있는 회의록은 덮어쓰지 않아요.</div>
+    <div id="min-bk-body"></div>
   </div>
 </div>
 
