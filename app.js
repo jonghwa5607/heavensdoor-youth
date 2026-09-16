@@ -5175,5 +5175,5 @@ function openMyPostDetail(pid){
   setTimeout(go,220);   /* 화면 전환이 끝난 뒤 상세 열기 */
 }
 
-function selDept(dept,btn){document.querySelectorAll('.dept-tab').forEach(t=>{t.className='dept-tab';});btn.className='dept-tab active-'+dept;show('dept-choir',dept==='choir');show('dept-liturgy',dept==='liturgy');var _p=document.getElementById(dept==='choir'?'dept-choir':'dept-liturgy');if(_p){var _an='deptSlide'+(dept==='liturgy'?'R':'L');_p.style.animation='none';void _p.offsetWidth;_p.style.animation=_an+' .34s cubic-bezier(.4,0,.2,1)';}renderDeptPosts(dept);}
+function selDept(dept,btn){var tc=document.getElementById('dt-choir'),tl=document.getElementById('dt-liturgy');if(tc)tc.classList.toggle('active',dept==='choir');if(tl)tl.classList.toggle('active',dept==='liturgy');var ind=document.getElementById('dept-ind');if(ind){ind.style.transform='translateX('+(dept==='liturgy'?'100%':'0')+')';ind.style.background=dept==='liturgy'?'#DAD1F3':'#F2C5AF';}show('dept-choir',dept==='choir');show('dept-liturgy',dept==='liturgy');var _p=document.getElementById(dept==='choir'?'dept-choir':'dept-liturgy');if(_p){var _an='deptSlide'+(dept==='liturgy'?'R':'L');_p.style.animation='none';void _p.offsetWidth;_p.style.animation=_an+' .34s cubic-bezier(.4,0,.2,1)';}renderDeptPosts(dept);}
 renderCalendar();

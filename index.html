@@ -33,10 +33,11 @@
 #liturgy-week-card{--primary:#4B5DB6;--primary-dark:#4B5DB6;--primary-light:#DAD1F3}
 @keyframes deptSlideR{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
 @keyframes deptSlideL{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
-.dept-tab{transition:border-color .32s cubic-bezier(.4,0,.2,1),background .32s cubic-bezier(.4,0,.2,1),color .32s,box-shadow .2s!important}
-.dept-tab .dept-icon{color:var(--text-sub);transition:color .32s}
-.dept-tab.active-choir .dept-icon{color:#C9785F}
-.dept-tab.active-liturgy .dept-icon{color:#4B5DB6}
+.dept-seg{position:relative;display:flex;margin:16px;background:var(--bg);border-radius:14px;padding:5px}
+.dept-seg-ind{position:absolute;top:5px;left:5px;width:calc(50% - 5px);height:calc(100% - 10px);background:#F2C5AF;border-radius:11px;box-shadow:0 1px 4px rgba(0,0,0,.10);transition:transform .34s cubic-bezier(.4,0,.2,1),background .34s}
+.dept-seg-btn{position:relative;z-index:1;flex:1;border:none;background:none;padding:12px 0;font-size:14px;font-weight:700;color:var(--text-sub);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;transition:color .3s}
+#dt-choir.active{color:#8F4F40}
+#dt-liturgy.active{color:#39458A}
 #dept-choir,#dept-liturgy{will-change:transform,opacity}
 #yearplan-modal .pg-head{background:#fff}
 #yearplan-modal .yp-row{background:#fff}
@@ -566,9 +567,10 @@
       </button>
     </div>
   </div>
-  <div class="dept-tabs">
-    <button class="dept-tab active-choir" id="dt-choir" onclick="selDept('choir',this)"><div class="dept-icon"><svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2.6"/><circle cx="17" cy="16" r="2.6"/><path d="M8.6 18V5.2l11-2v12.6"/><path d="M8.6 8.6l11-2"/></svg></div><div class="dept-name">성가대</div></button>
-    <button class="dept-tab" id="dt-liturgy" onclick="selDept('liturgy',this)"><div class="dept-icon"><svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M7 8h10"/></svg></div><div class="dept-name">전례부</div></button>
+  <div class="dept-seg" id="dept-tabs">
+    <div class="dept-seg-ind" id="dept-ind"></div>
+    <button class="dept-seg-btn active" id="dt-choir" onclick="selDept('choir',this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2.6"/><circle cx="17" cy="16" r="2.6"/><path d="M8.6 18V5.2l11-2v12.6"/><path d="M8.6 8.6l11-2"/></svg>성가대</button>
+    <button class="dept-seg-btn" id="dt-liturgy" onclick="selDept('liturgy',this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M7 8h10"/></svg>전례부</button>
   </div>
   <!-- 성가대 -->
   <div id="dept-choir">
