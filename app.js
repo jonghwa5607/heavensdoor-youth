@@ -5175,5 +5175,5 @@ function openMyPostDetail(pid){
   setTimeout(go,220);   /* 화면 전환이 끝난 뒤 상세 열기 */
 }
 
-function selDept(dept,btn){document.querySelectorAll('.dept-tab').forEach(t=>{t.className='dept-tab';});btn.className='dept-tab active-'+dept;show('dept-choir',dept==='choir');show('dept-liturgy',dept==='liturgy');renderDeptPosts(dept);}
+function selDept(dept,btn){document.querySelectorAll('.dept-tab').forEach(t=>{t.className='dept-tab';});btn.className='dept-tab active-'+dept;show('dept-choir',dept==='choir');show('dept-liturgy',dept==='liturgy');var _p=document.getElementById(dept==='choir'?'dept-choir':'dept-liturgy');if(_p){var _an='deptSlide'+(dept==='liturgy'?'R':'L');_p.style.animation='none';void _p.offsetWidth;_p.style.animation=_an+' .34s cubic-bezier(.4,0,.2,1)';}renderDeptPosts(dept);}
 renderCalendar();
