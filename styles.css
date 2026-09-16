@@ -635,13 +635,13 @@ input[type="date"].form-input,input[type="time"].form-input{-webkit-appearance:n
 .dept-tab{flex:1;padding:16px 12px;background:white;border:2px solid var(--border-light);border-radius:var(--radius);display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;transition:all .2s;box-shadow:var(--shadow-sm);}
 .dept-tab .dept-icon{font-size:28px;}
 .dept-tab .dept-name{font-size:13px;font-weight:700;color:var(--text-sub);}
-.dept-tab.active-choir{border-color:var(--coral);background:var(--coral-light);}
-.dept-tab.active-choir .dept-name{color:#D95F50;}
-.dept-tab.active-liturgy{border-color:var(--primary);background:var(--primary-light);}
-.dept-tab.active-liturgy .dept-name{color:var(--primary-dark);}
+.dept-tab.active-choir{border-color:#C9785F;background:#F2C5AF;}
+.dept-tab.active-choir .dept-name{color:#8F4F40;}
+.dept-tab.active-liturgy{border-color:#4B5DB6;background:#DAD1F3;}
+.dept-tab.active-liturgy .dept-name{color:#39458A;}
 .dept-banner{border-radius:var(--radius-lg);padding:20px;color:white;margin:0 16px 16px;}
-.dept-banner-choir{background:linear-gradient(135deg,#FF8C7A,#FF6B54);}
-.dept-banner-liturgy{background:linear-gradient(135deg,#4A90D9,#2E6DB4);}
+.dept-banner-choir{background:#C9785F;}
+.dept-banner-liturgy{background:#4B5DB6;}
 .dept-stats{display:flex;gap:10px;margin-top:12px;}
 .dept-stat-pill{background:rgba(255,255,255,0.2);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:600;}
 @keyframes fall0{0%{transform:translateY(-10px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(360deg);opacity:0}}
