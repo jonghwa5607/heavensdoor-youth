@@ -1701,6 +1701,37 @@ function editResource(){const r=resources.find(r=>r.id===currentResourceId);if(!
 function deleteResource(){if(!currentResourceId)return;resources=resources.filter(r=>r.id!==currentResourceId);closeModal('resource-detail-modal');renderResourceList();showToast('자료가 삭제되었습니다');}
 const RESOURCE_CAT_LABEL={plan:'복음화계획서',form:'양식',doctrine:'교리',liturgy:'전례·성가',camp:'행사',minutes:'회의록',
   gospel:'복음교리',activity:'활동교리',choir:'성가',picnic:'봄소풍',retreat:'겨울피정',event:'행사',school:'주일학교',etc:'기타'}
+/* ── 자료실 라인 아이콘 세트 (드라이브 폴더 카드용) ── */
+var DRIVE_ICONS={
+  folder:'<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>',
+  file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/>',
+  clipboard:'<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/>',
+  users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>',
+  book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+  cross:'<path d="M10 2h4v6h6v4h-6v10h-4V12H4V8h6z"/>',
+  music:'<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+  calendar:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+  image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>',
+  camera:'<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
+  map:'<polygon points="1 6 8 3 16 6 23 3 23 18 16 21 8 18 1 21"/><line x1="8" y1="3" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="21"/>',
+  chart:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+  heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 1 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/>',
+  star:'<polygon points="12 2 15.1 8.6 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 8.9 8.6"/>',
+  gift:'<polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>',
+  pen:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  drive:'<path d="M8 3h8l6 10-4 8H6l-4-8z"/><path d="M2 13h20"/><path d="M8 3l4 10 4-10"/>'
+};
+var DRIVE_ICON_KEYS=['folder','file','clipboard','users','book','cross','music','calendar','image','camera','map','chart','heart','star','gift','pen'];
+/* 카테고리별 강조색 (1안) */
+var DRIVE_CAT_COLOR={
+  form:{c:'#4C7DF0',cb:'#E7EEFF'},
+  doctrine:{c:'#2FA595',cb:'#D4EEE9'},
+  liturgy:{c:'#7A6BD0',cb:'#EEE9FF'},
+  camp:{c:'#FF7B6B',cb:'#FFECE9'},
+  plan:{c:'#E0902A',cb:'#FBEFD9'}
+};
+var DRIVE_CAT_ICON={form:'file',doctrine:'book',liturgy:'music',camp:'calendar',plan:'chart'};
+function _driveIco(key,size){var inner=DRIVE_ICONS[key]||DRIVE_ICONS.folder;var s=size||22;return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+inner+'</svg>';}
 /* 드라이브 폴더 = 자료의 본진. 한 탭에 폴더 여러 개를 묶을 수 있음 */
 var DRIVE_DEFAULT={
   form:[
@@ -1725,21 +1756,29 @@ var _driveDraft=null;
 function _driveDraftInit(){
   _driveDraft={};
   RES_TABS.forEach(function(t){
-    _driveDraft[t.k]=driveFolders(t.k).map(function(f){return {n:f.n||'',d:f.d||'',u:f.u||''};});
+    _driveDraft[t.k]=driveFolders(t.k).map(function(f){return {n:f.n||'',d:f.d||'',u:f.u||'',ic:f.ic||''};});
   });
 }
 function renderDriveCfg(){
   var el=document.getElementById('cfg-drive-list');if(!el)return;
   if(!_driveDraft)_driveDraftInit();
   el.innerHTML=RES_TABS.map(function(t){
+    var cur0=DRIVE_CAT_ICON[t.k]||'folder';
     var rows=(_driveDraft[t.k]||[]).map(function(f,i){
+      var cur=f.ic||cur0;
+      var pick=DRIVE_ICON_KEYS.map(function(key){
+        var on=(cur===key);
+        return '<button type="button" class="dc-ipk'+(on?' on':'')+'" onclick="_dPickIcon(\''+t.k+'\','+i+',\''+key+'\',this)">'+_driveIco(key,18)+'</button>';
+      }).join('');
       return '<div style="background:var(--bg);border-radius:var(--radius-sm);padding:10px;margin-bottom:7px">'
         +'<div style="display:flex;gap:6px;margin-bottom:6px">'
           +'<input class="form-input" style="flex:1" placeholder="폴더 이름" value="'+_esc(f.n)+'" oninput="_dSet(\''+t.k+'\','+i+',\'n\',this.value)">'
           +'<button onclick="_dDel(\''+t.k+'\','+i+')" style="flex-shrink:0;width:34px;border:none;background:var(--coral-light);color:#D95F50;border-radius:9px;font-size:15px;cursor:pointer">×</button>'
         +'</div>'
         +'<input class="form-input" style="margin-bottom:6px" placeholder="설명 (예: 연도별 교안모음)" value="'+_esc(f.d)+'" oninput="_dSet(\''+t.k+'\','+i+',\'d\',this.value)">'
-        +'<input class="form-input" placeholder="드라이브 폴더 링크" value="'+_esc(f.u)+'" oninput="_dSet(\''+t.k+'\','+i+',\'u\',this.value)">'
+        +'<input class="form-input" style="margin-bottom:7px" placeholder="드라이브 폴더 링크" value="'+_esc(f.u)+'" oninput="_dSet(\''+t.k+'\','+i+',\'u\',this.value)">'
+        +'<div style="font-size:11px;color:var(--text-light);margin-bottom:5px">아이콘 선택</div>'
+        +'<div class="dc-iconpick">'+pick+'</div>'
         +'</div>';
     }).join('');
     return '<div style="margin-bottom:14px">'
@@ -1750,14 +1789,15 @@ function renderDriveCfg(){
   }).join('');
 }
 function _dSet(k,i,f,v){if(!_driveDraft)return;if(_driveDraft[k]&&_driveDraft[k][i])_driveDraft[k][i][f]=v;}
-function _dAdd(k){if(!_driveDraft)_driveDraftInit();(_driveDraft[k]=_driveDraft[k]||[]).push({n:'',d:'',u:''});renderDriveCfg();}
+function _dPickIcon(k,i,key,btn){_dSet(k,i,'ic',key);try{var box=btn.parentNode;box.querySelectorAll('.dc-ipk').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');}catch(e){}}
+function _dAdd(k){if(!_driveDraft)_driveDraftInit();(_driveDraft[k]=_driveDraft[k]||[]).push({n:'',d:'',u:'',ic:''});renderDriveCfg();}
 function _dDel(k,i){if(!_driveDraft||!_driveDraft[k])return;if(!confirm('이 폴더를 목록에서 뺄까요?'))return;_driveDraft[k].splice(i,1);renderDriveCfg();}
 function collectDriveCfg(){
   if(!_driveDraft)return;
   var out={};
   RES_TABS.forEach(function(t){
     out[t.k]=(_driveDraft[t.k]||[]).filter(function(f){return (f.u||'').trim();})
-      .map(function(f){return {n:(f.n||'').trim()||'폴더',d:(f.d||'').trim(),u:normDriveUrl(f.u)};});
+      .map(function(f){return {n:(f.n||'').trim()||'폴더',d:(f.d||'').trim(),u:normDriveUrl(f.u),ic:(f.ic||'')};});
   });
   appConfig.driveFolders=out;
   _driveDraft=null;
@@ -2214,16 +2254,17 @@ function _linkCard(r){
 }
 function _resSecLabel(t){return '<div style="font-size:12px;font-weight:700;color:var(--text-sub);margin:4px 0 8px">'+t+'</div>';}
 function _resEmpty(emoji,title,desc){return '<div class="empty"><div class="empty-emoji">'+emoji+'</div><div class="empty-title">'+title+'</div>'+(desc?'<div class="empty-desc">'+desc+'</div>':'')+'</div>';}
-function _driveCard(f){
-  /* 모든 카드 높이를 동일하게: 설명은 한 줄로 고정 */
-  return '<a href="'+_esc(f.u)+'" class="drive-card">'
-    +'<span class="dc-ico">📂</span>'
+function _driveCard(f,cat){
+  var col=DRIVE_CAT_COLOR[cat]||DRIVE_CAT_COLOR.form;
+  var ic=(f&&f.ic)||DRIVE_CAT_ICON[cat]||'folder';
+  return '<a href="'+_esc(f.u)+'" class="drive-card" style="--dc-ac:'+col.c+';--dc-acb:'+col.cb+'">'
+    +'<span class="dc-ico">'+_driveIco(ic,22)+'</span>'
     +'<span class="dc-body">'
       +'<span class="dc-title">'+_esc(f.n)+'</span>'
-      +'<span class="dc-desc">'+_esc(f.d||'')+'</span>'
-      +'<span class="dc-foot">구글 드라이브에서 열기</span>'
+      +(f.d?'<span class="dc-desc">'+_esc(f.d)+'</span>':'')
+      +'<span class="dc-pill">'+_driveIco('drive',12)+'Drive에서 열기</span>'
     +'</span>'
-    +'<span class="dc-arrow">›</span></a>';
+    +'<span class="dc-arrow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span></a>';
 }
 function renderResourceList(){
   const el=document.getElementById('resource-list');if(!el)return;
@@ -2231,7 +2272,7 @@ function renderResourceList(){
   if(cat==='minutes'){ openMinutesHub(); resourceCurCat='form'; return; }
 
   const folders=driveFolders(cat);
-  let html=folders.map(_driveCard).join('');
+  let html=folders.map(function(f){return _driveCard(f,cat);}).join('');
 
   /* 임시 공유 — 있을 때만 나타남 */
   const tmp=resources.filter(r=>_catNorm(r.cat)===cat&&r.cat!=='minutes')
