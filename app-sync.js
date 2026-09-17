@@ -234,10 +234,12 @@ document.addEventListener('click',function(e){try{var c=e.target.closest&&e.targ
     if(bd&&bd.classList.contains('open')){ try{closeBirthdayScreen();}catch(e){bd.classList.remove('open');} return true; }
     var co=document.getElementById('coach-overlay');
     if(co&&co.classList.contains('open')){ try{skipCoach();}catch(e){co.classList.remove('open');} return true; }
-    var open=Array.prototype.filter.call(document.querySelectorAll('.modal-overlay.open'),function(m){return m.offsetParent!==null||true;});
+    var open=Array.prototype.slice.call(document.querySelectorAll('.modal-overlay.open'));
     if(open.length){
+      /* DOM 순서가 아니라 실제 최상단(z-index 큰 것)을 닫는다 — 프로필/아바타가 스토리 위에 떠 있어도 올바르게 처리 */
+      open.sort(function(a,b){return (parseInt(getComputedStyle(a).zIndex,10)||0)-(parseInt(getComputedStyle(b).zIndex,10)||0);});
       var m=open[open.length-1];
-      if(m.id==='story-viewer-modal'){ try{closeStory();}catch(e){m.classList.remove('open');} }
+      if(m.id==='story-viewer-modal'){ if(window._storyOverlayBack&&window._storyOverlayBack())return true; try{closeStory();}catch(e){m.classList.remove('open');} }
       else{ try{closeModal(m.id);}catch(e){m.classList.remove('open');} }
       return true;
     }

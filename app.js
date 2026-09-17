@@ -1226,7 +1226,7 @@ function pruneStoryPhotos(){/* 표시 제한은 renderStoryRow에서 처리. 실
 function _canSeePhoto(ph){if(!ph)return false;if(G.role==='teacher')return true;var t=ph.target,g=ph.grade;if(t===undefined){var p=posts.find(function(x){return x.photoId===ph.id;});if(p){t=p.target;g=p.grade;}}var fake={cat:'gallery',target:t||'all',grade:g||'all'};return G.role==='parent'?_canParentSee(fake):_canStudentSee(fake,G.gradeKey);}
 function renderStoryRow(){pruneStoryPhotos();const el=document.getElementById('story-row');if(!el)return;const visP=photosData.filter(_canSeePhoto);if(!visP.length){el.innerHTML='<div style="font-size:12px;color:var(--text-light);padding:10px 0">아직 사진이 없어요</div>';return;}const byDate=[...visP].sort((a,b)=>new Date(b.date)-new Date(a.date));let show=byDate;if(byDate.length>15){const excess=byDate.length-15;const drop=new Set();const seenOld=byDate.filter(p=>(p.readBy||[]).includes(G.id)).sort((a,b)=>new Date(a.date)-new Date(b.date));for(const p of seenOld){if(drop.size>=excess)break;drop.add(p.id);}if(drop.size<excess){const restOld=byDate.filter(p=>!drop.has(p.id)).sort((a,b)=>new Date(a.date)-new Date(b.date));for(const p of restOld){if(drop.size>=excess)break;drop.add(p.id);}}show=byDate.filter(p=>!drop.has(p.id));}el.innerHTML=show.map(p=>{const isRead=(p.readBy||[]).includes(G.id);const _cv=photoCover(p);const bg=_cv?`style="background-image:url('${_cv}');background-size:cover;background-position:center"`:'';return `<div class="story-item" onclick="openStory('${p.id}')"><div class="story-ring${isRead?' seen':''}"><div class="story-inner" ${bg}>${_cv?'':'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="opacity:.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>'}</div></div><span style="font-size:10px;color:var(--text-sub);max-width:74px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.title}</span></div>`;}).join('');}
 let storyPaused=false,currentStoryImgObj=null,currentStoryPost=null;
-function openStory(id){storyList=[...photosData].sort((a,b)=>{const ar=(a.readBy||[]).includes(G.id),br=(b.readBy||[]).includes(G.id);if(ar!==br)return ar?1:-1;return new Date(b.date)-new Date(a.date);}).slice(0,10);storyIdx=storyList.findIndex(p=>p.id===id);if(storyIdx<0)storyIdx=0;storyImgIdx=0;_sheetOpen=false;_storyReplyTo=null;var _stg=document.getElementById('story-stage');if(_stg)_stg.classList.remove('cmt-open');var _sh=document.getElementById('story-comment-sheet');if(_sh)_sh.style.transform='translateY(100%)';try{_stDoCancelReply();}catch(e){}try{var _me=_meRec()||G,_ia=document.getElementById('story-inline-av');if(_ia){if(_me.avatar){_ia.style.backgroundImage="url('"+_me.avatar+"')";_ia.style.backgroundSize='cover';_ia.style.backgroundPosition='center';_ia.textContent='';}else{_ia.style.backgroundImage='';_ia.textContent=(G.displayName||'?').charAt(0);}}var _ii=document.getElementById('story-inline-input');if(_ii)_ii.value='';}catch(e){}openModal('story-viewer-modal');_stStack=[];_stOpenLayer('story');try{_initStorySheetDrag();}catch(e){}collapseStoryContent();showStorySlide();}
+function openStory(id){storyList=[...photosData].sort((a,b)=>{const ar=(a.readBy||[]).includes(G.id),br=(b.readBy||[]).includes(G.id);if(ar!==br)return ar?1:-1;return new Date(b.date)-new Date(a.date);}).slice(0,10);storyIdx=storyList.findIndex(p=>p.id===id);if(storyIdx<0)storyIdx=0;storyImgIdx=0;_sheetOpen=false;_storyReplyTo=null;var _stg=document.getElementById('story-stage');if(_stg)_stg.classList.remove('cmt-open');var _sh=document.getElementById('story-comment-sheet');if(_sh)_sh.style.transform='translateY(100%)';try{_stDoCancelReply();}catch(e){}try{var _me=_meRec()||G,_ia=document.getElementById('story-inline-av');if(_ia){if(_me.avatar){_ia.style.backgroundImage="url('"+_me.avatar+"')";_ia.style.backgroundSize='cover';_ia.style.backgroundPosition='center';_ia.textContent='';}else{_ia.style.backgroundImage='';_ia.textContent=(G.displayName||'?').charAt(0);}}var _ii=document.getElementById('story-inline-input');if(_ii)_ii.value='';}catch(e){}openModal('story-viewer-modal');try{_initStorySheetDrag();}catch(e){}collapseStoryContent();showStorySlide();}
 /* ══ 이미지 저장소: 사진 1장 = images 컬렉션 문서 1개. 앱 시작 시 받지 않고, 화면에 보일 때만 가져옴 ══ */
 var IMGC={},IMGPEND={},_imgRT=null;
 var FILEC={};
@@ -1518,37 +1518,31 @@ function renderStoryComments(scrollBottom){
   if(scrollBottom)el.scrollTop=el.scrollHeight;
 }
 function toggleStoryReplies(cid){_storyRepliesOpen[cid]=!_storyRepliesOpen[cid];renderStoryComments(false);}
-/* ── 스토리 뷰어 뒤로가기 스택 (레이어: story < sheet < reply < profile < avatar) ──
-   sentinel history 1개만 유지. 하드웨어 back → 최상위 1개만 닫고 재무장.
-   UI 닫기 → 최상위 1개 닫고, 스택이 비면 sentinel 소비(history.back). */
-var _stStack=[];
+/* ── 스토리 뷰어 뒤로가기: app-sync.js의 통합 뒤로가기 시스템과 연동 ──
+   app-sync closeTopOverlay 가 story-viewer-modal 을 만나면 _storyOverlayBack() 를
+   먼저 호출한다. 여기서 시트/답글이 열려 있으면 그것만 닫고 true 를 돌려주고,
+   더 닫을 게 없으면 false → closeStory() 가 실행된다.
+   시트/답글은 열 때 _navPush 로 history 1개씩 쌓아 하드웨어 back 과 개수를 맞춘다. */
 var _sheetOpen=false;
-function _stArm(){try{history.pushState({stview:1},'');}catch(e){}}
-function _stOpenLayer(layer){var first=!_stStack.length;_stStack.push(layer);if(first)_stArm();}
-function _stApplyClose(layer){
-  if(layer==='avatar')_stCloseAvatar();
-  else if(layer==='profile')_stCloseProfile();
-  else if(layer==='reply')_stDoCancelReply();
-  else if(layer==='sheet')_stDoCloseSheet();
-  else if(layer==='story')_stDoCloseStory();
-}
-function _stUIcloseTop(){if(!_stStack.length)return;_stApplyClose(_stStack.pop());if(!_stStack.length){try{history.back();}catch(e){}}}
-function _stUIcloseTo(target){if(_stStack.indexOf(target)<0)return;while(_stStack.length&&_stStack[_stStack.length-1]!==target)_stApplyClose(_stStack.pop());if(_stStack.length&&_stStack[_stStack.length-1]===target)_stApplyClose(_stStack.pop());if(!_stStack.length){try{history.back();}catch(e){}}}
-window.addEventListener('popstate',function(){if(!_stStack.length)return;_stApplyClose(_stStack.pop());if(_stStack.length)_stArm();});
-function storyBack(){_stUIcloseTop();}
+window._storyOverlayBack=function(){
+  if(_storyReplyTo){_stDoCancelReply();return true;}
+  if(_sheetOpen){_stDoCloseSheet();return true;}
+  return false;
+};
+/* X버튼·핸들·스와이프 등 UI 닫기 = history.back() → app-sync popstate → 위 훅이 한 겹 닫음 */
+function storyBack(){try{history.back();}catch(e){ if(!window._storyOverlayBack()){try{closeStory();}catch(_){}} }}
 /* 답글 */
-function storyReplyTo(pid,author){_storyReplyTo=pid;var bar=document.getElementById('story-reply-bar');var who=document.getElementById('story-reply-who');if(who)who.textContent='@'+(author||'')+' 님에게 답글 남기는 중';if(bar)bar.style.display='flex';var inp=document.getElementById('story-comment-input');if(inp){inp.placeholder='답글 입력...';try{inp.focus();}catch(e){}}if(_stStack[_stStack.length-1]!=='reply')_stOpenLayer('reply');}
+function storyReplyTo(pid,author){var wasReply=!!_storyReplyTo;_storyReplyTo=pid;var bar=document.getElementById('story-reply-bar');var who=document.getElementById('story-reply-who');if(who)who.textContent='@'+(author||'')+' 님에게 답글 남기는 중';if(bar)bar.style.display='flex';var inp=document.getElementById('story-comment-input');if(inp){inp.placeholder='답글 입력...';try{inp.focus();}catch(e){}}if(!wasReply&&window._navPush)window._navPush('story-reply');}
 function _stDoCancelReply(){_storyReplyTo=null;var bar=document.getElementById('story-reply-bar');if(bar)bar.style.display='none';var inp=document.getElementById('story-comment-input');if(inp)inp.placeholder='댓글 입력...';}
-function storyCancelReply(){if(_stStack[_stStack.length-1]==='reply')_stUIcloseTop();else _stDoCancelReply();}
+function storyCancelReply(){if(_storyReplyTo){try{history.back();}catch(e){_stDoCancelReply();}}}
 /* 댓글 시트 열기/닫기 (+이미지 축소 애니메이션) */
-function openStoryCommentSheet(focusInput){if(_sheetOpen){if(focusInput){var i0=document.getElementById('story-comment-input');if(i0)try{i0.focus();}catch(e){}}return;}pauseStory();var stage=document.getElementById('story-stage');if(stage)stage.classList.add('cmt-open');var sheet=document.getElementById('story-comment-sheet');if(sheet){sheet.style.transition='transform .3s ease';sheet.style.transform='translateY(0)';}_sheetOpen=true;renderStoryComments(false);_stOpenLayer('sheet');if(focusInput){var inp=document.getElementById('story-comment-input');if(inp)setTimeout(function(){try{inp.focus();}catch(e){}},220);}}
+function openStoryCommentSheet(focusInput){if(_sheetOpen){if(focusInput){var i0=document.getElementById('story-comment-input');if(i0)try{i0.focus();}catch(e){}}return;}pauseStory();var stage=document.getElementById('story-stage');if(stage)stage.classList.add('cmt-open');var sheet=document.getElementById('story-comment-sheet');if(sheet){sheet.style.transition='transform .3s ease';sheet.style.transform='translateY(0)';}_sheetOpen=true;renderStoryComments(false);if(window._navPush)window._navPush('story-sheet');if(focusInput){var inp=document.getElementById('story-comment-input');if(inp)setTimeout(function(){try{inp.focus();}catch(e){}},220);}}
 function _stDoCloseSheet(){var sheet=document.getElementById('story-comment-sheet');if(sheet){sheet.style.transition='transform .3s ease';sheet.style.transform='translateY(100%)';}var stage=document.getElementById('story-stage');if(stage)stage.classList.remove('cmt-open');var input=document.getElementById('story-comment-input');if(input)input.blur();_sheetOpen=false;try{_stDoCancelReply();}catch(e){}resumeStory();}
-function closeStoryCommentSheet(){if(_sheetOpen)_stUIcloseTo('sheet');else _stDoCloseSheet();}
-/* 프로필 (스토리 위에 표시) / 아바타 크게보기 */
-function openStoryProfile(uid){var u=_fillProfileView(uid);if(!u)return;var av=document.getElementById('pv-avatar');if(av){av.style.cursor='zoom-in';av.onclick=function(e){if(e)e.stopPropagation();openStoryAvatar(u.avatar||'');};}var cb=document.getElementById('pv-close-btn');if(cb)cb.onclick=function(){storyBack();};openModal('profile-view-modal');_stOpenLayer('profile');}
-function _stCloseProfile(){closeModal('profile-view-modal');}
-function openStoryAvatar(src){var im=document.getElementById('avatar-full-img');var fb=document.getElementById('avatar-full-fallback');if(src){if(im){im.src=src;im.style.display='block';}if(fb)fb.style.display='none';}else{if(im){im.removeAttribute('src');im.style.display='none';}if(fb)fb.style.display='flex';}var cb=document.getElementById('af-close-btn');if(cb)cb.onclick=function(e){if(e)e.stopPropagation();storyBack();};if(im)im.onclick=function(e){if(e)e.stopPropagation();storyBack();};if(fb)fb.onclick=function(e){if(e)e.stopPropagation();storyBack();};openModal('avatar-full-modal');_stOpenLayer('avatar');}
-function _stCloseAvatar(){closeModal('avatar-full-modal');}
+/* 슬라이드 전환 등 프로그램용(히스토리 건드리지 않음). UI 닫기는 storyBack 사용 */
+function closeStoryCommentSheet(){_stDoCloseSheet();}
+/* 프로필(스토리 위)·아바타 크게보기 = 일반 모달로 열어 app-sync 가 뒤로가기 처리 */
+function openStoryProfile(uid){var u=_fillProfileView(uid);if(!u)return;var av=document.getElementById('pv-avatar');if(av){av.style.cursor='zoom-in';av.onclick=function(e){if(e)e.stopPropagation();openStoryAvatar(u.avatar||'');};}var cb=document.getElementById('pv-close-btn');if(cb)cb.onclick=function(){closeModal('profile-view-modal');};openModal('profile-view-modal');}
+function openStoryAvatar(src){var im=document.getElementById('avatar-full-img');var fb=document.getElementById('avatar-full-fallback');if(src){if(im){im.src=src;im.style.display='block';}if(fb)fb.style.display='none';}else{if(im){im.removeAttribute('src');im.style.display='none';}if(fb)fb.style.display='flex';}var cb=document.getElementById('af-close-btn');if(cb)cb.onclick=function(e){if(e)e.stopPropagation();closeModal('avatar-full-modal');};if(im)im.onclick=function(e){if(e)e.stopPropagation();closeModal('avatar-full-modal');};if(fb)fb.onclick=function(e){if(e)e.stopPropagation();closeModal('avatar-full-modal');};openModal('avatar-full-modal');}
 /* 댓글 추가 공용 */
 function _pushStoryComment(text,replyTo){var p=storyList&&storyList[storyIdx];if(!p)return null;var list=_storyCmtStore(true);if(!list)return null;_storyEnsureIds(list);var c={id:'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),author:G.displayName,authorId:G.id,text:text,time:'방금',ts:Date.now(),likes:[]};if(replyTo&&list.some(function(x){return x.id===replyTo;})){c.replyTo=replyTo;_storyRepliesOpen[replyTo]=true;}list.push(c);try{var orig=photosData.find(function(x){return x.id===p.id;});if(orig&&orig!==p){orig.imgComments=orig.imgComments||{};orig.imgComments[_storyCmtKey()]=list;}if(window.FB&&FB.enabled()&&FB.save)FB.save('photos',p.id,(orig||p));if(window.flushSync)window.flushSync();}catch(e){console.warn('[STORY]',e);}return c;}
 function submitInlineComment(){var inp=document.getElementById('story-inline-input');var t=(inp.value||'').trim();if(!t)return;var c=_pushStoryComment(t,null);if(!c){showToast('댓글을 저장할 수 없어요');return;}inp.value='';openStoryCommentSheet();renderStoryComments(true);}
@@ -1610,11 +1604,11 @@ function submitStoryComment(){
   const input=document.getElementById('story-comment-input');
   const text=(input.value||'').trim();
   if(!text)return;
-  var rt=(_storyReplyTo&&_stStack[_stStack.length-1]==='reply')?_storyReplyTo:null;
+  var rt=_storyReplyTo||null;
   var c=_pushStoryComment(text,rt);
   if(!c){showToast('댓글을 저장할 수 없어요');return;}
   input.value='';
-  if(_stStack[_stStack.length-1]==='reply')_stUIcloseTop();
+  if(rt)storyCancelReply();   /* 답글 등록 후 답글 모드 해제(히스토리 1개 소비) */
   renderStoryComments(!rt);
 }
 /* 갤러리 사진 수정·삭제 — 작성자 또는 교사만 */
@@ -1710,8 +1704,7 @@ function refreshStoryLikeUI(){
   if(ic)ic.innerHTML=_heartHTML(liked);
   if(ct)ct.textContent=likes.length;
 }
-function _stDoCloseStory(){clearStoryTimer();try{collapseStoryContent();}catch(e){}var sheet=document.getElementById('story-comment-sheet');if(sheet)sheet.style.transform='translateY(100%)';var stage=document.getElementById('story-stage');if(stage)stage.classList.remove('cmt-open');_sheetOpen=false;_storyReplyTo=null;var rb=document.getElementById('story-reply-bar');if(rb)rb.style.display='none';closeModal('story-viewer-modal');_stStack=[];try{renderStoryRow();}catch(e){}}
-function closeStory(){if(_stStack.indexOf('story')>=0)_stUIcloseTo('story');else _stDoCloseStory();}
+function closeStory(){clearStoryTimer();try{collapseStoryContent();}catch(e){}var sheet=document.getElementById('story-comment-sheet');if(sheet)sheet.style.transform='translateY(100%)';var stage=document.getElementById('story-stage');if(stage)stage.classList.remove('cmt-open');_sheetOpen=false;_storyReplyTo=null;var rb=document.getElementById('story-reply-bar');if(rb)rb.style.display='none';closeModal('story-viewer-modal');try{renderStoryRow();}catch(e){}}
 /* 댓글 시트 드래그(아래로 밀어 닫기) */
 function _initStorySheetDrag(){var sheet=document.getElementById('story-comment-sheet');if(!sheet||sheet._dragInit)return;sheet._dragInit=true;var list=document.getElementById('story-comment-list');var head=document.getElementById('story-sheet-head');var startY=null,drag=false,fromList=false,onHead=false;
   sheet.addEventListener('touchstart',function(e){var y=e.touches[0].clientY;onHead=head&&head.contains(e.target);var atTop=list&&list.scrollTop<=0;if(onHead||atTop){startY=y;drag=true;fromList=!onHead;sheet.style.transition='none';}else{drag=false;startY=null;}},{passive:true});
