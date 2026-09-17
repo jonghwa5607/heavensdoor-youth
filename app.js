@@ -1704,7 +1704,14 @@ function refreshStoryLikeUI(){
   if(ic)ic.innerHTML=_heartHTML(liked);
   if(ct)ct.textContent=likes.length;
 }
-function closeStory(){clearStoryTimer();try{collapseStoryContent();}catch(e){}var sheet=document.getElementById('story-comment-sheet');if(sheet)sheet.style.transform='translateY(100%)';var stage=document.getElementById('story-stage');if(stage)stage.classList.remove('cmt-open');_sheetOpen=false;_storyReplyTo=null;var rb=document.getElementById('story-reply-bar');if(rb)rb.style.display='none';closeModal('story-viewer-modal');try{renderStoryRow();}catch(e){}}
+/* 뒤로가기 한 겹씩: app-sync 의 뒤로가기 처리는 스토리에서 closeStory()를 부른다.
+   답글/시트가 열려 있으면 그것만 닫고 사진은 유지 → 구버전 app-sync 에서도 올바르게 동작. */
+function closeStory(){
+  if(_storyReplyTo){ _stDoCancelReply(); return; }
+  if(_sheetOpen){ _stDoCloseSheet(); return; }
+  _stDoCloseStoryFull();
+}
+function _stDoCloseStoryFull(){clearStoryTimer();try{collapseStoryContent();}catch(e){}var sheet=document.getElementById('story-comment-sheet');if(sheet)sheet.style.transform='translateY(100%)';var stage=document.getElementById('story-stage');if(stage)stage.classList.remove('cmt-open');_sheetOpen=false;_storyReplyTo=null;var rb=document.getElementById('story-reply-bar');if(rb)rb.style.display='none';closeModal('story-viewer-modal');try{renderStoryRow();}catch(e){}}
 /* 댓글 시트 드래그(아래로 밀어 닫기) */
 function _initStorySheetDrag(){var sheet=document.getElementById('story-comment-sheet');if(!sheet||sheet._dragInit)return;sheet._dragInit=true;var list=document.getElementById('story-comment-list');var head=document.getElementById('story-sheet-head');var startY=null,drag=false,fromList=false,onHead=false;
   sheet.addEventListener('touchstart',function(e){var y=e.touches[0].clientY;onHead=head&&head.contains(e.target);var atTop=list&&list.scrollTop<=0;if(onHead||atTop){startY=y;drag=true;fromList=!onHead;sheet.style.transition='none';}else{drag=false;startY=null;}},{passive:true});
