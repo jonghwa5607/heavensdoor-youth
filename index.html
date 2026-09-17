@@ -346,9 +346,9 @@
 
   <!-- 교사: 일정 + 리마인더 -->
   <div id="home-teacher" style="display:none">
-    <div class="teacher-banner home-banner" style="margin:14px">
-      <div class="banner-label">HEAVEN'S DOOR · 교사</div>
-      <div class="banner-name" id="teacher-home-name"></div>
+    <div class="teacher-banner home-banner" style="margin:14px;position:relative">
+      <button onclick="openProfileEdit()" title="프로필 설정" style="position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.22);border:none;border-radius:11px;padding:8px 10px;color:#fff;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit;z-index:2"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+      <div style="display:flex;align-items:center;gap:11px;margin-bottom:8px"><div id="home-teacher-avatar" onclick="openProfileView(G.id)" style="flex-shrink:0;cursor:pointer" title="프로필 보기"></div><div style="min-width:0"><div class="banner-label">HEAVEN'S DOOR · 교사</div><div class="banner-name" id="teacher-home-name" style="cursor:pointer" onclick="openProfileView(G.id)"></div></div></div>
       <div class="banner-sub" id="teacher-home-desc"></div>
     </div>
     <div style="margin:0 14px 4px"><div id="home-smart"></div></div>
@@ -377,9 +377,9 @@
 
   <!-- 학부모: 자녀 출석 현황 -->
   <div id="home-parent" style="display:none">
-    <div class="parent-banner home-banner" style="margin:14px">
-      <div class="banner-label">HEAVEN'S DOOR 중고등부</div>
-      <div class="banner-name" id="parent-home-name"></div>
+    <div class="parent-banner home-banner" style="margin:14px;position:relative">
+      <button onclick="openProfileEdit()" title="프로필 설정" style="position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.22);border:none;border-radius:11px;padding:8px 10px;color:#fff;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit;z-index:2"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+      <div style="display:flex;align-items:center;gap:11px;margin-bottom:8px"><div id="home-parent-avatar" onclick="openProfileView(G.id)" style="flex-shrink:0;cursor:pointer" title="프로필 보기"></div><div style="min-width:0"><div class="banner-label">HEAVEN'S DOOR 중고등부</div><div class="banner-name" id="parent-home-name" style="cursor:pointer" onclick="openProfileView(G.id)"></div></div></div>
       <div class="banner-sub">자녀의 신앙 성장을 함께 응원해 주세요 🙏</div>
     </div>
     <div class="section">
