@@ -1777,8 +1777,12 @@ function renderDriveCfg(){
         +'</div>'
         +'<input class="form-input" style="margin-bottom:6px" placeholder="설명 (예: 연도별 교안모음)" value="'+_esc(f.d)+'" oninput="_dSet(\''+t.k+'\','+i+',\'d\',this.value)">'
         +'<input class="form-input" style="margin-bottom:7px" placeholder="드라이브 폴더 링크" value="'+_esc(f.u)+'" oninput="_dSet(\''+t.k+'\','+i+',\'u\',this.value)">'
-        +'<div style="font-size:11px;color:var(--text-light);margin-bottom:5px">아이콘 선택</div>'
-        +'<div class="dc-iconpick">'+pick+'</div>'
+        +'<div style="display:flex;align-items:center;gap:8px">'
+          +'<span style="font-size:11px;color:var(--text-light)">아이콘</span>'
+          +'<span class="dc-ipk on" id="dcur-'+t.k+'-'+i+'" style="cursor:default">'+_driveIco(cur,18)+'</span>'
+          +'<button type="button" class="btn btn-sm btn-outline" style="width:auto;padding:6px 13px;font-size:11px" onclick="_dToggleIcons(\''+t.k+'\','+i+',this)">변경 ▾</button>'
+        +'</div>'
+        +'<div class="dc-iconpick" id="dpick-'+t.k+'-'+i+'" style="display:none;margin-top:7px">'+pick+'</div>'
         +'</div>';
     }).join('');
     return '<div style="margin-bottom:14px">'
@@ -1789,7 +1793,8 @@ function renderDriveCfg(){
   }).join('');
 }
 function _dSet(k,i,f,v){if(!_driveDraft)return;if(_driveDraft[k]&&_driveDraft[k][i])_driveDraft[k][i][f]=v;}
-function _dPickIcon(k,i,key,btn){_dSet(k,i,'ic',key);try{var box=btn.parentNode;box.querySelectorAll('.dc-ipk').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');}catch(e){}}
+function _dToggleIcons(k,i,btn){var el=document.getElementById('dpick-'+k+'-'+i);if(!el)return;var show=(el.style.display==='none'||!el.style.display);el.style.display=show?'flex':'none';if(btn)btn.innerHTML=show?'닫기 ▴':'변경 ▾';}
+function _dPickIcon(k,i,key,btn){_dSet(k,i,'ic',key);try{var box=btn.parentNode;box.querySelectorAll('.dc-ipk').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');var cur=document.getElementById('dcur-'+k+'-'+i);if(cur)cur.innerHTML=_driveIco(key,18);}catch(e){}}
 function _dAdd(k){if(!_driveDraft)_driveDraftInit();(_driveDraft[k]=_driveDraft[k]||[]).push({n:'',d:'',u:'',ic:''});renderDriveCfg();}
 function _dDel(k,i){if(!_driveDraft||!_driveDraft[k])return;if(!confirm('이 폴더를 목록에서 뺄까요?'))return;_driveDraft[k].splice(i,1);renderDriveCfg();}
 function collectDriveCfg(){

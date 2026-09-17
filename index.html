@@ -44,9 +44,13 @@
 #dept-choir,#dept-liturgy{will-change:transform,opacity}
 #yearplan-modal .pg-head{background:#fff}
 #yearplan-modal .yp-row{background:#fff}
-#screen-attend .tab-bar,#screen-board .tab-bar,#screen-activity .tab-bar,#screen-teacher .tab-bar{padding:0;justify-content:center;overflow-x:visible}
-#screen-attend .tab-bar .tab-btn,#screen-board .tab-bar .tab-btn,#screen-activity .tab-bar .tab-btn,#screen-teacher .tab-bar .tab-btn{flex:1;text-align:center;padding:13px 4px}
-#screen-teacher .tab-bar .tab-btn{font-size:12.5px}
+#screen-attend .tab-bar,#screen-board .tab-bar,#screen-activity .tab-bar{padding:0;justify-content:center;overflow-x:visible}
+#screen-attend .tab-bar .tab-btn,#screen-board .tab-bar .tab-btn,#screen-activity .tab-bar .tab-btn{flex:1;text-align:center;padding:13px 4px}
+/* 자료실: 글자수가 제각각 → 균등 칸(flex:1)보다 균등 간격(space-between)이 더 고르게 보임 */
+#screen-teacher .tab-bar{justify-content:space-between;padding:0 14px;overflow-x:visible}
+#screen-teacher .tab-bar .tab-btn{flex:0 0 auto;padding:13px 3px;font-size:12.5px}
+/* 자료실 드라이브 폴더 설정: 내용이 길어도 잘리지 않게 높이 제한 해제 */
+#cfg-drive-sec.open .cfg-sec-body{max-height:none;overflow:visible}
 .home-banner .banner-name{display:flex;flex-wrap:wrap;align-items:center;column-gap:5px;white-space:normal;overflow:visible;text-overflow:clip;word-break:keep-all}
 
 /* 연간 운영 계획 — 상단 버튼 크기 정리 + 헤더와 표 사이 빈틈(뒷배경 비침) 제거로 연결 */
@@ -839,7 +843,7 @@
         <div style="font-size:11px;color:var(--text-light);margin-top:8px">🎂 생일 쿠폰은 학생 생일 당일에 자동 발급됩니다 (연 1회). 축일은 쿠폰 없이 축하 알림만 전송됩니다.</div>
       </div>
     </div>
-    <div class="cfg-sec">
+    <div class="cfg-sec" id="cfg-drive-sec">
       <button class="cfg-sec-head" onclick="toggleCfgSec(this)"><span style="display:flex;align-items:center;gap:6px;min-width:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> 자료실 드라이브 폴더</span> <span class="cfg-sec-arrow">▾</span></button>
       <div class="cfg-sec-body">
         <div style="font-size:11px;color:var(--text-light);margin-bottom:10px;line-height:1.6">자료실 각 탭에 보일 <strong>구글 드라이브 폴더</strong>를 관리해요. 드라이브에서 폴더 → 공유 → 링크 복사 후 붙여넣으세요. 한 탭에 여러 폴더를 넣을 수 있어요.</div>
