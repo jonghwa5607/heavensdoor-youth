@@ -1470,11 +1470,51 @@ let storyContentExpanded=false;
 function toggleStoryContent(){if(storyContentExpanded)collapseStoryContent();else expandStoryContent();}
 function expandStoryContent(){if(!currentStoryPost||!currentStoryPost.content)return;pauseStory();storyContentExpanded=true;document.getElementById('story-detail-content').textContent=currentStoryPost.content;const box=document.getElementById('story-content-expand');if(box)box.style.maxHeight='140px';const arrow=document.getElementById('story-expand-arrow');if(arrow)arrow.textContent='▼';const titleWrap=document.getElementById('story-title-wrap');if(titleWrap)titleWrap.style.transform='translateY(-2px)';}
 function collapseStoryContent(){storyContentExpanded=false;const box=document.getElementById('story-content-expand');if(box)box.style.maxHeight='0';const arrow=document.getElementById('story-expand-arrow');if(arrow)arrow.textContent='▲';const titleWrap=document.getElementById('story-title-wrap');if(titleWrap)titleWrap.style.transform='translateY(0)';resumeStory();}
-function renderStoryComments(){const el=document.getElementById('story-comment-list');if(!el)return;const comments=_storyCmtStore(false)||((currentStoryImgObj&&currentStoryImgObj.comments)||[]);const cnt=document.getElementById('story-comment-count');if(cnt)cnt.textContent=comments.length;if(!comments.length){el.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(255,255,255,.5);font-size:13px">아직 댓글이 없어요<br>첫 댓글을 남겨보세요 💬</div>';return;}el.innerHTML=comments.map((c,ix)=>{
-    const mine=(c.authorId&&c.authorId===G.id)||(!c.authorId&&c.author===G.displayName);
-    const canEdit=mine||G.role==='teacher';
-    return `<div style="display:flex;gap:10px"><div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--lavender));display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:800;flex-shrink:0">${(c.author||'?').charAt(0)}</div><div style="flex:1;min-width:0"><div style="font-size:12px;color:white"><strong onclick="openProfileView('${c.authorId||''}')" style="cursor:pointer">${c.author}</strong> <span style="color:rgba(255,255,255,.8)">${c.text}</span></div><div style="display:flex;align-items:center;gap:8px;margin-top:2px"><span style="font-size:10px;color:rgba(255,255,255,.4)">${_timeAgo(c.ts,c.time)}${c.edited?' (수정됨)':''}</span>${canEdit?`<button onclick="editStoryComment(${ix})" style="background:none;border:none;color:rgba(255,255,255,.55);font-size:10px;cursor:pointer;padding:0;font-family:inherit">수정</button><button onclick="deleteStoryComment(${ix})" style="background:none;border:none;color:rgba(255,255,255,.55);font-size:10px;cursor:pointer;padding:0;font-family:inherit">삭제</button>`:''}</div></div></div>`;
-  }).join('');el.scrollTop=el.scrollHeight;}
+var _storyReplyTo=null;      /* 답글 대상 최상위 댓글 id */
+var _storyRepliesOpen={};    /* {commentId:true} 답글 펼침 상태 */
+function _storyEnsureIds(list){(list||[]).forEach(function(c){if(!c.id)c.id='c'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);});}
+function _cmtAvatarHTML(c,sz){sz=sz||30;var u=(pendingList||[]).find(function(x){return x.id===c.authorId;});var av=u&&u.avatar;var base='width:'+sz+'px;height:'+sz+'px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;';if(av)return '<div style="'+base+'background:#4BAF9E url(\''+_esc(av)+'\') center/cover" onclick="openProfileView(\''+(c.authorId||'')+'\')"></div>';return '<div style="'+base+'background:linear-gradient(135deg,#2FA595,#9B8FD4);color:#fff;font-size:'+Math.round(sz*0.42)+'px;font-weight:800" onclick="openProfileView(\''+(c.authorId||'')+'\')">'+_esc((c.author||'?').charAt(0))+'</div>';}
+function _storyCmtRow(c,isReply){
+  var canEdit=_canEditCmt(c);
+  var sz=isReply?24:30;
+  var acts='<button onclick="storyReplyTo(\''+(c.replyTo||c.id)+'\',\''+_esc(c.author||'').replace(/'/g,'')+'\')" style="background:none;border:none;color:rgba(255,255,255,.65);font-size:10px;font-weight:700;cursor:pointer;padding:0;font-family:inherit">답글 달기</button>';
+  if(canEdit)acts+='<button onclick="editStoryCommentId(\''+c.id+'\')" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:10px;cursor:pointer;padding:0;font-family:inherit">수정</button><button onclick="deleteStoryCommentId(\''+c.id+'\')" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:10px;cursor:pointer;padding:0;font-family:inherit">삭제</button>';
+  return '<div style="display:flex;gap:10px'+(isReply?';padding-left:4px':'')+'">'
+    +_cmtAvatarHTML(c,sz)
+    +'<div style="flex:1;min-width:0">'
+      +'<div style="font-size:12px;color:white;line-height:1.4"><strong onclick="openProfileView(\''+(c.authorId||'')+'\')" style="cursor:pointer">'+_esc(c.author)+'</strong> <span style="color:rgba(255,255,255,.85)">'+_esc(c.text)+'</span></div>'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-top:3px">'
+        +'<span style="font-size:10px;color:rgba(255,255,255,.4)">'+_timeAgo(c.ts,c.time)+(c.edited?' (수정됨)':'')+'</span>'+acts
+      +'</div>'
+    +'</div>'
+  +'</div>';
+}
+function renderStoryComments(scrollBottom){
+  const el=document.getElementById('story-comment-list');if(!el)return;
+  const comments=_storyCmtStore(false)||((currentStoryImgObj&&currentStoryImgObj.comments)||[]);
+  _storyEnsureIds(comments);
+  const cnt=document.getElementById('story-comment-count');if(cnt)cnt.textContent=comments.length;
+  if(!comments.length){el.innerHTML='<div style="text-align:center;padding:30px 0;color:rgba(255,255,255,.5);font-size:13px">아직 댓글이 없어요<br>첫 댓글을 남겨보세요 💬</div>';return;}
+  var byId={};comments.forEach(function(c){byId[c.id]=c;});
+  var tops=comments.filter(function(c){return !c.replyTo||!byId[c.replyTo];});
+  var repl={};comments.forEach(function(c){if(c.replyTo&&byId[c.replyTo])(repl[c.replyTo]=repl[c.replyTo]||[]).push(c);});
+  el.innerHTML=tops.map(function(c){
+    var rs=repl[c.id]||[];
+    var block=_storyCmtRow(c,false);
+    if(rs.length){
+      var open=!!_storyRepliesOpen[c.id];
+      block+='<button onclick="toggleStoryReplies(\''+c.id+'\')" style="background:none;border:none;color:rgba(255,255,255,.55);font-size:11px;font-weight:700;cursor:pointer;padding:6px 0 0 38px;font-family:inherit;display:flex;align-items:center;gap:7px"><span style="width:18px;height:1px;background:rgba(255,255,255,.3);display:inline-block"></span>'+(open?'답글 숨기기':'답글 '+rs.length+'개 보기')+'</button>';
+      if(open)block+='<div style="display:flex;flex-direction:column;gap:12px;margin-top:10px;padding-left:38px">'+rs.map(function(r){return _storyCmtRow(r,true);}).join('')+'</div>';
+    }
+    return '<div>'+block+'</div>';
+  }).join('');
+  if(scrollBottom)el.scrollTop=el.scrollHeight;
+}
+function toggleStoryReplies(cid){_storyRepliesOpen[cid]=!_storyRepliesOpen[cid];renderStoryComments(false);}
+function storyReplyTo(pid,author){_storyReplyTo=pid;var bar=document.getElementById('story-reply-bar');var who=document.getElementById('story-reply-who');if(who)who.textContent='@'+(author||'')+' 님에게 답글 남기는 중';if(bar)bar.style.display='flex';var inp=document.getElementById('story-comment-input');if(inp){inp.placeholder='답글 입력...';try{inp.focus();}catch(e){}}}
+function storyCancelReply(){_storyReplyTo=null;var bar=document.getElementById('story-reply-bar');if(bar)bar.style.display='none';var inp=document.getElementById('story-comment-input');if(inp)inp.placeholder='댓글 입력...';}
+function editStoryCommentId(id){var list=_storyCmtStore(false);if(!list)return;var c=list.find(function(x){return x.id===id;});if(!c)return;if(!_canEditCmt(c)){showToast('수정 권한이 없어요');return;}var v=prompt('댓글 수정',c.text);if(v===null)return;var t=(v||'').trim();if(!t){showToast('내용을 입력해주세요');return;}c.text=t;c.edited=true;_saveStoryPhoto();renderStoryComments(false);showToast('댓글을 수정했어요');}
+function deleteStoryCommentId(id){var list=_storyCmtStore(false);if(!list)return;var c=list.find(function(x){return x.id===id;});if(!c)return;if(!_canEditCmt(c)){showToast('삭제 권한이 없어요');return;}var hasReplies=list.some(function(x){return x.replyTo===id;});if(!confirm(hasReplies?'이 댓글과 답글을 모두 삭제할까요?':'이 댓글을 삭제할까요?'))return;var kill={};kill[id]=1;list.forEach(function(x){if(x.replyTo===id)kill[x.id]=1;});for(var i=list.length-1;i>=0;i--){if(kill[list[i].id])list.splice(i,1);}_saveStoryPhoto();renderStoryComments(false);try{renderGalleryGrid&&renderGalleryGrid();}catch(e){}showToast('댓글을 삭제했어요');}
 /* 갤러리 댓글 수정·삭제 — 작성자 본인 또는 교사 */
 function _saveStoryPhoto(){
   const p=storyList&&storyList[storyIdx];
@@ -1516,7 +1556,7 @@ function deleteStoryComment(ix){
   showToast('댓글을 삭제했어요');
 }
 function openStoryCommentSheet(){pauseStory();renderStoryComments();const sheet=document.getElementById('story-comment-sheet');if(sheet)sheet.style.transform='translateY(0)';}
-function closeStoryCommentSheet(){const sheet=document.getElementById('story-comment-sheet');if(sheet)sheet.style.transform='translateY(100%)';const input=document.getElementById('story-comment-input');if(input)input.blur();resumeStory();}
+function closeStoryCommentSheet(){const sheet=document.getElementById('story-comment-sheet');if(sheet)sheet.style.transform='translateY(100%)';const input=document.getElementById('story-comment-input');if(input)input.blur();try{storyCancelReply();}catch(e){}resumeStory();}
 /* 댓글은 사진 게시물(photosData) 안에 이미지 순번별로 저장한다.
    예전엔 이미지 객체에 붙였는데, 이미지가 문자열로 저장되면 댓글을 아예 못 달았다. */
 function _storyCmtKey(){ return String(storyImgIdx||0); }
@@ -1536,8 +1576,13 @@ function submitStoryComment(){
   if(!p){showToast('사진을 찾을 수 없어요');return;}
   const list=_storyCmtStore(true);
   if(!list){showToast('댓글을 저장할 수 없어요');return;}
-  list.push({author:G.displayName,authorId:G.id,text:text,time:'방금',ts:Date.now()});
+  _storyEnsureIds(list);
+  var c={id:'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),author:G.displayName,authorId:G.id,text:text,time:'방금',ts:Date.now()};
+  var wasReply=false;
+  if(_storyReplyTo&&list.some(function(x){return x.id===_storyReplyTo;})){c.replyTo=_storyReplyTo;_storyRepliesOpen[_storyReplyTo]=true;wasReply=true;}
+  list.push(c);
   input.value='';
+  storyCancelReply();
   /* 원본 photosData 항목에도 반영 후 즉시 저장 */
   try{
     const orig=photosData.find(x=>x.id===p.id);
@@ -1545,7 +1590,7 @@ function submitStoryComment(){
     if(window.FB&&FB.enabled()&&FB.save)FB.save('photos',p.id,(orig||p));
     if(window.flushSync)window.flushSync();
   }catch(e){console.warn('[STORY]',e);}
-  renderStoryComments();
+  renderStoryComments(!wasReply);
 }
 /* 갤러리 사진 수정·삭제 — 작성자 또는 교사만 */
 function _curStoryPhoto(){ return (storyList&&storyList[storyIdx])||null; }
@@ -1630,7 +1675,7 @@ function toggleStoryLike(){
   }catch(e){console.warn('[STORY]',e);}
   refreshStoryLikeUI();
 }
-function _heartHTML(liked){return liked?'<svg viewBox="0 0 24 24" width="28" height="28" fill="#ed4956" style="display:block"><path d="M12 21.6C6.4 16 1 11.3 1 7.2 1 3.4 4.1 2 6.3 2c1.3 0 4.2.5 5.7 4.5C13.5 2.5 16.4 2 17.7 2c2.5 0 5.3 1.6 5.3 5.2 0 4.1-5.1 8.7-11 14.4z"/></svg>':'<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round" style="display:block"><path d="M12 21.6C6.4 16 1 11.3 1 7.2 1 3.4 4.1 2 6.3 2c1.3 0 4.2.5 5.7 4.5C13.5 2.5 16.4 2 17.7 2c2.5 0 5.3 1.6 5.3 5.2 0 4.1-5.1 8.7-11 14.4z"/></svg>';}
+function _heartHTML(liked){return liked?'<svg viewBox="0 0 24 24" width="26" height="26" fill="#ed4956" style="display:block"><path d="M12 21.6C6.4 16 1 11.3 1 7.2 1 3.4 4.1 2 6.3 2c1.3 0 4.2.5 5.7 4.5C13.5 2.5 16.4 2 17.7 2c2.5 0 5.3 1.6 5.3 5.2 0 4.1-5.1 8.7-11 14.4z"/></svg>':'<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round" style="display:block"><path d="M12 21.6C6.4 16 1 11.3 1 7.2 1 3.4 4.1 2 6.3 2c1.3 0 4.2.5 5.7 4.5C13.5 2.5 16.4 2 17.7 2c2.5 0 5.3 1.6 5.3 5.2 0 4.1-5.1 8.7-11 14.4z"/></svg>';}
 function _cmtHTML(){return '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.4 8.4 0 0 1-3.8-.9L3 21l2-5.2a8.4 8.4 0 0 1-.9-3.8 8.4 8.4 0 0 1 8.4-8.4h.5a8.4 8.4 0 0 1 8 8z"/></svg>';}
 function refreshStoryLikeUI(){
   const btn=document.getElementById('story-like-btn'); if(!btn)return;
