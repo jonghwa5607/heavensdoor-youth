@@ -51,6 +51,13 @@
 #screen-teacher .tab-bar .tab-btn{flex:0 0 auto;padding:13px 3px;font-size:12.5px}
 /* 자료실 드라이브 폴더 설정: 내용이 길어도 잘리지 않게 높이 제한 해제 */
 #cfg-drive-sec.open .cfg-sec-body{max-height:none;overflow:visible}
+/* ── 갤러리 스토리 뷰어: 댓글 열면 이미지 축소 + 시트 슬라이드 (인스타 스타일) ── */
+#story-viewer-image{transition:height .34s cubic-bezier(.16,1,.3,1),border-radius .34s,margin .34s}
+#story-stage.cmt-open #story-viewer-image{flex:none!important;height:34%!important;border-radius:16px;margin:12px 12px 0!important;pointer-events:none}
+#story-stage.cmt-open #story-cap-bar{opacity:0;pointer-events:none}
+#story-stage.cmt-open #story-inline-bar{display:none}
+#story-comment-sheet{height:66%!important}
+#story-cap-bar{transition:opacity .25s}
 .home-banner .banner-name{display:flex;flex-wrap:wrap;align-items:center;column-gap:5px;white-space:normal;overflow:visible;text-overflow:clip;word-break:keep-all}
 
 /* 연간 운영 계획 — 상단 버튼 크기 정리 + 헤더와 표 사이 빈틈(뒷배경 비침) 제거로 연결 */
@@ -1421,8 +1428,9 @@
 </div>
 
 <div class="modal-overlay" id="avatar-full-modal" style="background:#000;z-index:99999;padding:0">
-  <button onclick="event.stopPropagation();closeAvatarFull()" style="position:fixed;top:14px;right:14px;z-index:100000;width:42px;height:42px;border-radius:50%;border:none;background:rgba(255,255,255,0.2);color:#fff;font-size:22px;line-height:1;cursor:pointer;font-family:inherit">✕</button>
+  <button id="af-close-btn" onclick="event.stopPropagation();closeAvatarFull()" style="position:fixed;top:14px;right:14px;z-index:100000;width:42px;height:42px;border-radius:50%;border:none;background:rgba(255,255,255,0.2);color:#fff;font-size:22px;line-height:1;cursor:pointer;font-family:inherit">✕</button>
   <img id="avatar-full-img" src="" alt="프로필 사진" onclick="event.stopPropagation();closeAvatarFull()" style="width:100vw;height:100vh;object-fit:contain;display:block;margin:auto;cursor:zoom-out">
+  <div id="avatar-full-fallback" onclick="event.stopPropagation();closeAvatarFull()" style="display:none;width:100vw;height:100vh;align-items:center;justify-content:center;cursor:zoom-out"><svg width="160" height="160" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="3.4"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg></div>
 </div>
 
 <!-- ══ 모달: 회의록 (노션 스타일) ══ -->
@@ -2211,9 +2219,9 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="profile-view-modal" style="background:rgba(0,0,0,0.5)">
+<div class="modal-overlay" id="profile-view-modal" style="background:rgba(0,0,0,0.5);z-index:1000">
   <div class="modal" style="text-align:center;background:#ffffff;background-image:none;opacity:1;backdrop-filter:none;border-radius:22px;padding:22px 20px 26px;width:92vw;max-width:460px;margin:auto;box-shadow:0 12px 40px rgba(0,0,0,0.25)">
-    <div class="modal-title-row"><span class="modal-title">프로필</span><button class="modal-close" onclick="closeModal('profile-view-modal')">✕</button></div>
+    <div class="modal-title-row"><span class="modal-title">프로필</span><button class="modal-close" id="pv-close-btn" onclick="closeModal('profile-view-modal')">✕</button></div>
     <div id="pv-avatar" style="width:110px;height:110px;min-width:110px;min-height:110px;border-radius:50%;margin:6px auto 12px;background-color:#4BAF9E;background-size:cover;background-position:center;background-repeat:no-repeat;display:flex;align-items:center;justify-content:center;color:#fff;font-size:44px;font-weight:800;overflow:hidden;flex-shrink:0"></div>
     <div id="pv-name" style="font-size:18px;font-weight:800"></div>
     <div id="pv-role" style="font-size:12px;color:var(--text-light);margin-top:3px"></div>
@@ -2259,11 +2267,11 @@
 
 <!-- ══ 모달: 사진 스토리 뷰어 ══ -->
 <div class="modal-overlay" id="story-viewer-modal" style="align-items:stretch;background:rgba(0,0,0,0.9)">
-  <div style="position:relative;width:100%;max-width:480px;margin:0 auto;height:100%;display:flex;flex-direction:column;overflow:hidden">
+  <div id="story-stage" style="position:relative;width:100%;max-width:480px;margin:0 auto;height:100%;display:flex;flex-direction:column;overflow:hidden">
     <div style="display:flex;gap:4px;padding:12px 12px 0" id="story-progress-bar"></div>
     <div style="position:absolute;top:14px;right:10px;z-index:6;display:flex;align-items:center;gap:4px">
       <button id="story-more-btn" onclick="openStoryActions()" style="display:none;background:rgba(0,0,0,.35);border:none;color:white;font-size:18px;cursor:pointer;line-height:1;padding:6px 11px;border-radius:8px">⋯</button>
-      <button onclick="closeStory()" style="background:none;border:none;color:white;font-size:24px;cursor:pointer;line-height:1;padding:2px 6px">×</button>
+      <button onclick="storyBack()" style="background:none;border:none;color:white;font-size:24px;cursor:pointer;line-height:1;padding:2px 6px">×</button>
     </div>
     <div style="flex:1;position:relative;display:flex;align-items:center;justify-content:center;background:#000;margin-top:14px;overflow:hidden" id="story-viewer-image">
       <img id="story-viewer-img-el" style="max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block;transition:opacity .2s ease">
@@ -2271,7 +2279,7 @@
       <div onclick="storyTap(-1)" style="position:absolute;left:0;top:0;width:45%;height:100%"></div>
       <div onclick="storyTap(1)" style="position:absolute;right:0;top:0;width:45%;height:100%"></div>
     </div>
-    <div style="padding:14px 16px 20px;color:white;position:relative;z-index:2;background:linear-gradient(to top,rgba(0,0,0,.65),transparent)">
+    <div id="story-cap-bar" style="padding:14px 16px 20px;color:white;position:relative;z-index:2;background:linear-gradient(to top,rgba(0,0,0,.65),transparent)">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
         <div style="flex:1;min-width:0;cursor:pointer;transition:transform .25s ease" id="story-title-wrap" onclick="toggleStoryContent()">
           <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:5px"><span id="story-viewer-title"></span><span id="story-expand-arrow" style="font-size:10px;opacity:.8;display:none">▲</span></div>
@@ -2284,10 +2292,16 @@
         <div style="font-size:12px;color:rgba(255,255,255,.9);line-height:1.6;padding-top:8px;white-space:pre-wrap" id="story-detail-content"></div>
       </div>
     </div>
+    <!-- 사진 화면 하단 상시 댓글 입력 바 -->
+    <div id="story-inline-bar" style="display:flex;align-items:center;gap:8px;padding:8px 14px calc(10px + env(safe-area-inset-bottom));background:rgba(0,0,0,.55);position:relative;z-index:3">
+      <div id="story-inline-av" style="width:28px;height:28px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,#2FA595,#9B8FD4);display:flex;align-items:center;justify-content:center;overflow:hidden;color:#fff;font-size:12px;font-weight:800"></div>
+      <input id="story-inline-input" placeholder="댓글 달기..." onkeydown="if(event.key==='Enter')submitInlineComment()" style="flex:1;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;border-radius:18px;padding:9px 14px;font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none">
+      <button onclick="submitInlineComment()" style="background:none;border:none;color:var(--primary);font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;flex-shrink:0">게시</button>
+    </div>
     <!-- 댓글 슬라이드업 시트 -->
-    <div id="story-comment-sheet" style="position:absolute;left:0;right:0;bottom:0;height:80%;background:#1c1c1e;border-radius:18px 18px 0 0;transform:translateY(100%);transition:transform .3s ease;z-index:8;display:flex;flex-direction:column;overflow:hidden">
-      <div style="padding:12px 16px 10px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;align-items:center;gap:8px;position:relative">
-        <div class="modal-handle" onclick="closeStoryCommentSheet()" style="cursor:pointer;background:rgba(255,255,255,.3);margin:0"></div>
+    <div id="story-comment-sheet" style="position:absolute;left:0;right:0;bottom:0;height:66%;background:#1c1c1e;border-radius:18px 18px 0 0;transform:translateY(100%);transition:transform .3s ease;z-index:8;display:flex;flex-direction:column;overflow:hidden">
+      <div id="story-sheet-head" style="padding:12px 16px 10px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;flex-shrink:0;cursor:grab">
+        <div class="modal-handle" onclick="storyBack()" style="cursor:pointer;background:rgba(255,255,255,.3);margin:0"></div>
         <span style="color:white;font-size:14px;font-weight:800">댓글</span>
       </div>
       <div id="story-comment-list" style="flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;padding:12px 16px;display:flex;flex-direction:column;gap:14px"></div>
