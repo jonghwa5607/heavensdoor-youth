@@ -307,12 +307,13 @@
   <!-- ② 역할별 배너 -->
   <!-- 학생: 스탬프 -->
   <div id="home-student" style="display:none">
-    <div style="padding:16px 16px 8px;display:flex;align-items:flex-start;gap:10px">
-      <div style="flex:1;min-width:0">
+    <div style="padding:16px 16px 8px;display:flex;align-items:center;gap:12px">
+      <div id="home-student-avatar" onclick="openProfileView(G.id)" style="flex-shrink:0;cursor:pointer"></div>
+      <div style="flex:1;min-width:0;cursor:pointer" onclick="openProfileView(G.id)">
         <div id="student-greet" style="font-size:22px;font-weight:800;color:var(--text)">안녕! 👋</div>
         <div style="font-size:13px;color:var(--text-light);margin-top:3px;display:flex;align-items:center;gap:7px;flex-wrap:wrap"><span id="student-greet-sub"></span><span id="student-greet-grade" style="font-size:11px;font-weight:800;background:var(--primary-light);color:var(--primary-dark);padding:2px 9px;border-radius:20px"></span></div>
       </div>
-      <button onclick="openProfileEdit()" title="프로필 설정" style="flex-shrink:0;background:var(--card);border:1px solid var(--border-light);border-radius:12px;padding:8px 12px;color:var(--text-sub);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit;box-shadow:var(--shadow-sm)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>프로필</button>
+      <button onclick="openProfileEdit()" title="프로필 설정" style="flex-shrink:0;background:var(--card);border:1px solid var(--border-light);border-radius:12px;padding:9px 11px;color:var(--text-sub);cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit;box-shadow:var(--shadow-sm)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
     <div class="section">
       <div class="card" style="padding:15px 16px">
@@ -580,7 +581,7 @@
   <!-- 성가대 -->
   <div id="dept-choir" style="width:50%;flex-shrink:0">
     <div class="dept-banner dept-banner-choir" style="margin:0 16px 16px;position:relative;overflow:hidden">
-      <div style="font-size:10.5px;letter-spacing:1px;opacity:.85;margin-bottom:10px" id="choir-week-label">THIS WEEK · 성가대</div>
+      <div style="font-size:12px;letter-spacing:.8px;opacity:.9;margin-bottom:10px;font-weight:600" id="choir-week-label">THIS WEEK · 성가대</div>
       <div style="font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:600;line-height:1.1;letter-spacing:.3px">With One Voice</div>
       <div style="font-size:12px;opacity:.92;margin-top:10px" id="choir-info">담당교사 미정</div>
       <svg width="56" height="56" viewBox="0 0 70 70" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5" style="position:absolute;right:14px;top:16px"><path d="M6 64 Q6 20 50 16"/><path d="M52 26l3.5 8 8 3.5-8 3.5-3.5 8-3.5-8-8-3.5 8-3.5z" fill="rgba(255,255,255,.55)" stroke="none"/></svg>
@@ -596,7 +597,7 @@
   <!-- 전례부 -->
   <div id="dept-liturgy" style="width:50%;flex-shrink:0">
     <div class="dept-banner dept-banner-liturgy" style="margin:0 16px 16px;position:relative;overflow:hidden">
-      <div style="font-size:10.5px;letter-spacing:1px;opacity:.85;margin-bottom:10px" id="liturgy-week-label">THIS WEEK · 전례부</div>
+      <div style="font-size:12px;letter-spacing:.8px;opacity:.9;margin-bottom:10px;font-weight:600" id="liturgy-week-label">THIS WEEK · 전례부</div>
       <div style="font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:600;line-height:1.1;letter-spacing:.3px">Pray · Read · Live</div>
       <div style="font-size:12px;opacity:.92;margin-top:10px" id="liturgy-info">담당교사 미정</div>
       <svg width="56" height="56" viewBox="0 0 70 70" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5" style="position:absolute;right:16px;top:16px"><path d="M30 8v54M14 26h32"/></svg>
@@ -2209,6 +2210,7 @@
     <div id="pv-name" style="font-size:18px;font-weight:800"></div>
     <div id="pv-role" style="font-size:12px;color:var(--text-light);margin-top:3px"></div>
     <div id="pv-status" style="font-size:15px;font-weight:600;color:var(--text);margin-top:14px;line-height:1.6;white-space:pre-wrap"></div>
+    <button id="pv-edit-btn" onclick="closeModal('profile-view-modal');openProfileEdit()" style="display:none;width:100%;margin-top:18px;padding:12px;background:var(--primary);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;align-items:center;justify-content:center;gap:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>프로필 편집</button>
   </div>
 </div>
 
