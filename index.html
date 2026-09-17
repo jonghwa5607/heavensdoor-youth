@@ -25,9 +25,11 @@
 #home-teacher .teacher-banner{min-height:150px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center}
 :root{--card:#FFFFFF}
 /* 부서활동 콘텐츠 강조색 — 성가대(테라코타)/전례부(라벤더) · 배경/레이아웃 유지 */
+/* 초록 밑줄 잔상 제거: base border-bottom(초록) 무력화 + 밑줄은 box-shadow로만, transition 제외 */
+#screen-activity .tab-bar .tab-btn{border-bottom-color:transparent !important;transition:color .2s,transform .15s !important}
 #screen-activity .tab-bar .tab-btn.active{box-shadow:inset 0 -3px 0 var(--primary)}
-#dept-choir .tab-bar .tab-btn.active{color:#C9785F;box-shadow:inset 0 -3px 0 #C9785F}
-#dept-liturgy .tab-bar .tab-btn.active{color:#4B5DB6;box-shadow:inset 0 -3px 0 #4B5DB6}
+#dept-choir .tab-bar .tab-btn.active{color:#C9785F !important;box-shadow:inset 0 -3px 0 #C9785F !important}
+#dept-liturgy .tab-bar .tab-btn.active{color:#4B5DB6 !important;box-shadow:inset 0 -3px 0 #4B5DB6 !important}
 #dept-choir .chip-blue{background:#F2C5AF;color:#8F4F40}
 #dept-liturgy .chip-blue{background:#DAD1F3;color:#39458A}
 #choir-week-card{--coral:#C9785F;--coral-light:#F2C5AF;--coral-dark:#8F4F40}
