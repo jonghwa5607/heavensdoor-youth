@@ -370,7 +370,7 @@ input[type="date"].form-input,input[type="time"].form-input{-webkit-appearance:n
 /* ── 회의록 블록 에디터 ── */
 .min-editor{font-size:14px;line-height:1.75;color:var(--text);}
 .min-editor .mb{display:flex;align-items:flex-start;gap:7px;padding:1px 0;}
-.min-editor .mb-txt{flex:1;min-width:0;outline:none;white-space:pre-wrap;word-break:break-word;}
+.min-editor .mb-txt{flex:1;min-width:0;outline:none;white-space:pre-wrap;word-break:break-word;min-height:1.7em;}
 .min-editor .mb-txt:empty:before{content:attr(data-ph);color:var(--text-light);pointer-events:none;}
 .min-editor .mb-mk{flex-shrink:0;color:var(--text-light);user-select:none;line-height:1.75;}
 .min-editor .mb[data-t="h1"] .mb-txt{font-size:20px;font-weight:800;line-height:1.5;margin-top:12px;}
