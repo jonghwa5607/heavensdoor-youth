@@ -1381,23 +1381,16 @@ function _withDocData(d,cb){
 function previewPostDoc(pid,ix){const p=posts.find(x=>x.id===pid);const d=p&&(p.docs||[])[ix];_withDocData(d,function(data){_showPreview(data,d.name);});}
 function previewResDoc(rid,ix){const r=resources.find(x=>x.id===rid);const d=r&&(r.docs||[])[ix];_withDocData(d,function(data){_showPreview(data,d.name);});}
 var IMG_BLANK='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-function _imgRerenderSoon(){clearTimeout(_imgRT);_imgRT=setTimeout(function(){try{if(_minEditing)return;if(G&&G.id&&typeof rerenderAll==='function')rerenderAll();}catch(e){}},180);}
-var IMGTRY={};
+function _imgRerenderSoon(){clearTimeout(_imgRT);_imgRT=setTimeout(function(){try{if(G&&G.id&&typeof rerenderAll==='function')rerenderAll();}catch(e){}},180);}
 function imgGet(id){
   if(!id)return '';
-  if(IMGC[id]!==undefined&&IMGC[id]!=='')return IMGC[id];
-  if(IMGC[id]===''&&(IMGTRY[id]||0)>=6)return '';   /* 여러 번 실패 후에만 최종 포기 */
+  if(IMGC[id]!==undefined)return IMGC[id];
   if(!IMGPEND[id]){
     IMGPEND[id]=1;
     if(window.FB&&FB.enabled()&&FB.get){
-      FB.get('images',id).then(function(d){
-        var v=(d&&d.d)||'';
-        delete IMGPEND[id];
-        if(v){IMGC[id]=v;delete IMGTRY[id];_imgRerenderSoon();}
-        else{IMGTRY[id]=(IMGTRY[id]||0)+1;if(IMGTRY[id]>=6){IMGC[id]='';}else{delete IMGC[id];setTimeout(_imgRerenderSoon,700*IMGTRY[id]);}}
-      })
-        .catch(function(e){console.warn('[IMG] load fail',id,e&&e.code);delete IMGPEND[id];IMGTRY[id]=(IMGTRY[id]||0)+1;if(IMGTRY[id]>=6){IMGC[id]='';}else{delete IMGC[id];setTimeout(_imgRerenderSoon,900*IMGTRY[id]);}});
-    } else { /* 오프라인 등: 캐시하지 말고 다음 기회에 재시도 */ delete IMGPEND[id]; }
+      FB.get('images',id).then(function(d){IMGC[id]=(d&&d.d)||'';delete IMGPEND[id];_imgRerenderSoon();})
+        .catch(function(e){console.warn('[IMG] load fail',id,e&&e.code);IMGC[id]='';delete IMGPEND[id];});
+    } else { IMGC[id]=''; }
   }
   return IMG_BLANK;
 }
