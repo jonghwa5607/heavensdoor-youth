@@ -2805,7 +2805,7 @@ function _minViewSync(){
     _updateMinutesLockUI();
   }catch(e){}
 }
-function openMinutesViewer(id){const r=resources.find(r=>r.id===id);if(!r)return;currentMinutesId=id;_minEditing=false;_minSlashClose();document.getElementById('minutes-viewer-title').value=r.title;_minRender(_minParse(_minWithAgenda(r.content,'')),false);_renderMinAgenda(r);_renderMinutesMeta(r);setMinutesEditing(false);_updateMinutesLockUI();renderMinutesAck();clearInterval(_minViewTimer);_minViewTimer=setInterval(_minViewSync,500);openModal('minutes-viewer-modal');}
+function openMinutesViewer(id){const r=resources.find(r=>r.id===id);if(!r)return;try{coachClose();}catch(e){}try{var _co=document.getElementById('coach-overlay');if(_co)_co.style.display='none';}catch(e){}currentMinutesId=id;_minEditing=false;_minSlashClose();document.getElementById('minutes-viewer-title').value=r.title;_minRender(_minParse(_minWithAgenda(r.content,'')),false);_renderMinAgenda(r);_renderMinutesMeta(r);setMinutesEditing(false);_updateMinutesLockUI();renderMinutesAck();clearInterval(_minViewTimer);_minViewTimer=setInterval(_minViewSync,500);openModal('minutes-viewer-modal');}
 function _bindHrClick(){try{var ed=document.getElementById('minutes-viewer-content');if(!ed)return;ed.querySelectorAll('.mb').forEach(function(b){if(b.querySelector('.mb-txt'))return;b.onclick=function(ev){if(!_minEditing)return;ev.stopPropagation();if(confirm('이 구분선을 삭제할까요?')){b.remove();_minRenumber();onMinutesInput();}};b.style.cursor=_minEditing?'pointer':'';});}catch(e){}}
 function setMinutesEditing(editing){
   const ti=document.getElementById('minutes-viewer-title');
