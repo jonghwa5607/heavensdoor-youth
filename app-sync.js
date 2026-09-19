@@ -240,6 +240,7 @@ document.addEventListener('click',function(e){try{var c=e.target.closest&&e.targ
       open.sort(function(a,b){return (parseInt(getComputedStyle(a).zIndex,10)||0)-(parseInt(getComputedStyle(b).zIndex,10)||0);});
       var m=open[open.length-1];
       if(m.id==='story-viewer-modal'){ if(window._storyOverlayBack&&window._storyOverlayBack())return true; try{closeStory();}catch(e){m.classList.remove('open');} }
+      else if(window._modalBack&&window._modalBack(m.id)){ return true; }   /* 모달 내부 하위상태(예: 회의록 다중선택)를 먼저 닫기 */
       else{ try{closeModal(m.id);}catch(e){m.classList.remove('open');} }
       return true;
     }
