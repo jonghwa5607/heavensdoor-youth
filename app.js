@@ -1381,7 +1381,7 @@ function _withDocData(d,cb){
 function previewPostDoc(pid,ix){const p=posts.find(x=>x.id===pid);const d=p&&(p.docs||[])[ix];_withDocData(d,function(data){_showPreview(data,d.name);});}
 function previewResDoc(rid,ix){const r=resources.find(x=>x.id===rid);const d=r&&(r.docs||[])[ix];_withDocData(d,function(data){_showPreview(data,d.name);});}
 var IMG_BLANK='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-function _imgRerenderSoon(){clearTimeout(_imgRT);_imgRT=setTimeout(function(){try{if(G&&G.id&&typeof rerenderAll==='function')rerenderAll();}catch(e){}},180);}
+function _imgRerenderSoon(){clearTimeout(_imgRT);_imgRT=setTimeout(function(){try{if(_minEditing)return;if(G&&G.id&&typeof rerenderAll==='function')rerenderAll();}catch(e){}},180);}
 var IMGTRY={};
 function imgGet(id){
   if(!id)return '';
