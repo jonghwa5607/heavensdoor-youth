@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="하늘의문 중고등부">
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(e){console.warn('SW register failed',e);});});}</script>
-<link rel="stylesheet" href="./styles.css?v=20260921g">
+<link rel="stylesheet" href="./styles.css?v=20260921i">
 <style>
 /* 회의록: 플레이스홀더는 커서가 있는 빈 줄에만 표시 */
 #minutes-viewer-content .mb-txt[data-ph]::before,#minutes-viewer-content .mb-txt[data-ph]:empty:focus::before{content:none!important;display:none!important}
@@ -53,10 +53,10 @@
 #cfg-drive-sec.open .cfg-sec-body{max-height:none;overflow:visible}
 /* ── 갤러리 스토리 뷰어: 댓글 열면 이미지 축소 + 시트 슬라이드 (인스타 스타일) ── */
 #story-viewer-image{transition:height .34s cubic-bezier(.16,1,.3,1),border-radius .34s,margin .34s}
-#story-stage.cmt-open #story-viewer-image{flex:none!important;height:34%!important;border-radius:16px;margin:12px 12px 0!important;pointer-events:none}
+#story-stage.cmt-open #story-viewer-image{flex:none!important;height:46%!important;padding:6px 14px 4px!important;pointer-events:none}
 #story-stage.cmt-open #story-cap-bar{opacity:0;pointer-events:none}
 #story-stage.cmt-open #story-inline-bar{display:none}
-#story-comment-sheet{height:66%!important}
+#story-comment-sheet{height:54%!important}
 #story-cap-bar{transition:opacity .25s}
 .home-banner .banner-name{display:flex;flex-wrap:wrap;align-items:center;column-gap:5px;white-space:normal;overflow:visible;text-overflow:clip;word-break:keep-all}
 
@@ -1445,7 +1445,7 @@
   <div class="modal-sheet sheet-full">
     <div class="pg-head">
       <button class="pg-back" onclick="closeMinutesViewer()">‹</button>
-      <span class="pg-title">회의록 <span style="font-size:9px;font-weight:600;color:#2D9E8F;opacity:.75;vertical-align:middle">v23</span></span>
+      <span class="pg-title">회의록 <span style="font-size:9px;font-weight:600;color:#2D9E8F;opacity:.75;vertical-align:middle">v25</span></span>
       <div class="pg-acts">
         <button class="btn btn-sm" id="minutes-publish-btn" style="display:none;background:var(--coral);color:#fff;width:auto;padding:6px 11px;font-size:12px" onclick="publishMinutes()">📣 발행</button>
         <button class="btn btn-sm" id="minutes-save-btn" style="display:none;background:var(--primary);color:white;width:auto;padding:6px 13px;font-size:12px" onclick="stopMinutesEdit()">완료</button>
@@ -2646,7 +2646,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="./assets.js"></script>
-<script src="./app.js?v=20260921g"></script>
+<script src="./app.js?v=20260921i"></script>
 
 <div id="theme-preview-bar" style="display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:88px;z-index:600;background:rgba(26,35,64,0.95);color:white;padding:10px 12px 10px 16px;border-radius:14px;box-shadow:var(--shadow-lg);align-items:center;gap:10px;max-width:410px;width:calc(100% - 32px);backdrop-filter:blur(4px)">
   <span id="theme-preview-label" style="font-size:13px;font-weight:700;flex:1">🎨 미리보기</span>
@@ -2670,7 +2670,7 @@
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-messaging-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-auth-compat.js"></script>
-<script src="./app-sync.js?v=20260921g"></script>
+<script src="./app-sync.js?v=20260921i"></script>
 
 </body>
 </html>
