@@ -367,12 +367,14 @@ function openShop(){_shopCat='all';renderShop();openModal('shop-modal');}
 function shopSetCat(c){_shopCat=c;renderShop();}
 function _shopCard(it){
   var soldout=(it.stock||0)<=0;var can=(G.currentPoints||0)>=it.price&&!soldout&&G.role==='student';
-  return '<div style="background:var(--card);border:1px solid var(--border-light);border-radius:14px;overflow:hidden">'
-   +'<div style="height:80px;background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:hidden">'+(it.img?'<img src="'+it.img+'" style="width:100%;height:100%;object-fit:cover">':'<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'+_shopIcon(it.cat)+'</svg>')+'</div>'
-   +'<div style="padding:9px 10px 11px"><div style="font-size:11.5px;font-weight:700;color:var(--text);line-height:1.3;min-height:30px">'+_esc(it.name)+'</div>'
-   +'<div style="font-size:13px;font-weight:800;color:var(--primary-dark);margin-top:3px">'+(it.price||0).toLocaleString()+'P</div>'
-   +'<div style="font-size:10px;color:'+(soldout?'var(--coral)':'var(--text-light)')+';margin-top:1px">'+(soldout?'품절':'재고 '+(it.stock||0)+'개')+'</div>'
-   +(G.role==='student'?'<button class="btn btn-sm" '+(can?'':'disabled')+' style="width:100%;margin-top:7px;padding:7px 0;background:'+(can?'var(--primary)':'var(--border)')+';color:'+(can?'#fff':'var(--text-light)')+';font-weight:800;font-size:12px" onclick="buyItem(\''+it.id+'\')">'+(soldout?'품절':'교환하기')+'</button>':'')
+  return '<div style="display:flex;flex-direction:column">'
+   +'<div style="aspect-ratio:1/1;background:#F5F2EC;border-radius:16px;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative">'
+     +(it.img?'<img src="'+it.img+'" style="width:100%;height:100%;object-fit:cover">':'<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#B7AE9C" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">'+_shopIcon(it.cat)+'</svg>')
+     +(soldout?'<div style="position:absolute;inset:0;background:rgba(255,255,255,.62);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--text-sub)">품절</div>':'')
+   +'</div>'
+   +'<div style="padding:10px 2px 0"><div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.4;min-height:36px">'+_esc(it.name)+'</div>'
+   +'<div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:4px"><span style="font-size:15px;font-weight:800;color:var(--primary-dark)">'+(it.price||0).toLocaleString()+'P</span><span style="font-size:10.5px;color:'+(soldout?'var(--coral)':'var(--text-light)')+'">'+(soldout?'품절':'재고 '+(it.stock||0))+'</span></div>'
+   +(G.role==='student'?'<button class="btn btn-sm" '+(can?'':'disabled')+' style="width:100%;margin-top:9px;padding:10px 0;background:'+(can?'var(--primary)':'var(--border)')+';color:'+(can?'#fff':'var(--text-light)')+';font-weight:800;font-size:12.5px;border-radius:11px" onclick="buyItem(\''+it.id+'\')">'+(soldout?'품절':'교환하기')+'</button>':'')
    +'</div></div>';
 }
 function renderShop(){
@@ -381,10 +383,10 @@ function renderShop(){
   if(ch)ch.innerHTML=SHOP_CATS.map(function(c){return '<button class="filter-chip'+(_shopCat===c[0]?' active':'')+'" onclick="shopSetCat(\''+c[0]+'\')">'+c[1]+'</button>';}).join('');
   var el=document.getElementById('shop-items');if(!el)return;
   var all=_shopList().filter(function(it){return it&&it.active!==false;});
-  function grid(items){return '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px">'+items.map(_shopCard).join('')+'</div>';}
+  function grid(items){return '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px 14px">'+items.map(_shopCard).join('')+'</div>';}
   var html='';
   if(_shopCat==='all'){
-    SHOP_SECS.forEach(function(s){var items=all.filter(function(it){return (it.sec||'rec')===s[0];});if(!items.length)return;html+='<div style="font-size:14px;font-weight:800;color:var(--text);margin:2px 2px 9px">'+s[1]+'</div>'+grid(items)+'<div style="height:16px"></div>';});
+    SHOP_SECS.forEach(function(s){var items=all.filter(function(it){return (it.sec||'rec')===s[0];});if(!items.length)return;html+='<div style="font-size:17px;font-weight:800;color:var(--text);margin:6px 2px 12px">'+s[1]+'</div>'+grid(items)+'<div style="height:22px"></div>';});
   }else{
     var items=all.filter(function(it){return it.cat===_shopCat;});html=items.length?grid(items):'';
   }
@@ -480,10 +482,13 @@ function submitPointGrant(){
   var custom=(document.getElementById('pg-reason-custom').value||'').trim();
   var reason=custom||_grantReason||'교사 특별 포인트';
   var u=pendingList.find(function(x){return x.id===sid;});if(!u)return;
-  earnPoints(u,amt,'교사 특별 포인트 - '+reason,G.displayName,'grant');
-  try{notifications.unshift({pushed:false,id:'nt'+Date.now()+'pg',text:'⭐ 선생님이 <b>+'+amt+'P</b>를 지급했어요 · '+_esc(reason),time:'방금',ts:Date.now(),readBy:[],forStudentId:sid,tap:{type:'attend'}});updateNotifDot();}catch(e){}
-  try{if(typeof flushSync==='function')flushSync();}catch(e){}
-  closeModal('point-grant-modal');showToast(u.name+' 학생에게 +'+amt+'P 지급했어요');
+  appConfirm({icon:'info',title:'포인트를 지급할까요?',desc:(u.name+' '+(u.baptism||''))+'\n+'+amt.toLocaleString()+'P · '+reason,okText:'지급하기'}).then(function(ok){
+    if(!ok)return;
+    earnPoints(u,amt,'교사 특별 포인트 - '+reason,G.displayName,'grant');
+    try{notifications.unshift({pushed:false,id:'nt'+Date.now()+'pg',text:'⭐ 선생님이 <b>+'+amt+'P</b>를 지급했어요 · '+_esc(reason),time:'방금',ts:Date.now(),readBy:[],forStudentId:sid,tap:{type:'attend'}});updateNotifDot();}catch(e){}
+    try{if(typeof flushSync==='function')flushSync();}catch(e){}
+    closeModal('point-grant-modal');showToast(u.name+' 학생에게 +'+amt.toLocaleString()+'P 지급했어요');
+  });
 }
 /* ── 생일 포인트 (쿠폰 대체) ── */
 function checkBirthdayPoints(){
