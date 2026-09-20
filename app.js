@@ -368,7 +368,7 @@ function shopSetCat(c){_shopCat=c;renderShop();}
 function _shopCard(it){
   var soldout=(it.stock||0)<=0;var can=(G.currentPoints||0)>=it.price&&!soldout&&G.role==='student';
   return '<div style="background:var(--card);border:1px solid var(--border-light);border-radius:14px;overflow:hidden">'
-   +'<div style="height:80px;background:var(--bg);display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'+_shopIcon(it.cat)+'</svg></div>'
+   +'<div style="height:80px;background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:hidden">'+(it.img?'<img src="'+it.img+'" style="width:100%;height:100%;object-fit:cover">':'<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'+_shopIcon(it.cat)+'</svg>')+'</div>'
    +'<div style="padding:9px 10px 11px"><div style="font-size:11.5px;font-weight:700;color:var(--text);line-height:1.3;min-height:30px">'+_esc(it.name)+'</div>'
    +'<div style="font-size:13px;font-weight:800;color:var(--primary-dark);margin-top:3px">'+(it.price||0).toLocaleString()+'P</div>'
    +'<div style="font-size:10px;color:'+(soldout?'var(--coral)':'var(--text-light)')+';margin-top:1px">'+(soldout?'품절':'재고 '+(it.stock||0)+'개')+'</div>'
@@ -410,7 +410,7 @@ function renderShopAdmin(){
   var oh='<div style="font-size:13px;font-weight:800;margin:2px 0 8px">교환 처리 대기 '+(pend.length?('<span style="color:var(--coral)">'+pend.length+'</span>'):'0')+'건</div>';
   oh+= pend.length? pend.map(function(o){return '<div style="display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--border-light)"><div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:700">'+_esc(o.name||'')+' · '+_esc(o.itemName)+'</div><div style="font-size:10px;color:var(--text-light)">'+_esc(o.dateStr||'')+' · '+(o.price||0).toLocaleString()+'P</div></div><button class="btn btn-sm" style="width:auto;padding:6px 12px;background:var(--mint);color:#fff;font-weight:800" onclick="markOrderDone(\''+o.id+'\')">수령완료</button></div>';}).join('') : '<div style="font-size:12px;color:var(--text-light);padding:8px 2px 14px">대기중인 교환이 없어요</div>';
   var ih='<div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 8px"><span style="font-size:13px;font-weight:800">상품 '+items.length+'개</span><button class="btn btn-sm" style="width:auto;background:var(--primary);color:#fff;font-weight:800" onclick="openShopItemModal()">+ 상품 추가</button></div>';
-  ih+=items.map(function(it){return '<div class="card" style="margin-bottom:8px;display:flex;align-items:center;gap:10px;padding:11px 12px"><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+_esc(it.name)+(it.active===false?' <span class="chip chip-gray">숨김</span>':'')+'</div><div style="font-size:11px;color:var(--text-light);margin-top:2px">'+(it.price||0).toLocaleString()+'P · 재고 '+(it.stock||0)+' · '+(catLbl[it.cat]||it.cat)+' · '+(secLbl[it.sec]||'추천')+'</div></div><button class="btn btn-sm btn-outline" style="width:auto;padding:6px 10px" onclick="openShopItemModal(\''+it.id+'\')">수정</button><button class="btn btn-sm" style="width:auto;padding:6px 10px;background:var(--coral-light);color:#B0463A" onclick="deleteShopItem(\''+it.id+'\')">삭제</button></div>';}).join('');
+  ih+=items.map(function(it){return '<div class="card" style="margin-bottom:8px;display:flex;align-items:center;gap:10px;padding:11px 12px"><div style="width:40px;height:40px;border-radius:9px;background:var(--bg);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center">'+(it.img?'<img src="'+it.img+'" style="width:100%;height:100%;object-fit:cover">':'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+_shopIcon(it.cat)+'</svg>')+'</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+_esc(it.name)+(it.active===false?' <span class="chip chip-gray">숨김</span>':'')+'</div><div style="font-size:11px;color:var(--text-light);margin-top:2px">'+(it.price||0).toLocaleString()+'P · 재고 '+(it.stock||0)+' · '+(catLbl[it.cat]||it.cat)+' · '+(secLbl[it.sec]||'추천')+'</div></div><button class="btn btn-sm btn-outline" style="width:auto;padding:6px 10px" onclick="openShopItemModal(\''+it.id+'\')">수정</button><button class="btn btn-sm" style="width:auto;padding:6px 10px;background:var(--coral-light);color:#B0463A" onclick="deleteShopItem(\''+it.id+'\')">삭제</button></div>';}).join('');
   el.innerHTML=oh+ih;
 }
 function openShopItemModal(id){
@@ -424,6 +424,8 @@ function openShopItemModal(id){
   document.getElementById('sim-cat').value=it?it.cat:'food';
   document.getElementById('sim-sec').value=it?(it.sec||'rec'):'rec';
   document.getElementById('sim-active').checked=it?(it.active!==false):true;
+  var _imgd=document.getElementById('sim-img-data');if(_imgd)_imgd.value=(it&&it.img)?it.img:'';
+  var _pv=document.getElementById('sim-img-preview');if(_pv)_pv.innerHTML=(it&&it.img)?'<img src="'+it.img+'" style="width:100%;height:100%;object-fit:cover">':'<span style="font-size:12px;color:var(--text-light)">＋ 사진 추가</span>';
   var db=document.getElementById('sim-delete');if(db)db.style.display=it?'':'none';
   openModal('shop-item-modal');
 }
@@ -437,13 +439,15 @@ function saveShopItem(){
   var cat=document.getElementById('sim-cat').value||'food';
   var sec=document.getElementById('sim-sec').value||'rec';
   var active=document.getElementById('sim-active').checked;
+  var img=(document.getElementById('sim-img-data')||{}).value||'';
   if(!name){showToast('상품명을 입력해주세요');return;}
   if(price<=0){showToast('가격을 입력해주세요');return;}
-  if(id){var it=shopItems.find(function(x){return x.id===id;});if(it){it.name=name;it.price=price;it.stock=stock;it.cat=cat;it.sec=sec;it.active=active;}}
-  else{shopItems.push({id:'si'+Date.now().toString(36),name:name,price:price,stock:stock,cat:cat,sec:sec,active:active});}
+  if(id){var it=shopItems.find(function(x){return x.id===id;});if(it){it.name=name;it.price=price;it.stock=stock;it.cat=cat;it.sec=sec;it.active=active;it.img=img;}}
+  else{shopItems.push({id:'si'+Date.now().toString(36),name:name,price:price,stock:stock,cat:cat,sec:sec,active:active,img:img});}
   try{if(typeof flushSync==='function')flushSync();}catch(e){}
   closeModal('shop-item-modal');renderShopAdmin();showToast('저장했어요');
 }
+function onShopImgPick(input){if(!input.files||!input.files[0])return;compressImg(input.files[0],500,0.7).then(function(src){var d=document.getElementById('sim-img-data');if(d)d.value=src||'';var pv=document.getElementById('sim-img-preview');if(pv)pv.innerHTML=src?'<img src="'+src+'" style="width:100%;height:100%;object-fit:cover">':'<span style="font-size:12px;color:var(--text-light)">＋ 사진 추가</span>';input.value='';});}
 function deleteShopItem(id){
   if(!_isShopAdmin())return;
   appConfirm({icon:'trash',title:'상품을 삭제할까요?',desc:'삭제하면 상점에서 사라져요.',okText:'삭제',danger:true}).then(function(ok){
@@ -498,6 +502,20 @@ function _ptHistHtml(u){
   var h=(u.pointHistory||[]).slice().reverse();
   if(!h.length)return '<div style="font-size:12px;color:var(--text-light);padding:14px 2px">아직 포인트 내역이 없어요</div>';
   return h.slice(0,60).map(function(x){var pos=(x.amount||0)>=0;return '<div style="display:flex;justify-content:space-between;gap:10px;padding:9px 2px;border-bottom:1px solid var(--border-light)"><div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:600;color:var(--text)">'+_esc(x.reason||'')+'</div><div style="font-size:10px;color:var(--text-light)">'+_esc(x.createdAt||'')+(x.createdBy&&x.createdBy!=='시스템'?' · '+_esc(x.createdBy):'')+'</div></div><span style="font-size:13px;font-weight:800;color:'+(pos?'var(--primary-dark)':'var(--coral)')+'">'+(pos?'+':'')+(x.amount||0).toLocaleString()+'P</span></div>';}).join('');
+}
+function openLevelGuide(){
+  var yt=G.yearTotalPoints||0;var cur=levelInfo(yt).lv;
+  var el=document.getElementById('level-guide-list');if(!el)return;
+  el.innerHTML=LEVELS.map(function(L){
+    var done=yt>=L.min;var isCur=L.lv===cur;
+    return '<div style="display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;margin-bottom:8px;background:'+(isCur?'var(--primary-light)':'var(--bg)')+';border:'+(isCur?'1.5px solid var(--primary)':'1px solid var(--border-light)')+'">'
+      +'<div style="width:42px;height:42px;flex-shrink:0;border-radius:11px;background:#fff;display:flex;align-items:center;justify-content:center;'+(done?'':'opacity:.5;filter:grayscale(.5)')+'">'+_treeSVG(L.tree,32)+'</div>'
+      +'<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:800;color:var(--text)">Lv.'+L.lv+' '+L.stage+(isCur?' <span style="font-size:10px;color:var(--primary-dark);background:#fff;padding:2px 8px;border-radius:20px;margin-left:2px">현재</span>':'')+'</div>'
+      +'<div style="font-size:11px;color:var(--text-light);margin-top:2px">'+(L.min===0?'시작 레벨':(L.min.toLocaleString()+'P 이상'))+'</div></div>'
+      +(done?'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--mint)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>':'<span style="font-size:11px;color:var(--primary-dark);font-weight:800;flex-shrink:0">'+Math.max(0,L.min-yt).toLocaleString()+'P 남음</span>')
+    +'</div>';
+  }).join('');
+  openModal('level-guide-modal');
 }
 function openPointHistory(){var me=pendingList.find(function(x){return x.id===G.id;})||{pointHistory:[]};document.getElementById('pth-balance').textContent=(G.currentPoints||0).toLocaleString();document.getElementById('pth-list').innerHTML=_ptHistHtml(me);openModal('point-history-modal');}
 function renderDetailPoints(u){var el=document.getElementById('detail-coupon-list');if(!el||!u)return;var li=levelInfo(u.yearTotalPoints||0);el.innerHTML='<div class="card" style="margin-bottom:8px;display:flex;gap:10px"><div style="flex:1"><div style="font-size:10px;color:var(--text-light);font-weight:700">보유 포인트</div><div style="font-size:17px;font-weight:800;color:var(--primary-dark)">'+((u.currentPoints||0).toLocaleString())+'P</div></div><div style="flex:1"><div style="font-size:10px;color:var(--text-light);font-weight:700">Lv.'+li.lv+' '+li.stage+'</div><div style="font-size:13px;font-weight:800">누적 '+((u.yearTotalPoints||0).toLocaleString())+'P</div></div></div>'+_ptHistHtml(u);}
@@ -666,24 +684,29 @@ function saveCouponNow(c){
 function redeemCoupon(cid){const c=coupons.find(c=>c.id===cid);if(!c)return;const input=document.getElementById('coupon-code-'+cid);const val=(input.value||'').trim();if(!val){showToast('인증번호를 입력해주세요');return;}if(val!==c.code){showToast('❌ 인증번호가 일치하지 않아요');return;}c.used=true;c.usedAt=new Date().toLocaleDateString('ko-KR');saveCouponNow(c);renderCouponList();try{renderAdminCouponList();}catch(e){}showToast('🎉 쿠폰이 사용되었습니다!');}
 function selCatTab(btn){btn.closest('.tab-bar').querySelectorAll('.tab-btn').forEach(t=>t.classList.remove('active'));btn.classList.add('active');}
 function showAttendTab(tab){try{renderStudentGrowth();}catch(e){}try{if(typeof stopQRScan==='function')stopQRScan();}catch(e){}show('attend-scan-tab',tab==='scan');show('attend-history-tab',tab==='history');show('attend-rank-tab',tab==='rank');const bar=document.querySelector('#screen-attend .tab-bar');if(bar)bar.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.getAttribute('onclick').includes(`showAttendTab('${tab}')`)));if(tab==='history')renderAttendHistory();if(tab==='rank')renderAttendRank();}
+function _ymOf(ts){var d=new Date(ts||0);return d.getFullYear()+'-'+pad2(d.getMonth()+1);}
+function _monthEarned(u){var ym=currentYM();var s=0;((u&&u.pointHistory)||[]).forEach(function(x){if(x&&x.type==='earn'&&(x.amount>0)&&_ymOf(x.ts)===ym)s+=x.amount;});return s;}
 function renderAttendRank(){
   var el=document.getElementById('attend-rank-list');if(!el)return;
+  var mlabel=(new Date().getMonth()+1)+'월';
   var studs=(pendingList||[]).filter(function(u){return u&&u.approved&&u.role==='student'&&!u.hidden&&!u.graduated;});
-  studs.sort(function(a,b){return (b.attendTotal||0)-(a.attendTotal||0)||(b.streak||0)-(a.streak||0)||((a.name||'')>(b.name||'')?1:-1);});
-  if(!studs.length){el.innerHTML='<div class="empty" style="padding:32px"><div class="empty-emoji" style="font-size:32px">🏆</div><div class="empty-title" style="font-size:13px">순위 정보가 없어요</div></div>';return;}
+  studs.forEach(function(u){u._mp=_monthEarned(u);});
+  studs.sort(function(a,b){return (b._mp||0)-(a._mp||0)||((a.name||'')>(b.name||'')?1:-1);});
+  var head='<div style="font-size:12px;color:var(--text-light);font-weight:700;text-align:center;margin-bottom:14px"><b style="color:var(--primary-dark)">'+mlabel+'</b> 포인트 순위 · 매월 1일 초기화</div>';
+  if(!studs.length){el.innerHTML=head+'<div class="empty" style="padding:32px"><div class="empty-emoji" style="font-size:32px">🏆</div><div class="empty-title" style="font-size:13px">순위 정보가 없어요</div></div>';return;}
   var medal=['🥇','🥈','🥉'];var order=[1,0,2];
-  var top='<div style="font-size:13px;font-weight:800;margin-bottom:12px">🏆 출석 TOP 3</div><div style="display:flex;gap:8px;justify-content:center;align-items:flex-end;margin-bottom:18px">';
-  order.forEach(function(i){var u=studs[i];if(!u){top+='<div style="flex:1;max-width:100px"></div>';return;}var h=i===0?92:i===1?72:60;top+='<div style="flex:1;max-width:100px;text-align:center"><div style="font-size:22px">'+medal[i]+'</div><div style="background:linear-gradient(135deg,var(--mint),#3DAB99);color:#fff;border-radius:12px 12px 0 0;height:'+h+'px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:7px 4px"><div style="font-size:12px;font-weight:800;line-height:1.2;word-break:keep-all">'+_esc(u.name||'')+'</div><div style="font-size:17px;font-weight:900;margin-top:2px">'+(u.attendTotal||0)+'</div></div></div>';});
+  var top='<div style="display:flex;gap:8px;justify-content:center;align-items:flex-end;margin-bottom:18px">';
+  order.forEach(function(i){var u=studs[i];if(!u){top+='<div style="flex:1;max-width:100px"></div>';return;}var h=i===0?92:i===1?72:60;top+='<div style="flex:1;max-width:100px;text-align:center"><div style="font-size:22px">'+medal[i]+'</div><div style="background:linear-gradient(135deg,var(--mint),#3DAB99);color:#fff;border-radius:12px 12px 0 0;height:'+h+'px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:7px 4px"><div style="font-size:12px;font-weight:800;line-height:1.2;word-break:keep-all">'+_esc(u.name||'')+'</div><div style="font-size:15px;font-weight:900;margin-top:2px">'+(u._mp||0).toLocaleString()+'P</div></div></div>';});
   top+='</div>';
   var body='';
   if(G.role==='teacher'){
-    body='<div style="font-size:11px;color:var(--text-light);margin-bottom:6px">전체 순위 (교사 전용)</div>'+studs.map(function(u,i){return '<div class="student-row"><div class="student-avatar" style="background:'+(i<3?'var(--mint)':'var(--border-light)')+';color:'+(i<3?'#fff':'var(--text-light)')+';font-size:13px;font-weight:800">'+(i+1)+'</div><div class="student-info"><div class="student-name">'+_esc(u.name||'')+' '+_esc(u.baptism||'')+'</div><div class="student-detail">'+_esc(u.gradeLabel||'')+' · 출석 '+(u.attendTotal||0)+'회</div></div></div>';}).join('');
+    body='<div style="font-size:11px;color:var(--text-light);margin-bottom:6px">전체 순위 (교사 전용)</div>'+studs.map(function(u,i){return '<div class="student-row"><div class="student-avatar" style="background:'+(i<3?'var(--mint)':'var(--border-light)')+';color:'+(i<3?'#fff':'var(--text-light)')+';font-size:13px;font-weight:800">'+(i+1)+'</div><div class="student-info"><div class="student-name">'+_esc(u.name||'')+' '+_esc(u.baptism||'')+'</div><div class="student-detail">'+_esc(u.gradeLabel||'')+' · '+mlabel+' '+(u._mp||0).toLocaleString()+'P</div></div></div>';}).join('');
   }else{
     var mine=-1;for(var k=0;k<studs.length;k++){if(studs[k].id===G.id){mine=k;break;}}
-    if(mine>=0){body='<div class="card" style="background:linear-gradient(135deg,var(--mint-light),var(--primary-light));text-align:center;padding:18px"><div style="font-size:12px;color:var(--text-sub);font-weight:700">나의 현재 순위</div><div style="font-size:30px;font-weight:900;color:var(--primary);margin:4px 0">'+(mine+1)+'<span style="font-size:15px">등</span></div><div style="font-size:11px;color:var(--text-light)">전체 '+studs.length+'명 중 · 누적 출석 '+(G.attendTotal||0)+'회</div></div>';}
+    if(mine>=0){body='<div class="card" style="background:linear-gradient(135deg,var(--mint-light),var(--primary-light));text-align:center;padding:18px"><div style="font-size:12px;color:var(--text-sub);font-weight:700">나의 '+mlabel+' 순위</div><div style="font-size:30px;font-weight:900;color:var(--primary);margin:4px 0">'+(mine+1)+'<span style="font-size:15px">등</span></div><div style="font-size:11px;color:var(--text-light)">전체 '+studs.length+'명 중 · '+mlabel+' '+((studs[mine]._mp)||0).toLocaleString()+'P 획득</div></div>';}
     else{body='<div class="empty" style="padding:24px"><div class="empty-title" style="font-size:13px">아직 순위에 없어요</div></div>';}
   }
-  el.innerHTML=top+body;
+  el.innerHTML=head+top+body;
 }
 function renderAttendHistory(){const att=(G.attendedWeeks||[]);const half=(G.halfWeeks||[]);const scans=G.qrScanAt||{};const totalEl=document.getElementById('hist-total');if(totalEl)totalEl.textContent=G.attendTotal||0;const monthEl=document.getElementById('hist-month');if(monthEl)monthEl.textContent=monthAttendCount(G);const streakEl=document.getElementById('hist-streak');if(streakEl)streakEl.textContent=G.streak||0;const listEl=document.getElementById('attend-history-list');if(!listEl)return;const all=Array.from(new Set(att.concat(Object.keys(scans)))).sort().reverse();if(!all.length){listEl.innerHTML='<div class="empty" style="padding:32px"><div class="empty-emoji" style="font-size:32px">📋</div><div class="empty-title" style="font-size:13px">출석 기록이 없어요</div></div>';return;}listEl.innerHTML=all.map(function(w){var attended=att.indexOf(w)>=0,isHalf=half.indexOf(w)>=0,scan=scans[w];var av,bg,nm,dt;if(attended){av=isHalf?'◐':'✓';bg='linear-gradient(135deg,var(--mint),#3DAB99)';nm=w+(isHalf?' · 반일':'');dt=scan?('📱 내 QR 인식 '+scan):'토요일 출석';}else{av='✕';bg='var(--coral)';nm=w+' · 결석 처리';dt=scan?('📱 내 QR 인식 '+scan+' · 기록 보존됨'):'결석';}return '<div class="student-row"><div class="student-avatar" style="background:'+bg+'">'+av+'</div><div class="student-info"><div class="student-name">'+nm+'</div><div class="student-detail">'+dt+'</div></div></div>';}).join('');}
 function attendGuard(){if(gradGuard())return null;const sat=attendSat();if(isVacationDate(sat)){showToast('이번 주는 방학이라 출석체크를 진행하지 않아요');return null;}if(!qrState.code||qrState.week!==sat){showToast('아직 이번 주 QR이 생성되지 않았어요');return null;}G.attendedWeeks=G.attendedWeeks||[];if(G.attendedWeeks.includes(sat)){showToast('이미 이번 주 출석 처리되었어요');return null;}return sat;}
@@ -1147,20 +1170,19 @@ function renderStudentGrowth(){try{
   var nextEl=document.getElementById('growth-next');
   if(nextEl)nextEl.innerHTML=nx?('다음 성장까지 <strong style="color:var(--primary-dark);font-weight:800">'+(nx.n-t)+'회</strong>!'):'최고 등급(열매) 달성! 🍎';
   var ag=document.getElementById('attend-growth');
-  if(ag){var curLv=null;ATTEND_LEVELS.forEach(function(L){if(t>=L.n)curLv=L;});var cLabel=curLv?curLv.l:'🌱 시작 전';var mth=(typeof monthAttendCount==='function')?monthAttendCount(G):0;
-    ag.innerHTML='<div class="card" style="padding:14px;text-align:left;background:linear-gradient(120deg,var(--mint-light),var(--primary-light))">'
-      +'<div style="display:flex;align-items:center;gap:14px">'
-        +'<div style="flex-shrink:0">'+_treeSVG(_stage,88)+'</div>'
-        +'<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px"><span style="font-size:15px;font-weight:800;color:var(--text)">'+(curLv?(curLv.l.split(" ")[1]||"")+" 등급":"아직 시작 전")+'</span><span style="flex-shrink:0;font-size:10px;font-weight:800;color:var(--primary-dark);background:#fff;padding:4px 9px;border-radius:20px">'+cLabel+'</span></div>'
-        +'<div style="font-size:11px;color:var(--text-sub);margin-bottom:6px">'+(nx?('다음 등급까지 <b style="color:var(--primary-dark)">'+(nx.n-t)+'회</b>'):'최고 등급(열매) 달성 🍎')+'</div>'
-        +'<div style="height:7px;background:#fff;border-radius:20px;overflow:hidden"><div style="height:100%;width:'+(nx?Math.min(100,Math.max(4,Math.round((t-pv)/((nx.n-pv)||1)*100))):100)+'%;background:var(--primary);border-radius:20px"></div></div></div>'
+  if(ag){var _li=levelInfo(G.yearTotalPoints||0);var _yt=G.yearTotalPoints||0;var _pct=100;if(_li.next!=null){var _sp=_li.next-_li.min;_pct=_sp>0?Math.round((_yt-_li.min)/_sp*100):0;}_pct=Math.max(3,Math.min(100,_pct));
+    ag.innerHTML='<div class="card" style="padding:15px;text-align:left;background:linear-gradient(120deg,var(--mint-light),var(--primary-light))">'
+      +'<div style="display:flex;align-items:center;gap:13px;margin-bottom:12px">'
+        +'<div style="width:58px;height:58px;flex-shrink:0;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center">'+_treeSVG(_li.tree,44)+'</div>'
+        +'<div style="flex:1;min-width:0"><div style="font-size:17px;font-weight:800;color:var(--text)">Lv.'+_li.lv+' '+_li.stage+'</div>'
+        +'<div style="font-size:11px;color:var(--text-sub);margin-top:2px">'+(_li.next!=null?('다음 레벨까지 <b style="color:var(--primary-dark)">'+_li.toNext.toLocaleString()+'P</b>'):'최고 레벨 달성 🍎')+'</div></div>'
       +'</div>'
-      +'<div style="display:flex;background:rgba(255,255,255,.72);border-radius:12px;margin-top:12px;text-align:center;padding:10px 0">'
-        +'<div style="flex:1"><div style="font-size:10px;color:var(--text-light);margin-bottom:2px">이번 달</div><div style="font-size:16px;font-weight:800;color:var(--text)">'+mth+'회</div></div>'
+      +'<div style="height:8px;background:#fff;border-radius:20px;overflow:hidden;margin-bottom:12px"><div style="height:100%;width:'+_pct+'%;background:var(--primary);border-radius:20px"></div></div>'
+      +'<div style="display:flex;background:rgba(255,255,255,.72);border-radius:12px;text-align:center;padding:10px 0">'
+        +'<div style="flex:1"><div style="font-size:10px;color:var(--text-light);margin-bottom:2px">보유 포인트</div><div style="font-size:16px;font-weight:800;color:var(--primary-dark)">'+((G.currentPoints||0).toLocaleString())+'P</div></div>'
         +'<div style="flex:1;border-left:1px solid var(--border-light);border-right:1px solid var(--border-light)"><div style="font-size:10px;color:var(--text-light);margin-bottom:2px">연속</div><div style="font-size:16px;font-weight:800;color:var(--gold)">🔥'+(G.streak||0)+'주</div></div>'
-        +'<div style="flex:1"><div style="font-size:10px;color:var(--text-light);margin-bottom:2px">누적</div><div style="font-size:16px;font-weight:800;color:var(--primary)">'+t+'회</div></div>'
+        +'<div style="flex:1"><div style="font-size:10px;color:var(--text-light);margin-bottom:2px">누적 출석</div><div style="font-size:16px;font-weight:800;color:var(--primary)">'+((G.attendedWeeks||[]).length)+'회</div></div>'
       +'</div>'
-      +'<div style="font-size:11.5px;color:var(--text-sub);margin-top:11px;text-align:center">'+(nx?('다음 등급까지 <b style="color:var(--primary-dark)">'+(nx.n-t)+'회</b>'):'최고 등급 달성 🍎')+'</div>'
     +'</div>';}
 }catch(e){}}
 

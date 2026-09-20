@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="하늘의문 중고등부">
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(e){console.warn('SW register failed',e);});});}</script>
-<link rel="stylesheet" href="./styles.css?v=20260920f">
+<link rel="stylesheet" href="./styles.css?v=20260920i">
 <style>
 /* 회의록: 플레이스홀더는 커서가 있는 빈 줄에만 표시 */
 #minutes-viewer-content .mb-txt[data-ph]::before,#minutes-viewer-content .mb-txt[data-ph]:empty:focus::before{content:none!important;display:none!important}
@@ -332,12 +332,13 @@
     </div>
     <div class="section">
       <div class="card" style="padding:16px 16px 15px">
-        <div style="display:flex;gap:13px;align-items:center;margin-bottom:13px">
+        <div onclick="openLevelGuide()" style="display:flex;gap:13px;align-items:center;margin-bottom:13px;cursor:pointer">
           <div id="home-tree" style="width:58px;height:58px;flex-shrink:0;border-radius:16px;background:var(--mint-light);display:flex;align-items:center;justify-content:center"></div>
           <div style="flex:1;min-width:0">
             <div id="home-level-badge" style="font-size:18px;font-weight:800;color:var(--text)">Lv.1 씨앗</div>
             <div style="font-size:12px;color:var(--text-light);margin-top:2px">꾸준히 자라는 중이에요! 🌿</div>
           </div>
+          <span style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--primary-dark);background:var(--primary-light);padding:5px 10px;border-radius:20px">레벨 안내 ›</span>
         </div>
         <div style="height:9px;background:var(--bg);border-radius:20px;overflow:hidden;margin-bottom:5px"><div id="home-prog-fill" style="height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--mint));border-radius:20px;transition:width .5s"></div></div>
         <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:13px"><span style="color:var(--text-light);font-weight:700">다음 레벨까지 <b id="home-level-tonext" style="color:var(--primary-dark)">0</b>P</span><span style="color:var(--text-sub);font-weight:700"><span id="home-year-pts">0</span> / <span id="home-level-next">-</span></span></div>
@@ -537,7 +538,7 @@
   <div class="tab-bar">
     <button class="tab-btn active" onclick="selCatTab(this);showAttendTab('scan')">QR 스캔</button>
     <button class="tab-btn" onclick="selCatTab(this);showAttendTab('history')">출석 내역</button>
-    <button class="tab-btn" onclick="selCatTab(this);showAttendTab('rank')">출석 순위</button>
+    <button class="tab-btn" onclick="selCatTab(this);showAttendTab('rank')">포인트 순위</button>
   </div>
   <div id="attend-rank-tab" style="display:none;padding:14px"><div id="attend-rank-list"></div></div>
   <!-- QR 스캔 탭 -->
@@ -1451,7 +1452,7 @@
   <div class="modal-sheet sheet-full">
     <div class="pg-head">
       <button class="pg-back" onclick="closeMinutesViewer()">‹</button>
-      <span class="pg-title">회의록 <span style="font-size:9px;font-weight:600;color:#2D9E8F;opacity:.75;vertical-align:middle">v10</span></span>
+      <span class="pg-title">회의록 <span style="font-size:9px;font-weight:600;color:#2D9E8F;opacity:.75;vertical-align:middle">v13</span></span>
       <div class="pg-acts">
         <button class="btn btn-sm" id="minutes-publish-btn" style="display:none;background:var(--coral);color:#fff;width:auto;padding:6px 11px;font-size:12px" onclick="publishMinutes()">📣 발행</button>
         <button class="btn btn-sm" id="minutes-save-btn" style="display:none;background:var(--primary);color:white;width:auto;padding:6px 13px;font-size:12px" onclick="stopMinutesEdit()">완료</button>
@@ -1926,6 +1927,15 @@
     <div id="pth-list"></div>
   </div>
 </div>
+<!-- ══ 모달: 레벨 안내 ══ -->
+<div class="modal-overlay" id="level-guide-modal">
+  <div class="modal-sheet" style="max-height:85vh;overflow-y:auto">
+    <div class="modal-handle"></div>
+    <div class="modal-title-row"><span class="modal-title">🌱 레벨 안내</span><button class="modal-close" onclick="closeModal('level-guide-modal')">✕</button></div>
+    <div style="font-size:11.5px;color:var(--text-light);margin-bottom:14px;line-height:1.6">올해 누적 성장점수로 레벨이 올라가요. 포인트를 써도 레벨은 내려가지 않아요.</div>
+    <div id="level-guide-list"></div>
+  </div>
+</div>
 <!-- ══ 모달: 포인트 지급 (교사) ══ -->
 <div class="modal-overlay" id="point-grant-modal">
   <div class="modal-sheet" style="max-height:85vh;overflow-y:auto">
@@ -1943,6 +1953,11 @@
     <div class="modal-handle"></div>
     <div class="modal-title-row"><span class="modal-title" id="sim-title">상품 추가</span><button class="modal-close" onclick="closeModal('shop-item-modal')">✕</button></div>
     <input type="hidden" id="sim-id">
+    <div class="form-group"><label class="form-label">상품 사진 (선택)</label>
+      <input type="file" id="sim-img-file" accept="image/*" style="display:none" onchange="onShopImgPick(this)">
+      <input type="hidden" id="sim-img-data">
+      <div id="sim-img-preview" onclick="document.getElementById('sim-img-file').click()" style="height:120px;border:1.5px dashed var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:var(--bg);overflow:hidden"><span style="font-size:12px;color:var(--text-light)">＋ 사진 추가</span></div>
+    </div>
     <div class="form-group"><label class="form-label">상품명 *</label><input class="form-input" type="text" id="sim-name" placeholder="예: 음료 교환권"></div>
     <div style="display:flex;gap:8px">
       <div class="form-group" style="flex:1"><label class="form-label">가격(P) *</label><input class="form-input" type="number" inputmode="numeric" id="sim-price" placeholder="500"></div>
@@ -2634,7 +2649,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="./assets.js"></script>
-<script src="./app.js?v=20260920f"></script>
+<script src="./app.js?v=20260920i"></script>
 
 <div id="theme-preview-bar" style="display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:88px;z-index:600;background:rgba(26,35,64,0.95);color:white;padding:10px 12px 10px 16px;border-radius:14px;box-shadow:var(--shadow-lg);align-items:center;gap:10px;max-width:410px;width:calc(100% - 32px);backdrop-filter:blur(4px)">
   <span id="theme-preview-label" style="font-size:13px;font-weight:700;flex:1">🎨 미리보기</span>
@@ -2658,7 +2673,7 @@
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-messaging-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-auth-compat.js"></script>
-<script src="./app-sync.js?v=20260920f"></script>
+<script src="./app-sync.js?v=20260920i"></script>
 
 </body>
 </html>
