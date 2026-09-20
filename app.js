@@ -350,7 +350,6 @@ function awardAttendance(u,sat,status,by){
 function checkLevelCoupons(u){}   /* 쿠폰 자동발급 폐지 — 포인트제로 전환 */
 /* ══════════ 포인트 상점 ══════════ */
 const SHOP_CATS=[['all','전체'],['food','간식·음료'],['goods','굿즈'],['life','문구·생활'],['event','이벤트']];
-const SHOP_SECS=[['rec','추천 상품'],['hot','인기 상품'],['event','이벤트 상품']];
 const DEFAULT_SHOP_ITEMS=[
  {id:'si-drink',name:'음료 교환권',price:500,stock:20,cat:'food',sec:'rec',active:true},
  {id:'si-snack',name:'간식 교환권',price:300,stock:20,cat:'food',sec:'rec',active:true},
@@ -395,15 +394,12 @@ function renderShop(){
   function grid(items){return '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px 14px">'+items.map(_shopCard).join('')+'</div>';}
   var html='';
   if(_shopCat==='all'){
-    var evt=all.filter(function(it){return (it.sec||'rec')==='event';});
-    var nonEvt=all.filter(function(it){return (it.sec||'rec')!=='event';});
+    var nonEvt=all.filter(function(it){return it.cat!=='event';});
     var pop=_popularShopItems(nonEvt,4);
     var popIds={};pop.forEach(function(it){popIds[it.id]=1;});
-    var rec=nonEvt.filter(function(it){return !popIds[it.id];});
     function sec(title,items){return items.length?('<div style="font-size:17px;font-weight:800;color:var(--text);margin:6px 2px 12px">'+title+'</div>'+grid(items)+'<div style="height:22px"></div>'):'';}
     html+=sec('인기 상품',pop);
-    html+=sec('추천 상품',rec);
-    html+=sec('이벤트 상품',evt);
+    SHOP_CATS.forEach(function(c){if(c[0]==='all')return;var items=all.filter(function(it){return it.cat===c[0]&&!popIds[it.id];});html+=sec(c[1],items);});
   }else{
     var items=all.filter(function(it){return it.cat===_shopCat;});html=items.length?grid(items):'';
   }
@@ -424,12 +420,11 @@ function renderShopAdmin(){
   if(!(shopItems&&shopItems.length)){_shopSeed();}
   var items=_shopList();
   var catLbl={food:'간식·음료',goods:'굿즈',life:'문구·생활',event:'이벤트'};
-  var secLbl={rec:'추천',hot:'추천',event:'이벤트'};
   var pend=(shopOrders||[]).filter(function(o){return o&&o.status!=='done';}).sort(function(a,b){return (a.ts||0)-(b.ts||0);});
   var oh='<div style="font-size:13px;font-weight:800;margin:2px 0 8px">교환 처리 대기 '+(pend.length?('<span style="color:var(--coral)">'+pend.length+'</span>'):'0')+'건</div>';
   oh+= pend.length? pend.map(function(o){return '<div style="display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--border-light)"><div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:700">'+_esc(o.name||'')+' · '+_esc(o.itemName)+'</div><div style="font-size:10px;color:var(--text-light)">'+_esc(o.dateStr||'')+' · '+(o.price||0).toLocaleString()+'P</div></div><button class="btn btn-sm" style="width:auto;padding:6px 12px;background:var(--mint);color:#fff;font-weight:800" onclick="markOrderDone(\''+o.id+'\')">수령완료</button></div>';}).join('') : '<div style="font-size:12px;color:var(--text-light);padding:8px 2px 14px">대기중인 교환이 없어요</div>';
   var ih='<div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 8px"><span style="font-size:13px;font-weight:800">상품 '+items.length+'개</span><button class="btn btn-sm" style="width:auto;background:var(--primary);color:#fff;font-weight:800" onclick="openShopItemModal()">+ 상품 추가</button></div>';
-  ih+=items.map(function(it){return '<div class="card" style="margin-bottom:8px;display:flex;align-items:center;gap:10px;padding:11px 12px"><div style="width:40px;height:40px;border-radius:9px;background:var(--bg);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center">'+(it.img?'<img src="'+it.img+'" style="width:100%;height:100%;object-fit:cover">':'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+_shopIcon(it.cat)+'</svg>')+'</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+_esc(it.name)+(it.active===false?' <span class="chip chip-gray">숨김</span>':'')+'</div><div style="font-size:11px;color:var(--text-light);margin-top:2px">'+(it.price||0).toLocaleString()+'P · 재고 '+(it.stock||0)+' · '+(catLbl[it.cat]||it.cat)+' · '+(secLbl[it.sec]||'추천')+'</div></div><button class="btn btn-sm btn-outline" style="width:auto;padding:6px 10px" onclick="openShopItemModal(\''+it.id+'\')">수정</button><button class="btn btn-sm" style="width:auto;padding:6px 10px;background:var(--coral-light);color:#B0463A" onclick="deleteShopItem(\''+it.id+'\')">삭제</button></div>';}).join('');
+  ih+=items.map(function(it){return '<div class="card" style="margin-bottom:8px;display:flex;align-items:center;gap:10px;padding:11px 12px"><div style="width:40px;height:40px;border-radius:9px;background:var(--bg);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center">'+(it.img?'<img src="'+it.img+'" style="width:100%;height:100%;object-fit:cover">':'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+_shopIcon(it.cat)+'</svg>')+'</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+_esc(it.name)+(it.active===false?' <span class="chip chip-gray">숨김</span>':'')+'</div><div style="font-size:11px;color:var(--text-light);margin-top:2px">'+(it.price||0).toLocaleString()+'P · 재고 '+(it.stock||0)+' · '+(catLbl[it.cat]||it.cat)+'</div></div><button class="btn btn-sm btn-outline" style="width:auto;padding:6px 10px" onclick="openShopItemModal(\''+it.id+'\')">수정</button><button class="btn btn-sm" style="width:auto;padding:6px 10px;background:var(--coral-light);color:#B0463A" onclick="deleteShopItem(\''+it.id+'\')">삭제</button></div>';}).join('');
   el.innerHTML=oh+ih;
 }
 function openShopItemModal(id){
@@ -441,7 +436,6 @@ function openShopItemModal(id){
   document.getElementById('sim-price').value=it?it.price:'';
   document.getElementById('sim-stock').value=it?it.stock:'';
   document.getElementById('sim-cat').value=it?it.cat:'food';
-  document.getElementById('sim-sec').value=(it&&it.sec==='event')?'event':'rec';
   document.getElementById('sim-active').checked=it?(it.active!==false):true;
   var _imgd=document.getElementById('sim-img-data');if(_imgd)_imgd.value=(it&&it.img)?it.img:'';
   var _pv=document.getElementById('sim-img-preview');if(_pv)_pv.innerHTML=(it&&it.img)?'<img src="'+it.img+'" style="width:100%;height:100%;object-fit:cover">':'<span style="font-size:12px;color:var(--text-light)">＋ 사진 추가</span>';
@@ -456,7 +450,7 @@ function saveShopItem(){
   var price=parseInt(document.getElementById('sim-price').value)||0;
   var stock=parseInt(document.getElementById('sim-stock').value)||0;
   var cat=document.getElementById('sim-cat').value||'food';
-  var sec=document.getElementById('sim-sec').value||'rec';
+  var sec=(cat==='event')?'event':'rec';
   var active=document.getElementById('sim-active').checked;
   var img=(document.getElementById('sim-img-data')||{}).value||'';
   if(!name){showToast('상품명을 입력해주세요');return;}

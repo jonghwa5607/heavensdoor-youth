@@ -1,13 +1,13 @@
 /* 하늘의문 중고등부 PWA service worker
    버전을 올리면(예: hd-v2) 배포 시 기존 캐시가 자동 정리됩니다. */
-const CACHE = 'hd-v25';
+const CACHE = 'hd-v26';
 const SHELL = [
   './',
   './index.html',
-  './styles.css?v=20260921d',
+  './styles.css?v=20260921e',
   './assets.js',
-  './app.js?v=20260921d',
-  './app-sync.js?v=20260921d',
+  './app.js?v=20260921e',
+  './app-sync.js?v=20260921e',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',
