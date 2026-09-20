@@ -694,29 +694,108 @@ function selCatTab(btn){btn.closest('.tab-bar').querySelectorAll('.tab-btn').for
 function showAttendTab(tab){try{renderStudentGrowth();}catch(e){}try{if(typeof stopQRScan==='function')stopQRScan();}catch(e){}show('attend-scan-tab',tab==='scan');show('attend-history-tab',tab==='history');show('attend-rank-tab',tab==='rank');const bar=document.querySelector('#screen-attend .tab-bar');if(bar)bar.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.getAttribute('onclick').includes(`showAttendTab('${tab}')`)));if(tab==='history')renderAttendHistory();if(tab==='rank')renderAttendRank();}
 function _ymOf(ts){var d=new Date(ts||0);return d.getFullYear()+'-'+pad2(d.getMonth()+1);}
 function _monthEarned(u){var ym=currentYM();var s=0;((u&&u.pointHistory)||[]).forEach(function(x){if(x&&x.type==='earn'&&(x.amount>0)&&_ymOf(x.ts)===ym)s+=x.amount;});return s;}
+function _monthSats(){var ym=currentYM();return getSaturdays(60).filter(function(w){return w.startsWith(ym)&&!isVacationDate(w);}).sort();}
+function _nextStreakMilestone(st){var m=ptCfg().milestones;var ks=Object.keys(m).map(Number).sort(function(a,b){return a-b;});for(var i=0;i<ks.length;i++){if(ks[i]>(st||0))return {week:ks[i],pt:m[ks[i]]};}return null;}
 function renderAttendRank(){
   var el=document.getElementById('attend-rank-list');if(!el)return;
   var mlabel=(new Date().getMonth()+1)+'월';
   var studs=(pendingList||[]).filter(function(u){return u&&u.approved&&u.role==='student'&&!u.hidden&&!u.graduated;});
   studs.forEach(function(u){u._mp=_monthEarned(u);});
   studs.sort(function(a,b){return (b._mp||0)-(a._mp||0)||((a.name||'')>(b.name||'')?1:-1);});
-  var head='<div style="font-size:12px;color:var(--text-light);font-weight:700;text-align:center;margin-bottom:14px"><b style="color:var(--primary-dark)">'+mlabel+'</b> 포인트 순위 · 매월 1일 초기화</div>';
+  var head='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><div><div style="font-size:19px;font-weight:900;letter-spacing:-.3px">'+mlabel+' 포인트 순위</div><div style="font-size:12.5px;color:var(--text-sub);font-weight:600;margin-top:2px">매월 1일 초기화돼요</div></div><div onclick="openLevelGuide()" style="font-size:12px;font-weight:800;color:var(--primary-dark);background:var(--mint-light);border-radius:20px;padding:7px 12px;cursor:pointer">레벨 안내 ›</div></div>';
   if(!studs.length){el.innerHTML=head+'<div class="empty" style="padding:32px"><div class="empty-emoji" style="font-size:32px">🏆</div><div class="empty-title" style="font-size:13px">순위 정보가 없어요</div></div>';return;}
-  var medal=['🥇','🥈','🥉'];var order=[1,0,2];
-  var top='<div style="display:flex;gap:8px;justify-content:center;align-items:flex-end;margin-bottom:18px">';
-  order.forEach(function(i){var u=studs[i];if(!u){top+='<div style="flex:1;max-width:100px"></div>';return;}var h=i===0?92:i===1?72:60;top+='<div style="flex:1;max-width:100px;text-align:center"><div style="font-size:22px">'+medal[i]+'</div><div style="background:linear-gradient(135deg,var(--mint),#3DAB99);color:#fff;border-radius:12px 12px 0 0;height:'+h+'px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:7px 4px"><div style="font-size:12px;font-weight:800;line-height:1.2;word-break:keep-all">'+_esc(u.name||'')+'</div><div style="font-size:15px;font-weight:900;margin-top:2px">'+(u._mp||0).toLocaleString()+'P</div></div></div>';});
+  var order=[1,0,2],rkl=['','1위','2위','3위'];
+  var top='<div style="display:flex;gap:9px;align-items:flex-end;justify-content:center;padding-top:6px;margin-bottom:14px">';
+  order.forEach(function(i){var u=studs[i];if(!u){top+='<div style="flex:1"></div>';return;}
+    var first=i===0;
+    var boxBg=first?'linear-gradient(165deg,#37B79A,#2A9179)':'var(--card)';
+    var boxBorder=first?'transparent':'var(--border-light)';
+    var boxSh=first?'0 8px 20px rgba(42,145,121,.28)':'0 2px 10px rgba(45,106,85,.06)';
+    var txtCol=first?'#fff':'var(--text)';
+    var ptCol=first?'#fff':'var(--primary-dark)';
+    var av=first?'👑':(i===1?'🥈':'🥉');
+    top+='<div style="flex:1;text-align:center">'
+      +'<div style="font-size:12px;font-weight:900;color:'+(first?'#E7A93B':'var(--text-light)')+';margin-bottom:5px">'+(i+1)+'위</div>'
+      +'<div style="background:'+boxBg+';border:1px solid '+boxBorder+';border-radius:16px;padding:'+(first?'18px 6px':'14px 6px')+';box-shadow:'+boxSh+';display:flex;flex-direction:column;align-items:center">'
+      +'<div style="width:'+(first?46:42)+'px;height:'+(first?46:42)+'px;border-radius:50%;background:'+(first?'rgba(255,255,255,.9)':'var(--mint-light)')+';display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:8px">'+av+'</div>'
+      +'<div style="font-size:12.5px;font-weight:800;line-height:1.2;word-break:keep-all;color:'+txtCol+'">'+_esc(u.name||'')+'</div>'
+      +'<div style="font-size:15px;font-weight:900;margin-top:4px;color:'+ptCol+'">'+(u._mp||0).toLocaleString()+'P</div>'
+      +'</div></div>';
+  });
   top+='</div>';
   var body='';
   if(G.role==='teacher'){
-    body='<div style="font-size:11px;color:var(--text-light);margin-bottom:6px">전체 순위 (교사 전용)</div>'+studs.map(function(u,i){return '<div class="student-row"><div class="student-avatar" style="background:'+(i<3?'var(--mint)':'var(--border-light)')+';color:'+(i<3?'#fff':'var(--text-light)')+';font-size:13px;font-weight:800">'+(i+1)+'</div><div class="student-info"><div class="student-name">'+_esc(u.name||'')+' '+_esc(u.baptism||'')+'</div><div class="student-detail">'+_esc(u.gradeLabel||'')+' · '+mlabel+' '+(u._mp||0).toLocaleString()+'P</div></div></div>';}).join('');
-  }else{
-    var mine=-1;for(var k=0;k<studs.length;k++){if(studs[k].id===G.id){mine=k;break;}}
-    if(mine>=0){body='<div class="card" style="background:linear-gradient(135deg,var(--mint-light),var(--primary-light));text-align:center;padding:18px"><div style="font-size:12px;color:var(--text-sub);font-weight:700">나의 '+mlabel+' 순위</div><div style="font-size:30px;font-weight:900;color:var(--primary);margin:4px 0">'+(mine+1)+'<span style="font-size:15px">등</span></div><div style="font-size:11px;color:var(--text-light)">전체 '+studs.length+'명 중 · '+mlabel+' '+((studs[mine]._mp)||0).toLocaleString()+'P 획득</div></div>';}
-    else{body='<div class="empty" style="padding:24px"><div class="empty-title" style="font-size:13px">아직 순위에 없어요</div></div>';}
+    body='<div style="font-size:11px;color:var(--text-light);margin:2px 2px 6px">전체 순위 (교사 전용)</div>'+studs.map(function(u,i){return '<div class="student-row"><div class="student-avatar" style="background:'+(i<3?'var(--mint)':'var(--border-light)')+';color:'+(i<3?'#fff':'var(--text-light)')+';font-size:13px;font-weight:800">'+(i+1)+'</div><div class="student-info"><div class="student-name">'+_esc(u.name||'')+' '+_esc(u.baptism||'')+'</div><div class="student-detail">'+_esc(u.gradeLabel||'')+' · '+mlabel+' '+(u._mp||0).toLocaleString()+'P</div></div></div>';}).join('');
+    el.innerHTML=head+top+body;return;
   }
+  var mine=-1;for(var k=0;k<studs.length;k++){if(studs[k].id===G.id){mine=k;break;}}
+  if(mine<0){el.innerHTML=head+top+'<div class="empty" style="padding:24px"><div class="empty-title" style="font-size:13px">아직 순위에 없어요</div></div>';return;}
+  var myMp=(studs[mine]._mp)||0;
+  // 나의 순위 (그라데이션 카드)
+  body+='<div style="background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:18px;padding:16px 18px;color:#fff;box-shadow:0 8px 22px rgba(31,122,100,.28)">'
+    +'<div style="font-size:12px;font-weight:700;opacity:.85">나의 '+mlabel+' 순위</div>'
+    +'<div style="display:flex;align-items:center;gap:14px;margin-top:8px">'
+    +'<div><div style="font-size:38px;font-weight:900;line-height:1">'+(mine+1)+'<span style="font-size:16px;font-weight:800;margin-left:2px">위</span></div>'
+    +'<div style="font-size:12px;font-weight:600;opacity:.9;margin-top:4px">전체 '+studs.length+'명 중 · '+mlabel+' '+myMp.toLocaleString()+'P 획득</div></div>'
+    +'<div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;margin-left:auto">'+(mine===0?'👑':'🙂')+'</div>'
+    +'</div></div>';
+  // 타일 4개
+  var mAtt=monthAttendCount(G),mTgt=_monthSats().length||4;
+  body+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:13px">'
+    +_rankTile('🪙',myMp.toLocaleString(),'이번 달 P')
+    +_rankTile('📅',mAtt+'/'+mTgt,'이번 달 출석')
+    +_rankTile('🔥',(G.streak||0)+'주','연속 출석')
+    +_rankTile('⭐',(G.attendTotal||0)+'회','올해 총 출석')
+    +'</div>';
+  // 이번 달 출석 현황
+  var pct=mTgt?Math.min(100,Math.round(mAtt/mTgt*100)):0,rem=Math.max(0,mTgt-Math.floor(mAtt));
+  body+='<div class="card" style="margin-top:13px"><div style="font-size:15px;font-weight:800;margin-bottom:11px">이번 달 출석 현황</div>'
+    +'<div style="height:12px;background:var(--border-light);border-radius:20px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,var(--primary),var(--mint));border-radius:20px"></div></div>'
+    +'<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--text-sub);margin-top:8px"><span>'+(rem>0?'이번 달 개근까지 '+rem+'회':'이번 달 개근 달성!')+'</span><span>'+mAtt+' / '+mTgt+'회</span></div>'
+    +'<div style="display:flex;align-items:center;gap:8px;background:var(--mint-light);border-radius:12px;padding:10px 12px;font-size:11.5px;color:var(--primary-dark);font-weight:700;margin-top:11px">🎁 이번 달 모든 주일에 출석하면 개근 보너스가 지급돼요</div></div>';
+  // 다음 연속출석 목표
+  var nm=_nextStreakMilestone(G.streak||0);
+  if(nm){body+='<div class="card" style="margin-top:13px;display:flex;align-items:center;gap:13px"><div style="width:40px;height:40px;border-radius:12px;background:var(--mint-light);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🎯</div><div><div style="font-size:14px;font-weight:800">다음 연속출석 보너스까지 '+(nm.week-(G.streak||0))+'주</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">'+nm.week+'주 연속 출석 시 +'+nm.pt+'P 지급</div></div></div>';}
+  body+='<div style="text-align:center;padding:20px 10px 4px"><div style="font-size:14px;color:var(--primary-dark);font-weight:800;line-height:1.5">작은 걸음이 모여, 멋진 성장이 됩니다</div><div style="font-size:12px;color:var(--text-sub);font-weight:600;margin-top:5px">오늘도 함께해줘서 고마워요</div></div>';
   el.innerHTML=head+top+body;
 }
-function renderAttendHistory(){const att=(G.attendedWeeks||[]);const half=(G.halfWeeks||[]);const scans=G.qrScanAt||{};const totalEl=document.getElementById('hist-total');if(totalEl)totalEl.textContent=G.attendTotal||0;const monthEl=document.getElementById('hist-month');if(monthEl)monthEl.textContent=monthAttendCount(G);const streakEl=document.getElementById('hist-streak');if(streakEl)streakEl.textContent=G.streak||0;const listEl=document.getElementById('attend-history-list');if(!listEl)return;const all=Array.from(new Set(att.concat(Object.keys(scans)))).sort().reverse();if(!all.length){listEl.innerHTML='<div class="empty" style="padding:32px"><div class="empty-emoji" style="font-size:32px">📋</div><div class="empty-title" style="font-size:13px">출석 기록이 없어요</div></div>';return;}listEl.innerHTML=all.map(function(w){var attended=att.indexOf(w)>=0,isHalf=half.indexOf(w)>=0,scan=scans[w];var av,bg,nm,dt;if(attended){av=isHalf?'◐':'✓';bg='linear-gradient(135deg,var(--mint),#3DAB99)';nm=w+(isHalf?' · 반일':'');dt=scan?('📱 내 QR 인식 '+scan):'토요일 출석';}else{av='✕';bg='var(--coral)';nm=w+' · 결석 처리';dt=scan?('📱 내 QR 인식 '+scan+' · 기록 보존됨'):'결석';}return '<div class="student-row"><div class="student-avatar" style="background:'+bg+'">'+av+'</div><div class="student-info"><div class="student-name">'+nm+'</div><div class="student-detail">'+dt+'</div></div></div>';}).join('');}
+function _rankTile(em,n,l){return '<div style="background:var(--card);border:1px solid var(--border-light);border-radius:14px;padding:13px 6px;text-align:center;box-shadow:0 2px 8px rgba(45,106,85,.045)"><div style="font-size:18px">'+em+'</div><div style="font-size:16px;font-weight:900;margin-top:4px">'+n+'</div><div style="font-size:9.5px;color:var(--text-light);margin-top:3px;font-weight:600">'+l+'</div></div>';}
+function renderAttendHistory(){
+  var el=document.getElementById('attend-history-list');if(!el)return;
+  var att=(G.attendedWeeks||[]),half=(G.halfWeeks||[]),scans=G.qrScanAt||{},cfg=ptCfg();
+  var mlabel=(new Date().getMonth()+1)+'월';
+  var mAtt=monthAttendCount(G),msats=_monthSats(),mTgt=msats.length||4;
+  var pct=mTgt?Math.min(100,Math.round(mAtt/mTgt*100)):0,rem=Math.max(0,mTgt-Math.floor(mAtt));
+  var total=G.attendTotal||0,streak=G.streak||0;
+  var html='';
+  // 월 출석 현황
+  html+='<div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div style="font-size:17px;font-weight:900;letter-spacing:-.3px">'+mlabel+' 출석 현황</div><span style="font-size:13px;font-weight:800;color:var(--primary-dark)">'+mAtt+' / '+mTgt+'회</span></div>'
+    +'<div style="height:12px;background:var(--border-light);border-radius:20px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,var(--primary),var(--mint));border-radius:20px"></div></div>'
+    +'<div style="font-size:12px;color:var(--text-sub);font-weight:600;margin-top:8px">'+(rem>0?'이번 달 개근까지 '+rem+'회 남았어요':'이번 달 개근을 달성했어요!')+'</div>'
+    +'<div style="display:flex;align-items:center;gap:8px;background:var(--mint-light);border-radius:12px;padding:10px 12px;font-size:11.5px;color:var(--primary-dark);font-weight:700;margin-top:11px">🎁 이번 달 모든 주일에 출석하면 개근 보너스가 지급돼요</div></div>';
+  // 3칸 통계
+  html+='<div class="card" style="display:flex;padding:0;text-align:center;margin-top:13px">'
+    +'<div style="flex:1;padding:15px 4px"><div style="font-size:18px">📖</div><div style="font-size:22px;font-weight:900;color:var(--primary);margin-top:3px">'+total+'</div><div style="font-size:10px;color:var(--text-light);font-weight:600;margin-top:3px">누적 출석</div></div>'
+    +'<div style="flex:1;padding:15px 4px;border-left:1px solid var(--border-light);border-right:1px solid var(--border-light)"><div style="font-size:18px">📅</div><div style="font-size:22px;font-weight:900;color:var(--mint);margin-top:3px">'+Math.floor(mAtt)+'</div><div style="font-size:10px;color:var(--text-light);font-weight:600;margin-top:3px">이번 달 출석</div></div>'
+    +'<div style="flex:1;padding:15px 4px"><div style="font-size:18px">🔥</div><div style="font-size:22px;font-weight:900;color:var(--yellow);margin-top:3px">'+streak+'</div><div style="font-size:10px;color:var(--text-light);font-weight:600;margin-top:3px">연속 출석</div></div></div>';
+  // 다음 연속출석 목표
+  var nm=_nextStreakMilestone(streak);
+  if(nm){html+='<div class="card" style="margin-top:13px;display:flex;align-items:center;gap:13px"><div style="width:40px;height:40px;border-radius:12px;background:var(--mint-light);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🎯</div><div><div style="font-size:14px;font-weight:800">'+nm.week+'주 연속 출석까지 '+(nm.week-streak)+'주</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">'+nm.week+'주 연속 출석 시 +'+nm.pt+'P 지급</div></div></div>';}
+  // 명언 카드
+  html+='<div class="card" style="margin-top:13px;background:linear-gradient(135deg,var(--mint-light),var(--card));display:flex;gap:14px;align-items:center"><div style="font-size:36px">🌳</div><div><div style="font-size:15px;font-weight:800;color:var(--primary-dark);line-height:1.5">작은 걸음이 모여,<br>멋진 성장이 됩니다</div><div style="font-size:11.5px;color:var(--text-sub);margin-top:5px">하느님과 함께하는 매주가 소중해요</div></div></div>';
+  // 최근 출석 내역
+  var all=Array.from(new Set(att.concat(Object.keys(scans)))).sort().reverse();
+  html+='<div style="font-size:15px;font-weight:800;margin:16px 2px 8px">최근 출석 내역</div>';
+  if(!all.length){html+='<div class="empty" style="padding:28px"><div class="empty-emoji" style="font-size:30px">📋</div><div class="empty-title" style="font-size:13px">출석 기록이 없어요</div></div>';}
+  else{html+=all.map(function(w){var attended=att.indexOf(w)>=0,isHalf=half.indexOf(w)>=0,scan=scans[w];
+    if(attended){var badge=isHalf?('+'+cfg.half+'P'):('+'+cfg.full+'P');var dt=scan?('QR 인식 · '+scan):'토요일 출석';return '<div style="display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border-light);border-radius:14px;padding:13px 14px;box-shadow:0 2px 8px rgba(45,106,85,.045);margin-bottom:9px"><div style="width:38px;height:38px;border-radius:11px;background:var(--mint-light);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;flex-shrink:0">'+(isHalf?'◐':'✓')+'</div><div><div style="font-size:14px;font-weight:800">'+w+'</div><div style="font-size:11.5px;color:var(--text-light);margin-top:2px">'+dt+(isHalf?' · 반일':'')+'</div></div><div style="margin-left:auto;background:var(--mint-light);color:var(--primary-dark);font-weight:800;font-size:13px;border-radius:20px;padding:7px 13px;flex-shrink:0">'+badge+'</div></div>';}
+    var dt2=scan?('QR 인식 '+scan+' · 기록 보존됨'):'결석';return '<div style="display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border-light);border-radius:14px;padding:13px 14px;box-shadow:0 2px 8px rgba(45,106,85,.045);margin-bottom:9px"><div style="width:38px;height:38px;border-radius:11px;background:#FBEAE6;color:var(--coral);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;flex-shrink:0">✕</div><div><div style="font-size:14px;font-weight:800">'+w+'</div><div style="font-size:11.5px;color:var(--text-light);margin-top:2px">'+dt2+'</div></div></div>';}).join('');}
+  // 이번 달 남은 주일
+  var today=toDateStr(new Date());var next=msats.filter(function(w){return w>=today&&att.indexOf(w)<0;})[0];
+  if(next){var nd=new Date(next);html+='<div class="card" style="margin-top:4px;display:flex;align-items:center;gap:12px;background:var(--mint-light);border-color:transparent"><div style="font-size:20px">📅</div><div><div style="font-size:13px;font-weight:800">이번 달 남은 주일</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">'+(nd.getMonth()+1)+'월 '+nd.getDate()+'일 (토)</div></div><div style="margin-left:auto;font-size:11.5px;color:var(--primary-dark);font-weight:700">다음 주일에도 만나요</div></div>';}
+  html+='<div style="text-align:center;padding:20px 10px 8px"><div style="font-size:14px;color:var(--primary-dark);font-weight:800">함께 자라는 우리, 앞으로도 쭉</div></div>';
+  el.innerHTML=html;
+}
 function attendGuard(){if(gradGuard())return null;const sat=attendSat();if(isVacationDate(sat)){showToast('이번 주는 방학이라 출석체크를 진행하지 않아요');return null;}if(!qrState.code||qrState.week!==sat){showToast('아직 이번 주 QR이 생성되지 않았어요');return null;}G.attendedWeeks=G.attendedWeeks||[];if(G.attendedWeeks.includes(sat)){showToast('이미 이번 주 출석 처리되었어요');return null;}return sat;}
 function openAttendCodeModal(){if(attendGuard()===null)return;const inp=document.getElementById('attend-code-input');if(inp)inp.value='';openModal('attend-code-modal');setTimeout(()=>{if(inp)inp.focus();},250);}
 function submitAttendCode(){const inp=document.getElementById('attend-code-input');const v=(inp.value||'').trim();if(!v){showToast('인증코드를 입력해주세요');return;}if(v!==qrState.code){showToast('❌ 인증코드가 일치하지 않아요');return;}closeModal('attend-code-modal');doAttend();}
