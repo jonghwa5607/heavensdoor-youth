@@ -380,6 +380,12 @@ function _shopCard(it){
    +(G.role==='student'?'<button class="btn btn-sm" '+(can?'':'disabled')+' style="width:100%;margin-top:9px;padding:10px 0;background:'+(can?'var(--primary)':'var(--border)')+';color:'+(can?'#fff':'var(--text-light)')+';font-weight:800;font-size:12.5px;border-radius:11px" onclick="buyItem(\''+it.id+'\')">'+(soldout?'품절':'교환하기')+'</button>':'')
    +'</div></div>';
 }
+function _popularShopItems(list,n){
+  var cnt={};(shopOrders||[]).forEach(function(o){if(o&&o.itemId)cnt[o.itemId]=(cnt[o.itemId]||0)+1;});
+  return list.filter(function(it){return (cnt[it.id]||0)>0;})
+    .sort(function(a,b){return (cnt[b.id]||0)-(cnt[a.id]||0)||((a.name||'')>(b.name||'')?1:-1);})
+    .slice(0,n||4);
+}
 function renderShop(){
   var bp=document.getElementById('shop-balance');if(bp)bp.textContent=(G.currentPoints||0).toLocaleString();
   var ch=document.getElementById('shop-cats');
@@ -389,7 +395,15 @@ function renderShop(){
   function grid(items){return '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px 14px">'+items.map(_shopCard).join('')+'</div>';}
   var html='';
   if(_shopCat==='all'){
-    SHOP_SECS.forEach(function(s){var items=all.filter(function(it){return (it.sec||'rec')===s[0];});if(!items.length)return;html+='<div style="font-size:17px;font-weight:800;color:var(--text);margin:6px 2px 12px">'+s[1]+'</div>'+grid(items)+'<div style="height:22px"></div>';});
+    var evt=all.filter(function(it){return (it.sec||'rec')==='event';});
+    var nonEvt=all.filter(function(it){return (it.sec||'rec')!=='event';});
+    var pop=_popularShopItems(nonEvt,4);
+    var popIds={};pop.forEach(function(it){popIds[it.id]=1;});
+    var rec=nonEvt.filter(function(it){return !popIds[it.id];});
+    function sec(title,items){return items.length?('<div style="font-size:17px;font-weight:800;color:var(--text);margin:6px 2px 12px">'+title+'</div>'+grid(items)+'<div style="height:22px"></div>'):'';}
+    html+=sec('인기 상품',pop);
+    html+=sec('추천 상품',rec);
+    html+=sec('이벤트 상품',evt);
   }else{
     var items=all.filter(function(it){return it.cat===_shopCat;});html=items.length?grid(items):'';
   }
@@ -410,7 +424,7 @@ function renderShopAdmin(){
   if(!(shopItems&&shopItems.length)){_shopSeed();}
   var items=_shopList();
   var catLbl={food:'간식·음료',goods:'굿즈',life:'문구·생활',event:'이벤트'};
-  var secLbl={rec:'추천',hot:'인기',event:'이벤트'};
+  var secLbl={rec:'추천',hot:'추천',event:'이벤트'};
   var pend=(shopOrders||[]).filter(function(o){return o&&o.status!=='done';}).sort(function(a,b){return (a.ts||0)-(b.ts||0);});
   var oh='<div style="font-size:13px;font-weight:800;margin:2px 0 8px">교환 처리 대기 '+(pend.length?('<span style="color:var(--coral)">'+pend.length+'</span>'):'0')+'건</div>';
   oh+= pend.length? pend.map(function(o){return '<div style="display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--border-light)"><div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:700">'+_esc(o.name||'')+' · '+_esc(o.itemName)+'</div><div style="font-size:10px;color:var(--text-light)">'+_esc(o.dateStr||'')+' · '+(o.price||0).toLocaleString()+'P</div></div><button class="btn btn-sm" style="width:auto;padding:6px 12px;background:var(--mint);color:#fff;font-weight:800" onclick="markOrderDone(\''+o.id+'\')">수령완료</button></div>';}).join('') : '<div style="font-size:12px;color:var(--text-light);padding:8px 2px 14px">대기중인 교환이 없어요</div>';
@@ -427,7 +441,7 @@ function openShopItemModal(id){
   document.getElementById('sim-price').value=it?it.price:'';
   document.getElementById('sim-stock').value=it?it.stock:'';
   document.getElementById('sim-cat').value=it?it.cat:'food';
-  document.getElementById('sim-sec').value=it?(it.sec||'rec'):'rec';
+  document.getElementById('sim-sec').value=(it&&it.sec==='event')?'event':'rec';
   document.getElementById('sim-active').checked=it?(it.active!==false):true;
   var _imgd=document.getElementById('sim-img-data');if(_imgd)_imgd.value=(it&&it.img)?it.img:'';
   var _pv=document.getElementById('sim-img-preview');if(_pv)_pv.innerHTML=(it&&it.img)?'<img src="'+it.img+'" style="width:100%;height:100%;object-fit:cover">':'<span style="font-size:12px;color:var(--text-light)">＋ 사진 추가</span>';
@@ -702,7 +716,7 @@ function renderAttendRank(){
   var studs=(pendingList||[]).filter(function(u){return u&&u.approved&&u.role==='student'&&!u.hidden&&!u.graduated;});
   studs.forEach(function(u){u._mp=_monthEarned(u);});
   studs.sort(function(a,b){return (b._mp||0)-(a._mp||0)||((a.name||'')>(b.name||'')?1:-1);});
-  var head='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><div><div style="font-size:19px;font-weight:900;letter-spacing:-.3px">'+mlabel+' 포인트 순위</div><div style="font-size:12.5px;color:var(--text-sub);font-weight:600;margin-top:2px">매월 1일 초기화돼요</div></div><div onclick="openLevelGuide()" style="font-size:12px;font-weight:800;color:var(--primary-dark);background:var(--mint-light);border-radius:20px;padding:7px 12px;cursor:pointer">레벨 안내 ›</div></div>';
+  var head='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><div><div style="font-size:19px;font-weight:900;letter-spacing:-.3px">'+mlabel+' 포인트 순위</div></div><div onclick="openLevelGuide()" style="font-size:12px;font-weight:800;color:var(--primary-dark);background:var(--mint-light);border-radius:20px;padding:7px 12px;cursor:pointer">레벨 안내 ›</div></div>';
   if(!studs.length){el.innerHTML=head+'<div class="empty" style="padding:32px"><div class="empty-emoji" style="font-size:32px">🏆</div><div class="empty-title" style="font-size:13px">순위 정보가 없어요</div></div>';return;}
   var order=[1,0,2],rkl=['','1위','2위','3위'];
   var top='<div style="display:flex;gap:9px;align-items:flex-end;justify-content:center;padding-top:6px;margin-bottom:14px">';
