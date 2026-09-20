@@ -312,9 +312,14 @@ function renderDetailCoupons(u){dedupeBdayCoupons();const el=document.getElement
 function useCouponByTeacher(cid){const c=coupons.find(x=>x.id===cid);if(!c||c.used)return;const inp=document.getElementById('dcoupon-code-'+cid);const val=((inp&&inp.value)||'').trim();if(!val){showToast('인증번호를 입력해주세요');return;}if(val!==String(c.code)){showToast('❌ 인증번호가 일치하지 않아요');return;}c.used=true;c.usedAt=new Date().toLocaleDateString('ko-KR');saveCouponNow(c);const u=pendingList.find(x=>x.id===currentDetailStudentId);if(u)renderDetailCoupons(u);renderAdminCouponList();try{renderCouponList();}catch(e){}showToast('🎉 쿠폰이 사용 처리되었어요');}
 /* ══════════ 포인트제 (레벨/포인트 엔진) ══════════ */
 const LEVELS=[{lv:1,min:0,stage:'씨앗',tree:0},{lv:2,min:500,stage:'새싹',tree:1},{lv:3,min:1500,stage:'새싹',tree:1},{lv:4,min:3000,stage:'작은나무',tree:2},{lv:5,min:5000,stage:'작은나무',tree:2},{lv:6,min:7500,stage:'큰나무',tree:3},{lv:7,min:10000,stage:'큰나무',tree:3},{lv:8,min:13000,stage:'꽃',tree:4},{lv:9,min:17000,stage:'첫 열매',tree:5},{lv:10,min:20000,stage:'풍성한 열매',tree:5}];
-function ptCfg(){var c=(typeof appConfig!=='undefined'&&appConfig.pt)||{};return {full:c.full!=null?c.full:200,half:c.half!=null?c.half:100,bday:c.bday!=null?c.bday:300,feast:c.feast!=null?c.feast:300,tiers:c.tiers||{t2:25,t5:50,t10:75,t15:100,t20:125,t30:150,t40:175},milestones:c.milestones||{5:100,10:200,15:300,20:400,30:600,40:775,50:1000}};}
-/* 그 주의 일반 연속출석 보너스(구간별) */
-function _streakWeekly(s){var t=ptCfg().tiers;if(s<=1)return 0;if(s<=4)return t.t2;if(s<=9)return t.t5;if(s<=14)return t.t10;if(s<=19)return t.t15;if(s<=29)return t.t20;if(s<=39)return t.t30;return t.t40;}
+/* 연간 출석 대상 주차(방학 제외 기본값). 관리자가 방학을 지정해 실제 대상일을 조정 */
+var YEAR_TARGET_WEEKS=47;
+/* 포인트 정책 — 47주 개근 시 정확히 20,000P(성장점수) 도달하도록 보정
+   기본 9,400 + 연속보너스 8,400 + 마일스톤 2,200 = 20,000 */
+function ptCfg(){var c=(typeof appConfig!=='undefined'&&appConfig.pt)||{};return {full:c.full!=null?c.full:200,half:c.half!=null?c.half:100,bday:c.bday!=null?c.bday:300,feast:c.feast!=null?c.feast:300,tiers:{t2:50,t5:100,t15:150,t20:200,t30:250},milestones:{5:100,10:200,15:300,20:400,30:500,40:700}};}
+/* 그 주의 일반 연속출석 보너스(구간별)
+   1주:0 · 2~4주:+50 · 5~14주:+100 · 15~19주:+150 · 20~29주:+200 · 30주~:+250 */
+function _streakWeekly(s){var t=ptCfg().tiers;if(s<=1)return 0;if(s<=4)return t.t2;if(s<=14)return t.t5;if(s<=19)return t.t15;if(s<=29)return t.t20;return t.t30;}
 function levelInfo(pts){pts=pts||0;var cur=LEVELS[0];for(var i=0;i<LEVELS.length;i++){if(pts>=LEVELS[i].min)cur=LEVELS[i];}var nxt=LEVELS[cur.lv]||null;return {lv:cur.lv,stage:cur.stage,tree:cur.tree,min:cur.min,next:nxt?nxt.min:null,toNext:nxt?Math.max(0,nxt.min-pts):0};}
 function streakBonusOf(streak){var cfg=ptCfg();var ms=cfg.milestones[streak]||0;return {amount:_streakWeekly(streak)+ms,milestone:ms>0};}
 function _phPush(u,type,amount,reason,by,ref){u.pointHistory=u.pointHistory||[];u.pointHistory.push({type:type,amount:amount,reason:reason,createdAt:new Date().toLocaleDateString('ko-KR'),ts:Date.now(),createdBy:by||'시스템',ref:ref||''});if(u.pointHistory.length>500)u.pointHistory.splice(0,u.pointHistory.length-500);}
@@ -331,11 +336,11 @@ function awardAttendance(u,sat,status,by){
   u.currentPoints=(u.currentPoints||0)-prev.pts;
   u.yearTotalPoints=(u.yearTotalPoints||0)-prev.pts;
   u.pendingStreakRewards=Math.max(0,(u.pendingStreakRewards||0)-prev.pend);
-  var cfg=ptCfg(),addPts=0,addPend=0,reason='',mile=false,streak=0;
+  var cfg=ptCfg(),addPts=0,addPend=0,reason='',mile=false,streak=0,wk=0,ms=0,rel=0,msPaid=0;
   if(status!=='absent'){
-    streak=computeStreak(u);u.maxStreak=Math.max(u.maxStreak||0,streak);if(u.id===G.id)G.maxStreak=u.maxStreak;var wk=_streakWeekly(streak);var ms=cfg.milestones[streak]||0;mile=ms>0;
+    streak=computeStreak(u);u.maxStreak=Math.max(u.maxStreak||0,streak);if(u.id===G.id)G.maxStreak=u.maxStreak;wk=_streakWeekly(streak);ms=cfg.milestones[streak]||0;mile=ms>0;
     if(status==='half'){addPts=cfg.half;if(ms>0)addPend=ms;reason='지각 출석';}
-    else{var rel=(u.pendingStreakRewards||0);addPts=cfg.full+wk+ms+rel;if(rel)u.pendingStreakRewards=0;reason='주일 출석'+((wk+ms)?(' · 연속 '+streak+'주 보너스'):'')+(rel?(' · 보류 보너스'):'');}
+    else{rel=(u.pendingStreakRewards||0);msPaid=ms;addPts=cfg.full+wk+ms+rel;if(rel)u.pendingStreakRewards=0;reason='주일 출석'+((wk+ms)?(' · 연속 '+streak+'주 보너스'):'')+(rel?(' · 보류 보너스'):'');}
   }
   u.currentPoints=(u.currentPoints||0)+addPts;
   u.yearTotalPoints=(u.yearTotalPoints||0)+addPts;
@@ -345,7 +350,7 @@ function awardAttendance(u,sat,status,by){
   u.pointHistory=(u.pointHistory||[]).filter(function(h){return h.ref!=='att-'+sat;});
   if(addPts>0)_phPush(u,'earn',addPts,reason,by||'시스템','att-'+sat);
   _ptSyncG(u);
-  return {added:addPts,pend:addPend,streak:streak,milestone:mile,base:(status==='half'?cfg.half:(status==='absent'?0:cfg.full))};
+  return {added:addPts,pend:addPend,streak:streak,milestone:mile,base:(status==='half'?cfg.half:(status==='absent'?0:cfg.full)),weekly:(status==='half'?0:wk),milestonePaid:msPaid,released:rel};
 }
 function checkLevelCoupons(u){}   /* 쿠폰 자동발급 폐지 — 포인트제로 전환 */
 /* ══════════ 포인트 상점 ══════════ */
@@ -522,7 +527,17 @@ function _ptHistHtml(u){
 function openLevelGuide(){
   var yt=G.yearTotalPoints||0;var cur=levelInfo(yt).lv;
   var el=document.getElementById('level-guide-list');if(!el)return;
-  el.innerHTML=LEVELS.map(function(L){
+  var _row=function(l,r){return '<div style="display:flex;justify-content:space-between;font-size:11.5px;padding:4px 0"><span style="color:var(--text-sub)">'+l+'</span><span style="font-weight:700;color:var(--text)">'+r+'</span></div>';};
+  var guide='<div class="card" style="margin-bottom:14px;padding:14px 15px">'
+    +'<div style="font-size:13px;font-weight:800;margin-bottom:8px">🎯 포인트 획득 방법</div>'
+    +_row('주일 정상 출석','+200P')+_row('지각 출석','+100P')
+    +'<div style="height:8px"></div><div style="font-size:11.5px;font-weight:800;color:var(--primary-dark);margin-bottom:4px">연속출석 매주 보너스</div>'
+    +_row('2~4주','+50P')+_row('5~14주','+100P')+_row('15~19주','+150P')+_row('20~29주','+200P')+_row('30주 이상','+250P')
+    +'<div style="height:8px"></div><div style="font-size:11.5px;font-weight:800;color:var(--primary-dark);margin-bottom:4px">연속출석 마일스톤 특별 보너스</div>'
+    +_row('5주 / 10주 / 15주','+100 / +200 / +300P')+_row('20주 / 30주 / 40주','+400 / +500 / +700P')
+    +'<div style="font-size:11px;color:var(--text-light);margin-top:10px;line-height:1.6">· 방학은 결석·연속출석 끊김 없이 제외돼요<br>· 연간 개근(47주) 시 20,000P로 Lv.10 달성!<br>· 생일·축일·특별 포인트는 상점에서 쓸 수 있지만 레벨(성장점수)에는 반영되지 않아요</div>'
+    +'</div>';
+  el.innerHTML=guide+LEVELS.map(function(L){
     var done=yt>=L.min;var isCur=L.lv===cur;
     return '<div style="display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;margin-bottom:8px;background:'+(isCur?'var(--primary-light)':'var(--bg)')+';border:'+(isCur?'1.5px solid var(--primary)':'1px solid var(--border-light)')+'">'
       +'<div style="width:42px;height:42px;flex-shrink:0;border-radius:11px;background:#fff;display:flex;align-items:center;justify-content:center;'+(done?'':'opacity:.5;filter:grayscale(.5)')+'">'+_lvTree(L.lv,32)+'</div>'
@@ -567,9 +582,21 @@ function renderHomePoints(){
     var tr=document.getElementById('home-tree');if(tr&&typeof _treeSVG==='function')tr.innerHTML=_lvTree(li.lv,44);
     var pf=document.getElementById('home-prog-fill');if(pf){var pct=100;if(li.next!=null){var span=li.next-li.min;pct=span>0?Math.round((yt-li.min)/span*100):0;}pf.style.width=Math.max(0,Math.min(100,pct))+'%';}
     s('home-streak',G.streak||0);s('home-maxstreak',Math.max(G.streak||0,G.maxStreak||0));s('home-total',(G.attendedWeeks||[]).length);
-    var mw=[5,10,15,20,30,40,50],st=G.streak||0,nm=null;for(var i=0;i<mw.length;i++){if(mw[i]>st){nm=mw[i];break;}}
+    var mms=ptCfg().milestones,mw=[5,10,15,20,30,40],st=G.streak||0,nm=null;for(var i=0;i<mw.length;i++){if(mw[i]>st){nm=mw[i];break;}}
     var mel=document.getElementById('home-milestone');
-    if(mel){if(nm){var bonus=(ptCfg().milestones[nm])||0;mel.style.display='';mel.innerHTML='🔥 '+nm+'주 연속 출석까지 '+(nm-st)+'주 남았어요! 달성 시 <b>+'+bonus+'P</b> 보너스가 지급돼요.';}else{mel.style.display='none';}}
+    if(mel){
+      var cfg2=ptCfg();
+      var thisSat=(typeof attendSat==='function')?attendSat():'';
+      var doneThis=thisSat&&(G.attendedWeeks||[]).indexOf(thisSat)>=0;
+      var vacThis=thisSat&&typeof isVacationDate==='function'&&isVacationDate(thisSat);
+      var parts=[];
+      if(vacThis){parts.push('🏖️ 이번 주는 방학이에요 · 연속출석 기록은 유지돼요');}
+      else if(doneThis){parts.push('✅ 이번 주 출석 완료 · 현재 <b>'+st+'주</b> 연속출석');}
+      else{var nx=st+1,wk=_streakWeekly(nx),msn=mms[nx]||0,pend=G.pendingStreakRewards||0,tot=cfg2.full+wk+msn+pend;
+        parts.push('이번 주 정상 출석 시 <b>+'+tot+'P</b>'+(msn>0?(' · '+nx+'주 달성 특별 보너스 +'+msn+'P!'):''));}
+      if(nm&&nm!==(st+1)){var bonus=mms[nm]||0;parts.push('🔥 '+nm+'주 연속출석까지 '+(nm-st)+'주! 달성 시 <b>+'+bonus+'P</b> 특별 보너스');}
+      mel.style.display='';mel.innerHTML=parts.join('<br>');
+    }
   }catch(e){}
 }
 /* 출석 완료 화면 */
@@ -578,8 +605,9 @@ function showAttendDone(aw,streak){
   try{
     var cfg=ptCfg();var isHalf=aw.base===cfg.half;
     var rows=[[isHalf?'지각 출석':'기본 출석','+'+aw.base+'P']];
-    var bonus=(aw.added||0)-(aw.base||0);
-    if(bonus>0)rows.push([aw.milestone?('연속 '+aw.streak+'주 달성 보너스'):((aw.streak||streak||0)+'주 연속 보너스'),'+'+bonus+'P']);
+    if((aw.weekly||0)>0)rows.push([(aw.streak||streak||0)+'주 연속출석 보너스','+'+aw.weekly+'P']);
+    if((aw.milestonePaid||0)>0)rows.push([(aw.streak||streak||0)+'주 달성 특별 보너스','+'+aw.milestonePaid+'P']);
+    if((aw.released||0)>0)rows.push(['보류된 마일스톤 보너스','+'+aw.released+'P']);
     var body=document.getElementById('attdone-body');
     if(body)body.innerHTML=rows.map(function(r){return '<div style="display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:1px solid var(--border-light)"><span style="color:var(--text-sub)">'+r[0]+'</span><span style="font-weight:700">'+r[1]+'</span></div>';}).join('')
       +'<div style="display:flex;justify-content:space-between;align-items:center;background:var(--primary-light);border-radius:11px;padding:11px 13px;margin-top:9px"><span style="font-weight:800;color:var(--primary-dark)">획득 포인트</span><span style="font-weight:800;color:var(--primary-dark);font-size:15px">+'+(aw.added||0)+'P</span></div>';
@@ -1846,7 +1874,17 @@ function photoImgs(ph){if(!ph)return [];var a=(ph.images&&ph.images.length)?ph.i
 function photoCover(ph){return photoImgs(ph)[0]||'';}
 function eventCover(e){if(e&&e.image)return e.image;try{var po=posts.find(function(x){return x.eventId===e.id;});if(po){var pi=po.image||_srcOf((po.images||[])[0]);if(pi)return pi;}}catch(x){}var yid=(e&&e.youtube)||'';if(yid)return 'https://img.youtube.com/vi/'+yid+'/hqdefault.jpg';return '';}
 function getStoryImgs(p){return photoImgs(p);}
-function showStorySlide(){if(storyIdx<0||storyIdx>=storyList.length){closeStory();return;}const p=storyList[storyIdx];const imgs=getStoryImgs(p);if(storyImgIdx>=imgs.length){if(!p.readBy)p.readBy=[];if(!p.readBy.includes(G.id))p.readBy.push(G.id);renderStoryRow();storyIdx++;storyImgIdx=0;showStorySlide();return;}if(storyImgIdx<0){storyIdx--;if(storyIdx<0){closeStory();return;}storyImgIdx=getStoryImgs(storyList[storyIdx]).length-1;showStorySlide();return;}storyPaused=false;collapseStoryContent();closeStoryCommentSheet();currentStoryPost=p;const bar=document.getElementById('story-progress-bar');bar.innerHTML=imgs.map((_,i)=>`<div style="flex:1;height:2px;background:rgba(255,255,255,.35);border-radius:2px;overflow:hidden"><div class="story-prog-fill" style="height:100%;background:white;width:${i<storyImgIdx?'100%':'0%'}"></div></div>`).join('');const imgEl=document.getElementById('story-viewer-img-el');const fallback=document.getElementById('story-viewer-fallback');const cur=imgs[storyImgIdx];const curSrc=typeof cur==='object'?cur.src:cur;currentStoryImgObj=typeof cur==='object'?cur:null;try{refreshStoryLikeUI();renderStoryComments();refreshStoryOwnerBtns();}catch(e){}imgEl.style.opacity='0';setTimeout(()=>{if(curSrc){imgEl.src=curSrc;imgEl.style.display='';fallback.style.display='none';}else{imgEl.style.display='none';fallback.style.display='';}imgEl.style.opacity='1';},150);document.getElementById('story-viewer-title').textContent=p.title+(imgs.length>1?` (${storyImgIdx+1}/${imgs.length})`:'');document.getElementById('story-viewer-date').textContent=p.date;const arrow=document.getElementById('story-expand-arrow');if(arrow)arrow.style.display=p.content?'inline':'none';const likeBtn=document.getElementById('story-like-btn');if(likeBtn&&currentStoryImgObj){const liked=(currentStoryImgObj.likes||[]).includes(G.id);likeBtn.querySelector('.like-icon').innerHTML=_heartHTML(liked);likeBtn.querySelector('.like-count').textContent=(currentStoryImgObj.likes||[]).length;}renderStoryComments();document.getElementById('story-comment-input').value='';clearStoryTimer();const fills=bar.querySelectorAll('.story-prog-fill');if(fills[storyImgIdx]){requestAnimationFrame(()=>{fills[storyImgIdx].style.transition='width 3s linear';fills[storyImgIdx].style.width='100%';});}storyTimer=setTimeout(()=>storyTap(1),3000);}
+function _relTime(ts){if(!ts)return '';var d=Date.now()-ts;var m=Math.floor(d/60000);if(m<1)return '방금';if(m<60)return m+'분 전';var h=Math.floor(m/60);if(h<24)return h+'시간 전';var day=Math.floor(h/24);if(day<7)return day+'일 전';return '';}
+function _setStoryAuthor(p){
+  var post=null;try{post=(posts||[]).find(function(x){return x.photoId===p.id;});}catch(e){}
+  var name='',avatar='',ts=(post&&post.ts)||0;
+  if(post){name=post.authorName||'';var m=(pendingList||[]).find(function(u){return u.id===post.authorId;});if(m){avatar=m.avatar||'';if(!name)name=m.displayName||((m.name||'')+' '+(m.baptism||''));}}
+  var av=document.getElementById('story-top-av');
+  if(av){if(avatar){av.style.backgroundImage="url('"+avatar+"')";av.textContent='';}else{av.style.backgroundImage='';av.textContent=((name||p.title||'?').trim().charAt(0)||'?');}}
+  var de=document.getElementById('story-viewer-date');
+  if(de){var rt=_relTime(ts);de.textContent=(name?name+' · ':'')+(rt||p.date||'');}
+}
+function showStorySlide(){if(storyIdx<0||storyIdx>=storyList.length){closeStory();return;}const p=storyList[storyIdx];const imgs=getStoryImgs(p);if(storyImgIdx>=imgs.length){if(!p.readBy)p.readBy=[];if(!p.readBy.includes(G.id))p.readBy.push(G.id);renderStoryRow();storyIdx++;storyImgIdx=0;showStorySlide();return;}if(storyImgIdx<0){storyIdx--;if(storyIdx<0){closeStory();return;}storyImgIdx=getStoryImgs(storyList[storyIdx]).length-1;showStorySlide();return;}storyPaused=false;collapseStoryContent();closeStoryCommentSheet();currentStoryPost=p;const bar=document.getElementById('story-progress-bar');bar.innerHTML=imgs.map((_,i)=>`<div style="flex:1;height:2px;background:rgba(255,255,255,.35);border-radius:2px;overflow:hidden"><div class="story-prog-fill" style="height:100%;background:white;width:${i<storyImgIdx?'100%':'0%'}"></div></div>`).join('');const imgEl=document.getElementById('story-viewer-img-el');const fallback=document.getElementById('story-viewer-fallback');const cur=imgs[storyImgIdx];const curSrc=typeof cur==='object'?cur.src:cur;currentStoryImgObj=typeof cur==='object'?cur:null;try{refreshStoryLikeUI();renderStoryComments();refreshStoryOwnerBtns();}catch(e){}imgEl.style.opacity='0';setTimeout(()=>{if(curSrc){imgEl.src=curSrc;imgEl.style.display='';fallback.style.display='none';}else{imgEl.style.display='none';fallback.style.display='';}imgEl.style.opacity='1';var _amb=document.getElementById('story-ambient');if(_amb)_amb.style.backgroundImage=curSrc?("url('"+curSrc+"')"):'';},150);document.getElementById('story-viewer-title').textContent=p.title+(imgs.length>1?` (${storyImgIdx+1}/${imgs.length})`:'');try{_setStoryAuthor(p);}catch(e){document.getElementById('story-viewer-date').textContent=p.date;}const arrow=document.getElementById('story-expand-arrow');if(arrow)arrow.style.display=p.content?'inline':'none';const likeBtn=document.getElementById('story-like-btn');if(likeBtn&&currentStoryImgObj){const liked=(currentStoryImgObj.likes||[]).includes(G.id);likeBtn.querySelector('.like-icon').innerHTML=_heartHTML(liked);likeBtn.querySelector('.like-count').textContent=(currentStoryImgObj.likes||[]).length;}renderStoryComments();document.getElementById('story-comment-input').value='';clearStoryTimer();const fills=bar.querySelectorAll('.story-prog-fill');if(fills[storyImgIdx]){requestAnimationFrame(()=>{fills[storyImgIdx].style.transition='width 3s linear';fills[storyImgIdx].style.width='100%';});}storyTimer=setTimeout(()=>storyTap(1),3000);}
 function storyTap(dir){if(storyContentExpanded)return;storyImgIdx+=dir;showStorySlide();}
 function clearStoryTimer(){if(storyTimer){clearTimeout(storyTimer);storyTimer=null;}}
 function pauseStory(){storyPaused=true;clearStoryTimer();const bar=document.getElementById('story-progress-bar');const fills=bar.querySelectorAll('.story-prog-fill');if(fills[storyImgIdx]){const cs=getComputedStyle(fills[storyImgIdx]);fills[storyImgIdx].style.width=cs.width;fills[storyImgIdx].style.transition='none';}}
