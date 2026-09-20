@@ -7,6 +7,8 @@ let _plinkIdx=-1;
 let calResponses=[];
 let posts=[],diaryData=[],reminderData=[],birthdayComments=[],bdayLikes=[],currentPostId=null,notifications=[],letters=[];
 let coupons=[];
+let shopItems=[];   /* 포인트 상점 상품 {id,name,price,stock,cat,img,active} */
+let shopOrders=[];  /* 교환 주문 {id,uid,name,itemId,itemName,price,ts,dateStr,status:'pending'|'done'} */
 let hymnData=[];   /* 주간 성가·전례: {id,date:'2026-07-04',label:'연중 제15주일',items:{입당:'814',...},note:''} */
 let litData=[];    /* 주간 전례: {id,date,label,reading1,reading2,gospel,note} */
 function pad2(n){return n<10?'0'+n:''+n;}
@@ -64,7 +66,7 @@ function updateWeeklyBtn(){
   b.style.display=on?'':'none';
   /* 이번 주 공지가 아직 없으면 빨간 점 */
   var d=document.getElementById('weekly-dot');
-  if(d)d.style.display=(on&&typeof _wnPost==='function'&&!_wnPost(_wnSat()))?'block':'none';
+  if(d)d.style.display=(on&&typeof _wnPost==='function'&&!_wnPost(_wnSat())&&!(appConfig&&appConfig.wnScheduled===_wnSat()))?'block':'none';
 }
 function updateVerseEditUI(){try{updateWeeklyBtn();}catch(e){}
   var can=_canEditVerse();
@@ -229,7 +231,7 @@ function startNewSchoolYear(term){if(!_autoPromote&&!(G.type==='principal'||G.ty
   let _from=term?term.start:((appConfig&&appConfig.termStart)||'');
   if(!_from){ const _all=[];pendingList.forEach(x=>{(x.attendedWeeks||[]).forEach(w=>_all.push(w));});_all.sort();_from=_all[0]||_to; }
   const _term=(term?term.yr:(_from?_from.slice(0,4):String(yr)))+'학년도';try{appConfig.promoteBackup={yr:(term?term.yr+1:yr),at:_to,snap:pendingList.filter(function(u){return u.role==='student'||u.role==='teacher';}).map(function(u){return {id:u.id,role:u.role,gradeKey:u.gradeKey,gradeLabel:u.gradeLabel,graduated:!!u.graduated,teacherType:u.teacherType};})};}catch(e){}
-  pendingList.filter(u=>u.role==='student').forEach(u=>{const t=u.attendTotal||0;if(t>0||(u.attendedWeeks||[]).length){let lv='🌱 씨앗';for(const L of ATTEND_LEVELS)if(t>=L.n)lv=L.l;u.history=u.history||[];u.history.push({year:yr,term:_term,from:_from,to:_to,grade:u.gradeLabel||'',attendTotal:t,level:lv,weeks:(u.attendedWeeks||[]).slice(),halfWeeks:(u.halfWeeks||[]).slice()});}u.attendedWeeks=[];u.halfWeeks=[];u.qrScanAt={};u.attendTotal=0;u.streak=0;u.earnedLevels=[];u.absentAckWeek=null;u.absentAckBy=null;u.lastContactAt=null;u.lastContactBy=null;if(!(_promoteExemptFrom&&u.joinedAt&&u.joinedAt>=_promoteExemptFrom)){if(u.gradeKey==='h'){const gy=((u.gradeLabel||'').match(/고(\d)/)||[])[1];if(gy==='3'){u.graduated=true;u.graduatedYear=yr;}else if(gy==='2')u.gradeLabel='고3';else if(gy==='1')u.gradeLabel='고2';}else if(u.gradeKey==='m3'){u.gradeKey='h';u.gradeLabel='고1';}else if(u.gradeKey==='m2'){u.gradeKey='m3';u.gradeLabel='중3';}else if(u.gradeKey==='m1'){u.gradeKey='m2';u.gradeLabel='중2';}}});try{appConfig.termStart=_to;}catch(e){}coupons=[];vacationDates=[];eduVacationDates=[];absentNotifiedKeys={};notifications=notifications.filter(n=>!n.absentUid&&!(n.tap&&(n.tap.type==='coupon'||n.tap.type==='coupon-admin')));updateNotifDot();renderAdminGrid(G.type==='principal'||G.type==='admin'||G.isAdmin);renderAttendList();renderAttendStats();renderAbsentAlerts();renderAdminCouponList();pendingList.filter(function(u){return u.role==='teacher'&&u.approved&&!(u.teacherType==='principal'||u.teacherType==='admin'||u.isAdmin);}).forEach(function(u){u.teacherType='etc';u.gradeLabel='기타';});try{if(typeof flushSync==='function')flushSync();}catch(e){}showToast('🎓 새 학년도 시작 · '+_term+' · 학생 진급·기록 보관, 교사 담당학년 초기화 완료');return true;}
+  pendingList.filter(u=>u.role==='student').forEach(u=>{const t=u.attendTotal||0;if(t>0||(u.attendedWeeks||[]).length){let lv='🌱 씨앗';for(const L of ATTEND_LEVELS)if(t>=L.n)lv=L.l;u.history=u.history||[];u.history.push({year:yr,term:_term,from:_from,to:_to,grade:u.gradeLabel||'',attendTotal:t,level:lv,weeks:(u.attendedWeeks||[]).slice(),halfWeeks:(u.halfWeeks||[]).slice()});}u.attendedWeeks=[];u.halfWeeks=[];u.qrScanAt={};u.attendTotal=0;u.streak=0;u.earnedLevels=[];u.yearTotalPoints=0;u.level=1;u.weekAward={};u.pendingStreakRewards=0;u.absentAckWeek=null;u.absentAckBy=null;u.lastContactAt=null;u.lastContactBy=null;if(!(_promoteExemptFrom&&u.joinedAt&&u.joinedAt>=_promoteExemptFrom)){if(u.gradeKey==='h'){const gy=((u.gradeLabel||'').match(/고(\d)/)||[])[1];if(gy==='3'){u.graduated=true;u.graduatedYear=yr;}else if(gy==='2')u.gradeLabel='고3';else if(gy==='1')u.gradeLabel='고2';}else if(u.gradeKey==='m3'){u.gradeKey='h';u.gradeLabel='고1';}else if(u.gradeKey==='m2'){u.gradeKey='m3';u.gradeLabel='중3';}else if(u.gradeKey==='m1'){u.gradeKey='m2';u.gradeLabel='중2';}}});try{appConfig.termStart=_to;}catch(e){}coupons=[];vacationDates=[];eduVacationDates=[];absentNotifiedKeys={};notifications=notifications.filter(n=>!n.absentUid&&!(n.tap&&(n.tap.type==='coupon'||n.tap.type==='coupon-admin')));updateNotifDot();renderAdminGrid(G.type==='principal'||G.type==='admin'||G.isAdmin);renderAttendList();renderAttendStats();renderAbsentAlerts();renderAdminCouponList();pendingList.filter(function(u){return u.role==='teacher'&&u.approved&&!(u.teacherType==='principal'||u.teacherType==='admin'||u.isAdmin);}).forEach(function(u){u.teacherType='etc';u.gradeLabel='기타';});try{if(typeof flushSync==='function')flushSync();}catch(e){}showToast('🎓 새 학년도 시작 · '+_term+' · 학생 진급·기록 보관, 교사 담당학년 초기화 완료');return true;}
 function _gEsc(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function _gLatin(t){return /^[\sA-Za-z0-9.,!'"?&:;()\-]+$/.test(t||'');}
 function applyThemeGreet(k){var d=SEASON_GREET[k]||null;var c=(typeof appConfig!=='undefined'&&appConfig.greets)?appConfig.greets[k]:null;var t=(c&&c.t)||(d&&d.t)||'';var sub=(c&&(c.sub!=null&&c.sub!==''))?c.sub:((c&&c.t)?'':((d&&d.sub)||''));var _ff=(typeof appConfig!=='undefined'&&appConfig.greetFont)||'gothic';var _fc=(_ff==='gothic')?'':' tg-f-'+_ff;var els=document.querySelectorAll('.theme-greet');for(var i=0;i<els.length;i++){var el=els[i];var tt=t,ss=sub;if(!tt&&el.id==='cfg-greet-preview'){tt='하늘의문 중고등부';ss='이 글씨체로 보여요';}if(!tt){el.style.display='none';el.innerHTML='';continue;}var _L=(tt||'').replace(/\s/g,'').length;var sc=_L<=8?' tg-s1':_L<=18?' tg-s2':_L<=34?' tg-s3':' tg-s4';el.style.display='block';el.innerHTML='<div class="tg-main'+sc+_fc+'">'+_gEsc(tt)+'</div>'+(ss?'<div class="tg-sub">'+_gEsc(ss)+'</div>':'');}}
@@ -308,7 +310,146 @@ function openManualStudentModal(){const bm=document.getElementById('ms-bmonth'),
 function submitManualStudent(){const name=(document.getElementById('ms-name').value||'').trim();const bap=(document.getElementById('ms-baptism').value||'').trim();const gv=document.getElementById('ms-grade').value;if(!name||!bap||!gv){showToast('이름·세례명·학년을 입력해주세요');return;}var _cohort,_gk,_gl;if(gv==='prep'){_cohort=_curSchoolYr()+1;_gk='m1';_gl='중1';}else{const p=gv.split('|');_gk=p[0];_gl=p[1];_cohort=_cohortFromLabel(_gl);}const u={id:'manual'+Date.now(),pwh:'',demo:false,manualReg:true,name,baptism:bap,phone:'',role:'student',cohort:_cohort,gradeOffset:0,gradeKey:_gk,gradeLabel:_gl,approved:true,joinedAt:toDateStr(new Date()),joinedTs:Date.now(),attendTotal:0,streak:0,attendedWeeks:[],halfWeeks:[],earnedLevels:[],birthYear:parseInt(document.getElementById('ms-byear').value)||0,birthMonth:parseInt(document.getElementById('ms-bmonth').value)||0,birthDay:parseInt(document.getElementById('ms-bday').value)||0,feastMonth:parseInt(document.getElementById('ms-fmonth').value)||0,feastDay:parseInt(document.getElementById('ms-fday').value)||0};try{applyStudentGrade(u);}catch(e){}pendingList.push(u);closeModal('manual-student-modal');renderStudentCards('all');renderAttendList();showToast('📵 '+name+' 학생이 등록되었어요. 출석관리에서 바로 체크할 수 있어요');}
 function renderDetailCoupons(u){dedupeBdayCoupons();const el=document.getElementById('detail-coupon-list');if(!el)return;const hint=document.getElementById('detail-coupon-hint');if(hint)hint.textContent=u.manualReg?'📵 수동등록 학생 · 교사가 대신 확인·사용 처리':'';const mine=coupons.filter(c=>c.studentId===u.id);if(!mine.length){el.innerHTML='<div class="card" style="text-align:center;font-size:12px;color:var(--text-light);padding:16px">보유한 쿠폰이 없어요</div>';return;}el.innerHTML=mine.slice().reverse().map(c=>`<div class="card" style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:12px;font-weight:700;display:flex;align-items:center;gap:5px">${_treeByLabel(c.badgeLabel,22)}${(_treeByLabel(c.badgeLabel)?_labelNoEmoji(c.badgeLabel):c.badgeLabel)} 쿠폰 <span style="font-size:11px;color:var(--text-light);font-weight:500">· 🎁 ${c.reward||'보상'}</span></div><span class="chip ${c.used?'chip-gray':'chip-coral'}">${c.used?'사용완료':'미사용'}</span></div><div style="font-size:10px;color:var(--text-light);margin-top:6px">발급 ${c.createdAt}${c.used&&c.usedAt?' · 사용 '+c.usedAt:''}${c.used?'':' · 인증번호 <b style="color:var(--primary-dark);letter-spacing:1px">'+c.code+'</b>'}</div>${c.used?'':`<div style="display:flex;gap:6px;margin-top:8px"><input class="form-input" type="text" inputmode="numeric" id="dcoupon-code-${c.id}" placeholder="인증번호 6자리" maxlength="6" style="flex:1;min-width:0"><button class="btn btn-sm" style="background:var(--primary);color:white;width:auto;padding:6px 12px;white-space:nowrap" onclick="useCouponByTeacher('${c.id}')">✅ 사용</button></div>`}</div>`).join('');}
 function useCouponByTeacher(cid){const c=coupons.find(x=>x.id===cid);if(!c||c.used)return;const inp=document.getElementById('dcoupon-code-'+cid);const val=((inp&&inp.value)||'').trim();if(!val){showToast('인증번호를 입력해주세요');return;}if(val!==String(c.code)){showToast('❌ 인증번호가 일치하지 않아요');return;}c.used=true;c.usedAt=new Date().toLocaleDateString('ko-KR');saveCouponNow(c);const u=pendingList.find(x=>x.id===currentDetailStudentId);if(u)renderDetailCoupons(u);renderAdminCouponList();try{renderCouponList();}catch(e){}showToast('🎉 쿠폰이 사용 처리되었어요');}
-function checkLevelCoupons(u){u.earnedLevels=u.earnedLevels||[];ATTEND_LEVELS.forEach(L=>{if(!L.r||(u.attendTotal||0)<L.n)return;if(coupons.some(c=>c.studentId===u.id&&c.badgeLabel===L.l)){if(!u.earnedLevels.includes(L.n))u.earnedLevels.push(L.n);return;}u.earnedLevels.push(L.n);generateCoupon(u,L);if(u.id===G.id)nudgePushOnReward();});}
+/* ══════════ 포인트제 (레벨/포인트 엔진) ══════════ */
+const LEVELS=[{lv:1,min:0,stage:'씨앗',tree:0},{lv:2,min:500,stage:'새싹',tree:1},{lv:3,min:1500,stage:'새싹',tree:1},{lv:4,min:3000,stage:'작은나무',tree:2},{lv:5,min:5000,stage:'작은나무',tree:2},{lv:6,min:7500,stage:'큰나무',tree:3},{lv:7,min:10000,stage:'큰나무',tree:3},{lv:8,min:13000,stage:'꽃',tree:4},{lv:9,min:17000,stage:'첫 열매',tree:5},{lv:10,min:20000,stage:'풍성한 열매',tree:5}];
+function ptCfg(){var c=(typeof appConfig!=='undefined'&&appConfig.pt)||{};return {full:c.full!=null?c.full:100,half:c.half!=null?c.half:50,bday:c.bday!=null?c.bday:300,feast:c.feast!=null?c.feast:300,streakBase:c.streakBase!=null?c.streakBase:50,milestones:c.milestones||{2:20,3:30,4:50,5:100,10:200,15:300,20:400,30:500,40:700}};}
+function levelInfo(pts){pts=pts||0;var cur=LEVELS[0];for(var i=0;i<LEVELS.length;i++){if(pts>=LEVELS[i].min)cur=LEVELS[i];}var nxt=LEVELS[cur.lv]||null;return {lv:cur.lv,stage:cur.stage,tree:cur.tree,min:cur.min,next:nxt?nxt.min:null,toNext:nxt?Math.max(0,nxt.min-pts):0};}
+function streakBonusOf(streak){var cfg=ptCfg();if(streak<=1)return {amount:0,milestone:false};var big=[5,10,15,20,30,40];if(cfg.milestones[streak]!=null)return {amount:cfg.milestones[streak],milestone:big.indexOf(streak)>=0};return {amount:cfg.streakBase,milestone:false};}
+function _phPush(u,type,amount,reason,by,ref){u.pointHistory=u.pointHistory||[];u.pointHistory.push({type:type,amount:amount,reason:reason,createdAt:new Date().toLocaleDateString('ko-KR'),ts:Date.now(),createdBy:by||'시스템',ref:ref||''});if(u.pointHistory.length>500)u.pointHistory.splice(0,u.pointHistory.length-500);}
+function _ptSyncG(u){if(u&&G&&u.id===G.id){G.currentPoints=u.currentPoints||0;G.yearTotalPoints=u.yearTotalPoints||0;G.level=u.level||1;G.pendingStreakRewards=u.pendingStreakRewards||0;}}
+function earnPoints(u,amount,reason,by,ref){if(!u||!amount)return;u.currentPoints=(u.currentPoints||0)+amount;u.yearTotalPoints=(u.yearTotalPoints||0)+amount;u.level=levelInfo(u.yearTotalPoints).lv;_phPush(u,'earn',amount,reason,by,ref);_ptSyncG(u);try{saveMemberNow(u);}catch(e){}}
+function spendPoints(u,amount,reason,ref){if(!u||!amount)return false;if((u.currentPoints||0)<amount)return false;u.currentPoints-=amount;_phPush(u,'spend',-amount,reason,'',ref);_ptSyncG(u);try{saveMemberNow(u);}catch(e){}return true;}
+/* 주(週)단위 출석 포인트 — 상태를 바꿔도 중복지급 없이 재계산 */
+function awardAttendance(u,sat,status,by){
+  if(!u||!sat)return {added:0};
+  if(typeof isVacationDate==='function'&&isVacationDate(sat))return {added:0};
+  u.weekAward=u.weekAward||{};
+  var prev=u.weekAward[sat]||{pts:0,pend:0};
+  u.currentPoints=(u.currentPoints||0)-prev.pts;
+  u.yearTotalPoints=(u.yearTotalPoints||0)-prev.pts;
+  u.pendingStreakRewards=Math.max(0,(u.pendingStreakRewards||0)-prev.pend);
+  var cfg=ptCfg(),addPts=0,addPend=0,reason='',mile=false,streak=0;
+  if(status!=='absent'){
+    streak=computeStreak(u);var sb=streakBonusOf(streak);mile=sb.milestone;
+    if(status==='half'){addPts=cfg.half;if(sb.milestone)addPend=sb.amount;reason='지각 출석';}
+    else{var rel=(u.pendingStreakRewards||0);addPts=cfg.full+sb.amount+rel;if(rel)u.pendingStreakRewards=0;reason='주일 출석'+(sb.amount?(' · 연속 '+streak+'주 보너스'):'')+(rel?(' · 보류 보너스'):'');}
+  }
+  u.currentPoints=(u.currentPoints||0)+addPts;
+  u.yearTotalPoints=(u.yearTotalPoints||0)+addPts;
+  u.pendingStreakRewards=(u.pendingStreakRewards||0)+addPend;
+  u.weekAward[sat]={pts:addPts,pend:addPend};
+  u.level=levelInfo(u.yearTotalPoints).lv;
+  u.pointHistory=(u.pointHistory||[]).filter(function(h){return h.ref!=='att-'+sat;});
+  if(addPts>0)_phPush(u,'earn',addPts,reason,by||'시스템','att-'+sat);
+  _ptSyncG(u);
+  return {added:addPts,pend:addPend,streak:streak,milestone:mile,base:(status==='half'?cfg.half:(status==='absent'?0:cfg.full))};
+}
+function checkLevelCoupons(u){}   /* 쿠폰 자동발급 폐지 — 포인트제로 전환 */
+/* ══════════ 포인트 상점 ══════════ */
+const SHOP_CATS=[['all','전체'],['snack','간식'],['drink','음료'],['ticket','쿠폰/이용권'],['goods','굿즈']];
+const DEFAULT_SHOP_ITEMS=[
+ {id:'si-choco',name:'초코바',price:300,stock:20,cat:'snack',active:true},
+ {id:'si-drink',name:'음료 교환권',price:500,stock:20,cat:'drink',active:true},
+ {id:'si-note',name:'주일학교 노트',price:800,stock:15,cat:'goods',active:true},
+ {id:'si-goods',name:'소형 굿즈',price:1500,stock:10,cat:'goods',active:true},
+ {id:'si-tumbler',name:'텀블러',price:2000,stock:8,cat:'goods',active:true},
+ {id:'si-raffle',name:'이벤트 응모권',price:200,stock:50,cat:'ticket',active:true},
+ {id:'si-special',name:'특별 굿즈',price:3000,stock:5,cat:'goods',active:true}
+];
+var _shopCat='all';
+function _shopList(){return (shopItems&&shopItems.length)?shopItems:DEFAULT_SHOP_ITEMS;}
+function _shopEnsureSeed(){if(!(shopItems&&shopItems.length)&&G.role==='teacher'&&(G.type==='principal'||G.type==='admin'||G.isAdmin)){shopItems=DEFAULT_SHOP_ITEMS.map(function(x){return Object.assign({},x);});try{if(typeof flushSync==='function')flushSync();}catch(e){}}}
+function openShop(){_shopCat='all';_shopEnsureSeed();renderShop();openModal('shop-modal');}
+function shopSetCat(c){_shopCat=c;renderShop();}
+function renderShop(){
+  var bp=document.getElementById('shop-balance');if(bp)bp.textContent=(G.currentPoints||0).toLocaleString();
+  var yp=document.getElementById('shop-yeartotal');if(yp)yp.textContent=(G.yearTotalPoints||0).toLocaleString();
+  var ch=document.getElementById('shop-cats');
+  if(ch)ch.innerHTML=SHOP_CATS.map(function(c){return '<button class="filter-chip'+(_shopCat===c[0]?' active':'')+'" onclick="shopSetCat(\''+c[0]+'\')">'+c[1]+'</button>';}).join('');
+  var el=document.getElementById('shop-items');if(!el)return;
+  var list=_shopList().filter(function(it){return it&&it.active!==false&&(_shopCat==='all'||it.cat===_shopCat);});
+  if(!list.length){el.innerHTML='<div class="empty" style="padding:28px"><div class="empty-title" style="font-size:13px">상품이 없어요</div></div>';}
+  else el.innerHTML=list.map(function(it){
+    var soldout=(it.stock||0)<=0;var can=(G.currentPoints||0)>=it.price&&!soldout;
+    return '<div class="card" style="padding:12px 13px;margin-bottom:8px;display:flex;align-items:center;gap:12px">'
+      +'<div style="width:46px;height:46px;border-radius:12px;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>'
+      +'<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:800;color:var(--text)">'+_esc(it.name)+'</div>'
+      +'<div style="font-size:12px;font-weight:800;color:var(--primary-dark);margin-top:2px">'+(it.price||0).toLocaleString()+'P</div>'
+      +'<div style="font-size:10px;color:'+(soldout?'var(--coral)':'var(--text-light)')+';margin-top:2px">'+(soldout?'품절':'재고 '+(it.stock||0)+'개')+'</div></div>'
+      +'<button class="btn btn-sm" '+(can?'':'disabled')+' style="width:auto;padding:8px 14px;background:'+(can?'var(--primary)':'var(--border)')+';color:'+(can?'#fff':'var(--text-light)')+';font-weight:800" onclick="buyItem(\''+it.id+'\')">'+(soldout?'품절':'교환')+'</button>'
+    +'</div>';
+  }).join('');
+  renderShopOrders();
+}
+function renderShopOrders(){
+  var el=document.getElementById('shop-orders');if(!el)return;
+  var isT=G.role==='teacher';
+  var th=document.getElementById('shop-orders-title');
+  if(isT){
+    if(th)th.textContent='교환 처리';
+    var pend=(shopOrders||[]).filter(function(o){return o&&o.status!=='done';}).sort(function(a,b){return (a.ts||0)-(b.ts||0);});
+    if(!pend.length){el.innerHTML='<div style="font-size:12px;color:var(--text-light);padding:10px 2px">수령 대기중인 교환이 없어요</div>';return;}
+    el.innerHTML=pend.map(function(o){return '<div style="display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--border-light)"><div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:700">'+_esc(o.name||'')+' · '+_esc(o.itemName)+'</div><div style="font-size:10px;color:var(--text-light)">'+_esc(o.dateStr||'')+' · '+(o.price||0).toLocaleString()+'P</div></div><button class="btn btn-sm" style="width:auto;padding:6px 12px;background:var(--mint);color:#fff;font-weight:800" onclick="markOrderDone(\''+o.id+'\')">수령완료</button></div>';}).join('');
+    return;
+  }
+  if(th)th.textContent='최근 교환 내역';
+  var mine=(shopOrders||[]).filter(function(o){return o&&o.uid===G.id;}).sort(function(a,b){return (b.ts||0)-(a.ts||0);}).slice(0,8);
+  if(!mine.length){el.innerHTML='<div style="font-size:12px;color:var(--text-light);padding:10px 2px">아직 교환 내역이 없어요</div>';return;}
+  el.innerHTML=mine.map(function(o){var done=o.status==='done';return '<div style="display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--border-light)"><div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:700">'+_esc(o.itemName)+'</div><div style="font-size:10px;color:var(--text-light)">'+_esc(o.dateStr||'')+' · '+(o.price||0).toLocaleString()+'P</div></div><span class="chip '+(done?'chip-gray':'chip-coral')+'">'+(done?'수령완료':'수령대기')+'</span></div>';}).join('');
+}
+function markOrderDone(id){var o=(shopOrders||[]).find(function(x){return x.id===id;});if(!o)return;o.status='done';o.doneBy=G.displayName;o.doneAt=Date.now();try{if(typeof flushSync==='function')flushSync();}catch(e){}renderShopOrders();showToast('수령완료 처리했어요');}
+function buyItem(id){
+  var list=_shopList();var it=list.find(function(x){return x.id===id;});if(!it)return;
+  if((it.stock||0)<=0){showToast('품절된 상품이에요');return;}
+  if((G.currentPoints||0)<it.price){showToast('포인트가 부족해요');return;}
+  appConfirm({icon:'info',title:it.name+' 교환할까요?',desc:it.price.toLocaleString()+'P가 차감돼요.\n교환 후 선생님께 수령하세요.',okText:'교환하기'}).then(function(ok){
+    if(!ok)return;
+    var me=pendingList.find(function(x){return x.id===G.id;});
+    if(!me){showToast('학생 계정만 교환할 수 있어요');return;}
+    if(!spendPoints(me,it.price,'포인트 상점 - '+it.name,id)){showToast('포인트가 부족해요');return;}
+    /* 실제 상품(shopItems)일 때만 재고 차감 */
+    var real=(shopItems||[]).find(function(x){return x.id===id;});if(real&&real.stock>0)real.stock--;
+    var d=new Date();var ds=d.getFullYear()+'.'+pad2(d.getMonth()+1)+'.'+pad2(d.getDate());
+    shopOrders.unshift({id:'so'+Date.now()+Math.random().toString(36).slice(2,5),uid:G.id,name:G.displayName,itemId:id,itemName:it.name,price:it.price,ts:Date.now(),dateStr:ds,status:'pending'});
+    try{notifications.unshift({pushed:false,id:'nt'+Date.now()+'shop',text:'🛍️ '+G.displayName+' 학생이 <b>'+_esc(it.name)+'</b>('+it.price.toLocaleString()+'P)을(를) 교환했어요 · 수령 처리 필요',time:'방금',ts:Date.now(),readBy:[],forRole:'teacher-grade-'+G.gradeKey,tap:{type:'shop-admin'}});updateNotifDot();}catch(e){}
+    try{if(typeof flushSync==='function')flushSync();}catch(e){}
+    renderShop();try{renderHomePoints();}catch(e){}
+    showToast('교환 완료! 남은 포인트 '+(G.currentPoints||0).toLocaleString()+'P');
+  });
+}
+/* 홈 포인트 카드 */
+function renderHomePoints(){
+  try{
+    var li=levelInfo(G.yearTotalPoints||0);
+    var s=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
+    s('home-cur-points',(G.currentPoints||0).toLocaleString());
+    s('home-year-pts',(G.yearTotalPoints||0).toLocaleString());
+    s('home-level-next',li.next!=null?li.next.toLocaleString():'MAX');
+    s('home-level-tonext',li.toNext.toLocaleString());
+    var lb=document.getElementById('home-level-badge');if(lb)lb.textContent='Lv.'+li.lv+' '+li.stage;
+  }catch(e){}
+}
+/* 출석 완료 화면 */
+function showAttendDone(aw,streak){
+  if(!aw){return;}
+  try{
+    var cfg=ptCfg();
+    var rows=[];
+    var isHalf=aw.base===cfg.half;
+    rows.push([isHalf?'지각 출석':'기본 출석','+'+aw.base+'P']);
+    var bonus=(aw.added||0)-(aw.base||0);
+    if(bonus>0)rows.push([aw.milestone?('연속 '+aw.streak+'주 달성 보너스'):('연속 출석 보너스'),'+'+bonus+'P']);
+    var body=document.getElementById('attdone-body');
+    if(body)body.innerHTML=rows.map(function(r){return '<div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border-light)"><span style="color:var(--text-sub)">'+r[0]+'</span><span style="font-weight:800;color:var(--primary-dark)">'+r[1]+'</span></div>';}).join('')
+      +'<div style="display:flex;justify-content:space-between;font-size:15px;padding:10px 0 2px"><span style="font-weight:800">총 획득</span><span style="font-weight:800;color:var(--primary)">+'+(aw.added||0)+'P</span></div>';
+    var sub=document.getElementById('attdone-sub');
+    if(sub){
+      if(isHalf)sub.innerHTML='🔥 연속출석 기록은 유지돼요.'+(aw.milestone?'<br>마일스톤 보너스는 다음 정상 출석 시 지급돼요.':'<br>이번 주 연속 보너스는 지급되지 않아요.');
+      else{var li=levelInfo(G.yearTotalPoints||0);sub.innerHTML='🔥 현재 '+(streak||0)+'주 연속 출석 중'+(li.next!=null?('<br>다음 레벨(Lv.'+(li.lv+1)+')까지 '+li.toNext.toLocaleString()+'P'):'');}
+    }
+    openModal('attend-done-modal');
+  }catch(e){try{showToast('✅ 출석 완료! +'+(aw.added||0)+'P');}catch(_){}}
+}
 function pushIsOn(){ try{ return ('Notification' in window) && Notification.permission==='granted'; }catch(e){ return false; } }
 function nudgePushOnReward(){
   if(pushIsOn())return;
@@ -442,7 +583,7 @@ function renderAttendHistory(){const att=(G.attendedWeeks||[]);const half=(G.hal
 function attendGuard(){if(gradGuard())return null;const sat=attendSat();if(isVacationDate(sat)){showToast('이번 주는 방학이라 출석체크를 진행하지 않아요');return null;}if(!qrState.code||qrState.week!==sat){showToast('아직 이번 주 QR이 생성되지 않았어요');return null;}G.attendedWeeks=G.attendedWeeks||[];if(G.attendedWeeks.includes(sat)){showToast('이미 이번 주 출석 처리되었어요');return null;}return sat;}
 function openAttendCodeModal(){if(attendGuard()===null)return;const inp=document.getElementById('attend-code-input');if(inp)inp.value='';openModal('attend-code-modal');setTimeout(()=>{if(inp)inp.focus();},250);}
 function submitAttendCode(){const inp=document.getElementById('attend-code-input');const v=(inp.value||'').trim();if(!v){showToast('인증코드를 입력해주세요');return;}if(v!==qrState.code){showToast('❌ 인증코드가 일치하지 않아요');return;}closeModal('attend-code-modal');doAttend();}
-function doAttend(){const sat=attendGuard();if(sat===null)return;G.attendedWeeks.push(sat);const me=pendingList.find(u=>u.id===G.id);const now=new Date();const hm=pad2(now.getHours())+':'+pad2(now.getMinutes());if(me){me.attendedWeeks=(me.attendedWeeks||[]);if(!me.attendedWeeks.includes(sat))me.attendedWeeks.push(sat);me.qrScanAt=me.qrScanAt||{};me.qrScanAt[sat]=hm;me.attendTotal=calcAttendTotal(me);me.absentAckBy=null;me.streak=computeStreak(me);checkLevelCoupons(me);G.attendTotal=me.attendTotal;G.streak=me.streak;saveMemberNow(me);}else{G.attendTotal=(G.attendTotal||0)+1;G.streak=computeStreak(G);showToast('⚠️ 등록된 학생 계정이 아니라 교사 출석부에는 반영되지 않아요');}initStamps();showAttendTab('history');showToast('✅ 출석 완료! ('+hm+')');}
+function doAttend(){const sat=attendGuard();if(sat===null)return;G.attendedWeeks.push(sat);const me=pendingList.find(u=>u.id===G.id);const now=new Date();const hm=pad2(now.getHours())+':'+pad2(now.getMinutes());if(me){me.attendedWeeks=(me.attendedWeeks||[]);if(!me.attendedWeeks.includes(sat))me.attendedWeeks.push(sat);me.qrScanAt=me.qrScanAt||{};me.qrScanAt[sat]=hm;me.attendTotal=calcAttendTotal(me);me.absentAckBy=null;me.streak=computeStreak(me);var _aw=awardAttendance(me,sat,'full',me.displayName||me.name);G.attendTotal=me.attendTotal;G.streak=me.streak;saveMemberNow(me);try{showAttendDone(_aw,me.streak);}catch(e){}}else{G.attendTotal=(G.attendTotal||0)+1;G.streak=computeStreak(G);showToast('⚠️ 등록된 학생 계정이 아니라 교사 출석부에는 반영되지 않아요');}initStamps();showAttendTab('history');}
 let _qrStream=null,_qrRAF=null,_qrScanning=false,_jsqrReady=false;
 function loadJsQR(){
   return new Promise(function(res,rej){
@@ -756,12 +897,12 @@ function startSession(u){
   G.isAdmin=u.isAdmin||false;G.isJabumo=u.isJabumo||false;G.isJabumoPresident=u.isJabumoPresident||false;G.graduated=u.graduated||false;
   G.birthMonth=u.birthMonth||0;G.birthDay=u.birthDay||0;
   G.feastMonth=u.feastMonth||0;G.feastDay=u.feastDay||0;
-  G.attendTotal=u.attendTotal||0;G.streak=u.streak||0;G.history=u.history||[];G.attendedWeeks=u.attendedWeeks||[];G.halfWeeks=u.halfWeeks||[];G.qrScanAt=u.qrScanAt||{};G.avatar=u.avatar||'';G.statusMsg=u.statusMsg||'';
+  G.attendTotal=u.attendTotal||0;G.streak=u.streak||0;G.history=u.history||[];G.attendedWeeks=u.attendedWeeks||[];G.halfWeeks=u.halfWeeks||[];G.qrScanAt=u.qrScanAt||{};G.avatar=u.avatar||'';G.statusMsg=u.statusMsg||'';G.currentPoints=u.currentPoints||0;G.yearTotalPoints=u.yearTotalPoints||0;G.level=u.level||levelInfo(u.yearTotalPoints||0).lv;G.pendingStreakRewards=u.pendingStreakRewards||0;
   document.getElementById('bottom-nav').style.display='flex';
   const isS=G.role==='student',isP=G.role==='parent',isT=G.role==='teacher';
   const isFull=isT&&(G.type==='principal'||G.type==='admin'||G.isAdmin);
   show('nav-attend',isS&&!G.graduated);show('nav-diary',isS&&!G.graduated);show('nav-board',!(isS&&G.graduated));if(isS&&G.graduated)setTimeout(()=>showToast('🎓 졸업생 열람 모드로 접속했어요'),400);show('nav-activity',isT||isS);const _al=document.getElementById('nav-activity-label'),_at=document.getElementById('activity-screen-title');const _grad=isS&&G.graduated;const _i1=document.getElementById('nav-activity-icon-dept'),_i2=document.getElementById('nav-activity-icon-grad');if(_i1)_i1.style.display=_grad?'none':'';if(_i2)_i2.style.display=_grad?'':'none';if(_al)_al.textContent=_grad?'활동카드':'부서활동';if(_at)_at.textContent=(isS&&G.graduated)?'활동카드':'부서활동';show('nav-teacher',isT);show('nav-admin',isT);if(isP){show('menu-jabumo-roster',!!G.isJabumoPresident);show('menu-jabumo-requests',!!G.isJabumoPresident);}
-  show('home-student',isS);show('home-teacher',isT);show('home-parent',isP);
+  show('home-student',isS);show('home-teacher',isT);show('home-parent',isP);try{if(isS)renderHomePoints();}catch(e){}
   show('event-banner-section',isS||isT||isP);show('reward-section',isS);
   show('board-teacher-top',isT);show('board-student-cats',isS);show('board-parent-cats',isP);
   show('fab-board',(isS&&!G.graduated)||isT);show('activity-write-btn',isT);
@@ -2117,13 +2258,13 @@ function renderMinutesHub(){
   var sel=document.getElementById('mh-year-sel');
   if(sel){sel.innerHTML=years.map(function(y){return '<option value="'+y+'">'+(y===String(LIVE_YEAR)?'올해 ('+y+')':y+'년');}).join('');sel.value=minutesHubYear;}
   var live=_isLiveYear(minutesHubYear);
-  var list=(resources||[]).filter(function(r){return r.cat==='minutes'&&!r.deleted&&r.year===minutesHubYear;}).sort(function(a,b){return (a.mdate||a.date||'')<(b.mdate||b.date||'')?-1:1;});
+  var list=(resources||[]).filter(function(r){return r.cat==='minutes'&&!r.deleted&&r.year===minutesHubYear;}).sort(function(a,b){return (a.mdate||a.date||'')>(b.mdate||b.date||'')?-1:1;});
   var el=document.getElementById('mh-list');if(!el)return;
   var html='';
   if(!live&&list.length)html+='<div style="background:var(--bg);border-radius:var(--radius-sm);padding:9px 11px;margin-bottom:9px;font-size:11px;color:var(--text-light)">🔒 '+minutesHubYear+'년 회의록은 보관되어 읽기 전용이에요.</div>';
   if(list.length)html+='<div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn btn-sm btn-outline" style="width:auto" onclick="exportMinutesYear()">⬇ '+minutesHubYear+'년 전체 PDF</button></div>';
   var _n=_mSel?Object.keys(_mSel).length:0;
-  html+=list.length?(function(){var _td=_today();var _dd=new Date();var _tdl=(_dd.getMonth()+1)+'월 '+_dd.getDate()+'일';var _shownLine=false;var out=list.map(function(r){var pre='';if(live&&!_shownLine&&(r.mdate||'')>=_td){_shownLine=true;pre='<div style="display:flex;align-items:center;gap:9px;margin:16px 2px 12px"><div style="flex:1;height:2px;background:var(--primary);border-radius:2px;opacity:.5"></div><span style="font-size:11px;font-weight:800;color:var(--primary-dark);white-space:nowrap">오늘 · '+_tdl+' ▾ 예정</span><div style="flex:1;height:2px;background:var(--primary);border-radius:2px;opacity:.5"></div></div>';}return pre+_resCard(r);}).join('');return out;})():_resEmpty('📝','회의록이 없어요',live?'＋ 새 회의록을 눌러 바로 시작해요':'이 해에는 작성된 회의록이 없어요');
+  html+=list.length?(function(){var _td=_today();var _dd=new Date();var _tdl=(_dd.getMonth()+1)+'월 '+_dd.getDate()+'일';var _shownLine=false;var out=list.map(function(r){var pre='';if(live&&!_shownLine&&(r.mdate||'')<_td){_shownLine=true;pre='<div style="display:flex;align-items:center;gap:9px;margin:16px 2px 12px"><div style="flex:1;height:2px;background:var(--border);border-radius:2px;opacity:.6"></div><span style="font-size:11px;font-weight:800;color:var(--text-light);white-space:nowrap">지난 회의록 ▾</span><div style="flex:1;height:2px;background:var(--border);border-radius:2px;opacity:.6"></div></div>';}return pre+_resCard(r);}).join('');return out;})():_resEmpty('📝','회의록이 없어요',live?'＋ 새 회의록을 눌러 바로 시작해요':'이 해에는 작성된 회의록이 없어요');
   if(live&&appConfig.notionUrl){
     html+='<div style="margin-top:16px;padding-top:13px;border-top:1px dashed var(--border-light)"></div>'
       +_resSecLabel('📓 예전 노션 회의록 (열람용)')
@@ -3608,8 +3749,9 @@ function setAttendOn(uid,dateStr,st){
   else if(st==='half'){u.attendedWeeks.push(dateStr);u.halfWeeks.push(dateStr);}
   u.attendedWeeks.sort();
   u.attendTotal=calcAttendTotal(u);
-  if(st!=='absent'){u.absentAckBy=null;checkLevelCoupons(u);}
+  if(st!=='absent'){u.absentAckBy=null;}
   u.streak=computeStreak(u);
+  try{awardAttendance(u,dateStr,st,G.displayName);}catch(e){}
   if(G.id===u.id){G.attendTotal=u.attendTotal;G.streak=u.streak;G.attendedWeeks=u.attendedWeeks;G.halfWeeks=u.halfWeeks;}
   try{saveMemberNow(u);}catch(e){}
   try{renderAttendList();}catch(e){}
@@ -3662,7 +3804,7 @@ function pickAttend(dateStr,st){
   closeModal('attend-pick-modal');
   renderDetailAttend();
 }
-function setAttendStatus(uid,st){const sat=attendSat();if(isVacationDate(sat)){showToast('이번 주는 방학이라 출석을 진행하지 않아요');return;}const u=pendingList.find(u=>u.id===uid);if(!u)return;u.attendedWeeks=(u.attendedWeeks||[]).filter(d=>d!==sat);u.halfWeeks=(u.halfWeeks||[]).filter(d=>d!==sat);if(st==='full')u.attendedWeeks.push(sat);else if(st==='half'){u.attendedWeeks.push(sat);u.halfWeeks.push(sat);}u.attendTotal=calcAttendTotal(u);if(st!=='absent'){u.absentAckBy=null;checkLevelCoupons(u);}u.streak=computeStreak(u);if(computeAbsentStreak(u)<3){notifications=notifications.filter(n=>n.absentUid!==u.id);}if(G.id===u.id){G.attendTotal=u.attendTotal;G.streak=u.streak;G.attendedWeeks=u.attendedWeeks;G.halfWeeks=u.halfWeeks;}saveMemberNow(u);checkAbsentNotifications();window._lastAttendUid=uid;renderAttendList();window._lastAttendUid=null;renderAbsentAlerts();renderAttendStats();renderAdminGrid(G.type==='principal'||G.type==='admin'||G.isAdmin);showToast(st==='full'?'✅ 출석 처리':st==='half'?'🌗 반일출석 처리':'결석 처리');}
+function setAttendStatus(uid,st){const sat=attendSat();if(isVacationDate(sat)){showToast('이번 주는 방학이라 출석을 진행하지 않아요');return;}const u=pendingList.find(u=>u.id===uid);if(!u)return;u.attendedWeeks=(u.attendedWeeks||[]).filter(d=>d!==sat);u.halfWeeks=(u.halfWeeks||[]).filter(d=>d!==sat);if(st==='full')u.attendedWeeks.push(sat);else if(st==='half'){u.attendedWeeks.push(sat);u.halfWeeks.push(sat);}u.attendTotal=calcAttendTotal(u);if(st!=='absent'){u.absentAckBy=null;}u.streak=computeStreak(u);try{awardAttendance(u,sat,st,G.displayName);}catch(e){}if(computeAbsentStreak(u)<3){notifications=notifications.filter(n=>n.absentUid!==u.id);}if(G.id===u.id){G.attendTotal=u.attendTotal;G.streak=u.streak;G.attendedWeeks=u.attendedWeeks;G.halfWeeks=u.halfWeeks;}saveMemberNow(u);checkAbsentNotifications();window._lastAttendUid=uid;renderAttendList();window._lastAttendUid=null;renderAbsentAlerts();renderAttendStats();renderAdminGrid(G.type==='principal'||G.type==='admin'||G.isAdmin);showToast(st==='full'?'✅ 출석 처리':st==='half'?'🌗 반일출석 처리':'결석 처리');}
 function generateCoupon(u,level){const code=String(Math.floor(100000+Math.random()*900000));const coupon={id:'cp'+Date.now()+Math.random().toString(36).slice(2,4),studentId:u.id,studentName:u.name+' '+u.baptism,badgeLabel:level.l,reward:level.r||'',code,used:false,createdAt:new Date().toLocaleDateString('ko-KR')};coupons.push(coupon);notifications.unshift({pushed:false,id:'nt'+Date.now()+'t',text:`🎟️ ${u.name} ${u.baptism} 학생이 [${level.l}] 등급을 달성했어요! 인증번호: ${code}`,time:'방금',ts:Date.now(),readBy:[],forTeacher:true,tap:{type:'coupon-admin'}});notifications.unshift({pushed:false,id:'nt'+Date.now()+'s',text:`🎉 축하해요! <b>[${level.l}]</b> 등급 달성으로 <b>${level.r||'보상'}</b> 쿠폰이 발급되었어요. 선생님께 확인받고 사용하세요!`,time:'방금',ts:Date.now(),readBy:[],forStudentId:u.id,tap:{type:'coupon'}});if(u.manualReg)notifications.unshift({pushed:false,id:'nt'+Date.now()+'mr',text:'📵 '+u.name+' '+u.baptism+' 학생(수동등록)에게 새 쿠폰이 발급됐어요. 학생카드에서 확인 후 직접 전달해주세요!',time:'방금',ts:Date.now(),readBy:[],forRole:'teacher-grade-'+u.gradeKey,tap:{type:'diary-shared',sid:u.id}});updateNotifDot();showToast('🎉 '+level.l+' 달성! 쿠폰 인증번호가 선생님께 전송되었습니다');renderNotifList();}
 function nRead(n){return !!(n&&(n.readBy||[]).indexOf(G.id)>=0);}
 /* 알림 문구의 장식용 아이콘 제거 — 중요/경고/긴급 표시(🚨 🆘)만 남긴다.
@@ -3968,11 +4110,13 @@ var cc=document.getElementById('choir-week-card');if(cc){var crows=[['입당',c.
   cc.innerHTML=h;}
 var _lw=(typeof appConfig!=='undefined'&&appConfig.liturgyWeek)||{};
 var _lm=(typeof litFor==='function'&&_sat)?litFor(_sat):null;
-var l=_lm?{title:_lm.label,reading1:_lm.reading1,reading2:_lm.reading2,gospel:_lm.gospel,note:_lm.note}:_lw;
-var lc=document.getElementById('liturgy-week-card');if(lc){var lrows=[['제1독서',l.reading1,l.r1],['제2독서',l.reading2,l.r2],['복음',l.gospel,l.rg]].filter(function(r){return r[1];});var lEmpty=!lrows.length&&!l.note&&!l.team;
+var l=_lm?{title:_lm.label,reading1:_lm.reading1,reading2:_lm.reading2,gospel:_lm.gospel,note:_lm.note,roles:_lm.roles}:_lw;
+var _litRoles=l.roles||{};var _litRoleKeys=(typeof LIT_SERVE!=='undefined'?LIT_SERVE:[]).filter(function(x){return _litRoles[x[0]];});
+var lc=document.getElementById('liturgy-week-card');if(lc){var lrows=[['제1독서',l.reading1,l.r1],['제2독서',l.reading2,l.r2],['복음',l.gospel,l.rg]].filter(function(r){return r[1];});var lEmpty=!lrows.length&&!l.note&&!l.team&&!_litRoleKeys.length;
   var h2='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px"><div style="min-width:0"><div style="font-size:10.5px;letter-spacing:.5px;color:#4B5DB6;font-weight:700">WEEKLY LITURGY</div><div style="font-size:16px;font-weight:800;color:var(--text);margin-top:1px">이번 주 전례</div>'+(_wkSub?'<div style="font-size:12.5px;color:var(--text-sub);margin-top:3px;font-weight:600">'+E(_wkSub)+'</div>':'')+'</div>'+(canEdit?'<button onclick="openLitPage()" style="background:var(--bg);border:1px solid var(--border-light);border-radius:8px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--text-sub)">✏️ 편집</button>':'')+'</div>';
   if(lEmpty){h2+='<div style="font-size:12px;color:var(--text-light);padding:4px 0">아직 등록된 독서가 없어요'+(canEdit?' · 편집을 눌러 입력하세요':'')+'</div>';}
   else{h2+=lrows.map(function(r,i){return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border-light)"><span style="font-size:14px;color:#4B5DB6;font-weight:800;width:20px;flex-shrink:0">'+('0'+(i+1)).slice(-2)+'</span><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">'+E(r[0])+'</div><div style="font-size:12px;color:var(--text-sub);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+E(r[1])+'</div></div>'+(r[2]?'<span style="font-size:12px;color:#4B5DB6;font-weight:700;flex-shrink:0">'+E(r[2])+'</span>':'')+'</div>';}).join('');
+    if(_litRoleKeys.length)h2+='<div style="margin-top:11px;padding-top:11px;border-top:1px dashed var(--border-light)"><div style="font-size:11px;color:var(--text-light);font-weight:700;margin-bottom:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px;margin-right:4px"><path d="M12 3v18"/><path d="M6 8h12"/></svg>전례 봉사 배정</div>'+_litRoleKeys.map(function(x){return '<div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0;font-size:12.5px"><span style="color:var(--text-sub);font-weight:700">'+E(x[1])+'</span><span style="font-weight:700">'+E(_litStuName(_litRoles[x[0]]))+'</span></div>';}).join('')+'</div>';
     if(l.team)h2+='<div style="margin-top:11px;padding-top:11px;border-top:1px dashed var(--border-light);font-size:12px"><span style="color:var(--text-light);font-weight:700">전례부원</span> '+E(l.team)+'</div>';
     if(l.note)h2+='<div style="margin-top:9px;font-size:12.5px;color:#4B5DB6;font-weight:700">'+E(l.note)+'</div>';}
   lc.innerHTML=h2;}}catch(e){}}
@@ -4472,8 +4616,13 @@ function setLitRole(ds,key,sid){
   var e=_litEntry(ds);
   if(!e.roles)e.roles={};
   if(sid)e.roles[key]=sid; else delete e.roles[key];
-  var b=document.getElementById('lit-dirty');if(b)b.style.display='';
+  /* 배정은 즉시 저장 — 월 저장을 깜빡해도 유실되지 않고 주간 표에 바로 반영 */
+  var h=litFor(ds);if(!h){h={id:'lt'+ds,date:ds};litData.push(h);}
+  h.roles=Object.assign({},e.roles);
+  try{if(typeof flushSync==='function')flushSync();}catch(err){}
+  try{if(window.FB&&FB.enabled()&&FB.save)FB.save('liturgy',h.id,h);}catch(err){}
   _litRefreshBadge(ds);
+  try{renderDeptWeekInfo();}catch(err){}
 }
 function sendLitNotify(ds){
   /* 저장하지 않은 배정도 반영되도록 먼저 이 날짜를 litData에 커밋 */
@@ -4633,7 +4782,7 @@ function renderCalDayEvents(dateStr){const el=document.getElementById('cal-event
     let respHtml='';if((e.isRecurring||e.vote||e.visibility==='shared')&&G.role==='teacher'){respHtml=(_isPast?'':`<div style="display:flex;gap:6px;margin-top:10px">
         <button class="filter-chip${myResp==='yes'?' active':''}" onclick="setCalResponse('${e.id}','yes')">✅ 참석</button>
         <button class="filter-chip${myResp==='no'?' active':''}" onclick="setCalResponse('${e.id}','no')">❌ 불참</button>
-      </div>`)+`<div style="display:flex;gap:6px;margin-top:9px">
+      </div>${myResp==='no'?`<input value="${_esc((_evReasons(e))[G.id]||'')}" onchange="setCalReason('${e.id}',this.value)" placeholder="불참 사유 입력 (선택)" style="width:100%;margin-top:8px;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;color:var(--text);background:var(--card);outline:none">`:''}`)+`<div style="display:flex;gap:6px;margin-top:9px">
         <button class="resp-cnt" onclick="openRespModal('${e.id}','yes')"><b>${yesCount}</b> ✅ 참석</button>
         <button class="resp-cnt" onclick="openRespModal('${e.id}','no')"><b>${noCount}</b> ❌ 불참</button>
         <button class="resp-cnt" onclick="openRespModal('${e.id}','none')"><b>${noResp.length}</b> ⏳ 미응답</button>
@@ -4840,7 +4989,9 @@ function renderHomeSchedule(){const el=document.getElementById('teacher-schedule
 function ensureWeeklyEvents(){if(!window._evReady)return;const sats=getUpcomingSaturdays(12);sats.forEach(d=>{if(!calEvents.some(e=>e.date===d&&e.isRecurring)){calEvents.push({id:'ce-week-'+d,title:'📌 주일학교',date:d,time:'',place:'',content:'매주 토요일 주일학교 모임입니다.',isRecurring:true,responses:{}});}});}
 function getApprovedTeachers(){return pendingList.filter(u=>u.approved&&u.role==='teacher');}
 function _evResp(e){var m=Object.assign({},(e&&e.responses)?e.responses:{});var eid=e&&e.id;if(eid){calResponses.forEach(function(r){if(r&&r.eid===eid){if(r.val)m[r.uid]=r.val;else delete m[r.uid];}});}return m;}
-function setCalResponse(eid,val){const e=calEvents.find(e=>e.id===eid);const rid=eid+'|'+G.id;const rec=calResponses.find(r=>r&&r.id===rid);if(rec)rec.val=val;else calResponses.push({id:rid,eid:eid,uid:G.id,val:val});if(e){if(!e.responses)e.responses={};e.responses[G.id]=val;}try{if(typeof flushSync==='function')flushSync();}catch(x){}renderCalDayEvents(selectedCalDate);showToast(val==='yes'?'참석으로 응답했어요':'불참으로 응답했어요');}
+function _evReasons(e){var m=Object.assign({},(e&&e.reasons)?e.reasons:{});var eid=e&&e.id;if(eid){calResponses.forEach(function(r){if(r&&r.eid===eid){if(r.reason)m[r.uid]=r.reason;else delete m[r.uid];}});}return m;}
+function setCalResponse(eid,val){const e=calEvents.find(e=>e.id===eid);const rid=eid+'|'+G.id;let rec=calResponses.find(r=>r&&r.id===rid);if(rec)rec.val=val;else{rec={id:rid,eid:eid,uid:G.id,val:val};calResponses.push(rec);}if(val!=='no'){if(rec)delete rec.reason;if(e&&e.reasons)delete e.reasons[G.id];}if(e){if(!e.responses)e.responses={};e.responses[G.id]=val;}try{if(typeof flushSync==='function')flushSync();}catch(x){}renderCalDayEvents(selectedCalDate);showToast(val==='yes'?'참석으로 응답했어요':'불참으로 응답했어요');}
+function setCalReason(eid,val){const e=calEvents.find(e=>e.id===eid);const rid=eid+'|'+G.id;let rec=calResponses.find(r=>r&&r.id===rid);if(!rec){rec={id:rid,eid:eid,uid:G.id,val:'no'};calResponses.push(rec);}if(e){if(!e.responses)e.responses={};if(!e.responses[G.id])e.responses[G.id]='no';}val=(val||'').trim();rec.reason=val;if(e){if(!e.reasons)e.reasons={};if(val)e.reasons[G.id]=val;else delete e.reasons[G.id];}try{if(typeof flushSync==='function')flushSync();}catch(x){}}
 function openRespModal(eid,kind){
   const e=calEvents.find(e=>e.id===eid);if(!e)return;
   const teachers=getApprovedTeachers();const R=_evResp(e);
@@ -4855,7 +5006,7 @@ function openRespModal(eid,kind){
   if(el){
     el.innerHTML=list.length
       ? '<div style="font-size:11px;color:var(--text-light);margin-bottom:8px">'+list.length+'명</div>'
-        +list.map(t=>`<div class="student-row"><div class="student-avatar" style="background:${cfg.c}">${t.name.charAt(0)}</div><div class="student-info"><div class="student-name">${t.name} ${t.baptism}</div><div class="student-detail">${t.gradeLabel||''}</div></div></div>`).join('')
+        +(function(){var _rz=(kind==='no')?_evReasons(e):{};return list.map(t=>{var _r=_rz[t.id]||'';return `<div class="student-row"><div class="student-avatar" style="background:${cfg.c}">${t.name.charAt(0)}</div><div class="student-info"><div class="student-name">${t.name} ${t.baptism}</div><div class="student-detail">${_r?'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:3px"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>'+_esc(_r):(t.gradeLabel||'')}</div></div></div>`;}).join('');})()
       : `<div class="empty" style="padding:20px"><div class="empty-emoji" style="font-size:24px">${cfg.emo}</div><div class="empty-title" style="font-size:12px">${cfg.emp}</div></div>`;
   }
   openModal('unresponded-modal');
@@ -4909,7 +5060,7 @@ function recomputeGrades(persist){var changed=false;(pendingList||[]).forEach(fu
 function _migrateCohorts(){if(!_canEditPlan())return;if(appConfig.cohortMigrated)return;var idx={'중1':0,'중2':1,'중3':2,'고1':3,'고2':4,'고3':5};var sy=_curSchoolYr();var ids=[];(pendingList||[]).forEach(function(u){if(u.role!=='student'||u.cohort)return;if(u.graduated){u.cohort=sy-6;u.gradeOffset=0;ids.push(u.id);return;}var gi=idx[u.gradeLabel];if(gi==null)return;u.cohort=sy-gi;u.gradeOffset=0;ids.push(u.id);});appConfig.cohortMigrated=true;appConfig.cohortBackup={at:_today(),ids:ids};try{if(window.flushCfg)window.flushCfg();}catch(e){}try{if(typeof flushSync==='function')flushSync();}catch(e){}}
 function _cohortFromLabel(gl){var idx={'중1':0,'중2':1,'중3':2,'고1':3,'고2':4,'고3':5};return _curSchoolYr()-(idx[gl]||0);}
 function _gradeLabelForYear(u,yr){if(!u.cohort)return u.gradeLabel||'';return _gradeFromN(yr-(u.cohort||0)+(u.gradeOffset||0)).gradeLabel;}
-function _sealIfRolled(u){if(u.role!=='student')return false;var cur=_curSchoolYr();if(u.curTermYr==null){u.curTermYr=cur;return true;}if(u.curTermYr>=cur)return false;var t=u.attendTotal||0;if(t>0||(u.attendedWeeks||[]).length){var lv='🌱 씨앗';for(var i=0;i<ATTEND_LEVELS.length;i++)if(t>=ATTEND_LEVELS[i].n)lv=ATTEND_LEVELS[i].l;u.history=u.history||[];u.history.push({year:u.curTermYr,term:u.curTermYr+'학년도',grade:_gradeLabelForYear(u,u.curTermYr),attendTotal:t,level:lv,weeks:(u.attendedWeeks||[]).slice(),halfWeeks:(u.halfWeeks||[]).slice()});}u.attendedWeeks=[];u.halfWeeks=[];u.qrScanAt={};u.attendTotal=0;u.streak=0;u.earnedLevels=[];u.absentAckWeek=null;u.absentAckBy=null;u.lastContactAt=null;u.lastContactBy=null;u.curTermYr=cur;return true;}
+function _sealIfRolled(u){if(u.role!=='student')return false;var cur=_curSchoolYr();if(u.curTermYr==null){u.curTermYr=cur;return true;}if(u.curTermYr>=cur)return false;var t=u.attendTotal||0;if(t>0||(u.attendedWeeks||[]).length){var lv='🌱 씨앗';for(var i=0;i<ATTEND_LEVELS.length;i++)if(t>=ATTEND_LEVELS[i].n)lv=ATTEND_LEVELS[i].l;u.history=u.history||[];u.history.push({year:u.curTermYr,term:u.curTermYr+'학년도',grade:_gradeLabelForYear(u,u.curTermYr),attendTotal:t,level:lv,weeks:(u.attendedWeeks||[]).slice(),halfWeeks:(u.halfWeeks||[]).slice()});}u.attendedWeeks=[];u.halfWeeks=[];u.qrScanAt={};u.attendTotal=0;u.streak=0;u.earnedLevels=[];u.yearTotalPoints=0;u.level=1;u.weekAward={};u.pendingStreakRewards=0;u.absentAckWeek=null;u.absentAckBy=null;u.lastContactAt=null;u.lastContactBy=null;u.curTermYr=cur;return true;}
 function _gradeSync(){try{var admin=_canEditPlan();if(admin)_migrateCohorts();var ch=false;(pendingList||[]).forEach(function(u){if(u.role!=='student')return;if(admin&&_sealIfRolled(u))ch=true;if(applyStudentGrade(u))ch=true;var _nt=calcAttendTotal(u);if((u.attendTotal||0)!==_nt){u.attendTotal=_nt;if(G&&G.id===u.id)G.attendTotal=_nt;ch=true;}});if(ch&&admin){try{if(typeof flushSync==='function')flushSync();}catch(e){}}}catch(e){}}
 function _planTerms(){if(!appConfig.planTerms){appConfig.planTerms=[];if(appConfig.planStart&&appConfig.planEnd){var y0=(+appConfig.planStart.slice(5,7)>=3?+appConfig.planStart.slice(0,4):+appConfig.planStart.slice(0,4)-1);appConfig.planTerms.push({yr:y0,start:appConfig.planStart,end:appConfig.planEnd,locked:true});}}return appConfig.planTerms;}
 function _termOf(yr){return _planTerms().find(function(t){return t.yr===yr;})||null;}
@@ -5078,6 +5229,16 @@ function savePlan(){
 function closeYearPlan(){
   if(_ypDirty()&&!confirm('저장하지 않은 변경사항이 있어요. 저장하지 않고 닫을까요?'))return;
   _ypBuf=null;closeModal('yearplan-modal');
+}
+function refreshYearPlan(){
+  if(_ypDirty()&&!confirm('저장하지 않은 변경사항이 있어요. 새로고침하면 사라져요. 계속할까요?'))return;
+  _ypBuf=null;
+  try{_hydrateYP();}catch(e){}
+  try{_planTerms();}catch(e){}
+  try{if(window.FB&&FB.enabled()&&FB.load){FB.load('liturgy').then(function(arr){if(arr&&arr.length){litData=arr;}try{_hydrateYP();}catch(e){}renderYearPlan();}).catch(function(){});}}catch(e){}
+  renderYearPlan();
+  try{renderLitLockUI();}catch(e){}
+  showToast('새로고침했어요');
 }
 
 let currentReminderId=null;
