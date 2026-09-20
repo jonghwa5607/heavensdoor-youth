@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="하늘의문 중고등부">
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(e){console.warn('SW register failed',e);});});}</script>
-<link rel="stylesheet" href="./styles.css?v=20260920d">
+<link rel="stylesheet" href="./styles.css?v=20260920e">
 <style>
 /* 회의록: 플레이스홀더는 커서가 있는 빈 줄에만 표시 */
 #minutes-viewer-content .mb-txt[data-ph]::before,#minutes-viewer-content .mb-txt[data-ph]:empty:focus::before{content:none!important;display:none!important}
@@ -661,7 +661,7 @@
   <div class="tab-bar">
     <button class="tab-btn active" onclick="selCatTab(this);showAdminTab('main')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2E9E8F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:2px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>홈</button>
     <button class="tab-btn" onclick="selCatTab(this);showAdminTab('members')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5B8DEF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:2px"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg>회원관리</button>
-    <button class="tab-btn" onclick="selCatTab(this);showAdminTab('coupons')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#E5806B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:2px"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2 2 2 0 0 0 0-4z"/><path d="M13 7v10"/></svg>쿠폰관리</button>
+    <button class="tab-btn" onclick="selCatTab(this);showAdminTab('shop')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#E5806B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:2px"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>상점관리</button>
     <button class="tab-btn" onclick="selCatTab(this);showAdminTab('attend')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#37B39B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:2px"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>출석관리</button>
     <button class="tab-btn" onclick="selCatTab(this);showAdminTab('stats')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7C6FF0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:2px"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>출석통계</button>
     <button class="tab-btn" onclick="selCatTab(this);showAdminTab('diary')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#EBA23B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:2px"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>다이어리</button>
@@ -762,9 +762,9 @@
   
 
   <!-- 출석 통계 -->
-  <div id="admin-coupons-tab" style="display:none;padding:14px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><span style="font-size:14px;font-weight:800">🎟️ 쿠폰 관리</span><button class="btn btn-sm" style="width:auto;background:var(--primary);color:white" onclick="openCouponIssueModal()">+ 쿠폰 발급</button></div>
-    <div id="admin-coupon-list"></div>
+  <div id="admin-shop-tab" style="display:none;padding:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><span style="font-size:14px;font-weight:800">포인트 상점 관리</span><button class="btn btn-sm" style="width:auto;background:var(--card);border:1.5px solid var(--border);color:var(--text);font-weight:800" onclick="openPointGrant()">⭐ 포인트 지급</button></div>
+    <div id="admin-shop-list"></div>
   </div>
   <div id="admin-stats-tab" style="display:none;padding:14px">
     <div style="font-size:14px;font-weight:800;margin-bottom:12px">📊 출석 통계 <span id="stats-vac-badge" style="display:none;font-size:10px;font-weight:700;background:var(--yellow-light);color:#9A6A00;padding:2px 8px;border-radius:8px;vertical-align:2px">🏖️ 이번 주 방학</span></div>
@@ -960,7 +960,7 @@
   </div>
   <div style="padding:0 14px;margin-bottom:16px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-      <div style="font-size:11px;font-weight:700;color:var(--text-light);letter-spacing:.5px">🎟️ 쿠폰</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-light);letter-spacing:.5px">포인트</div>
       <span id="detail-coupon-hint" style="font-size:10px;color:var(--text-light)"></span>
     </div>
     <div id="detail-coupon-list"></div>
@@ -1077,9 +1077,9 @@
         <div class="menu-info"><strong>내 등급</strong><small>획득한 등급 모아보기</small></div>
         <div class="menu-right"><span class="menu-arrow">›</span></div>
       </div>
-      <div class="menu-item" id="menu-coupon" style="display:none" onclick="openCouponBox()">
-        <div class="menu-icon-wrap" style="background:var(--coral-light)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--coral)" stroke-width="2" stroke-linecap="round"><path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"/></svg></div>
-        <div class="menu-info"><strong>쿠폰함</strong><small>받은 쿠폰 확인·사용</small></div>
+      <div class="menu-item" id="menu-coupon" style="display:none" onclick="openPointHistory()">
+        <div class="menu-icon-wrap" style="background:var(--primary-light)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--primary-dark)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+        <div class="menu-info"><strong>포인트 내역</strong><small>적립·사용 내역 보기</small></div>
         <div class="menu-right"><span class="menu-arrow">›</span></div>
       </div>
       <div class="menu-item" id="menu-posts" style="display:none" onclick="openMyPosts()">
@@ -1467,7 +1467,7 @@
   <div class="modal-sheet sheet-full">
     <div class="pg-head">
       <button class="pg-back" onclick="closeMinutesViewer()">‹</button>
-      <span class="pg-title">회의록 <span style="font-size:9px;font-weight:600;color:#2D9E8F;opacity:.75;vertical-align:middle">v8</span></span>
+      <span class="pg-title">회의록 <span style="font-size:9px;font-weight:600;color:#2D9E8F;opacity:.75;vertical-align:middle">v9</span></span>
       <div class="pg-acts">
         <button class="btn btn-sm" id="minutes-publish-btn" style="display:none;background:var(--coral);color:#fff;width:auto;padding:6px 11px;font-size:12px" onclick="publishMinutes()">📣 발행</button>
         <button class="btn btn-sm" id="minutes-save-btn" style="display:none;background:var(--primary);color:white;width:auto;padding:6px 13px;font-size:12px" onclick="stopMinutesEdit()">완료</button>
@@ -1895,17 +1895,19 @@
     <div class="pg-head">
       <button class="pg-back" onclick="closeModal('shop-modal')">‹</button>
       <span class="pg-title">포인트 상점</span>
-      <div class="pg-acts"></div>
+      <div class="pg-acts"><span style="display:inline-flex;align-items:center;gap:5px;background:var(--yellow-light);color:#9A7200;font-size:12px;font-weight:800;padding:6px 11px;border-radius:20px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5h4.5a1.5 1.5 0 0 1 0 3H9m0 0h5" stroke-linecap="round"/></svg>내 포인트 <span id="shop-balance">0</span>P</span></div>
     </div>
     <div class="pg-scroll">
-      <div class="card" style="padding:14px 16px;margin-bottom:12px;background:linear-gradient(135deg,var(--primary-light),var(--mint-light))">
-        <div style="display:flex;gap:10px">
-          <div style="flex:1"><div style="font-size:11px;color:var(--text-sub);font-weight:700">보유 포인트</div><div style="font-size:20px;font-weight:800;color:var(--primary-dark)"><span id="shop-balance">0</span><span style="font-size:12px">P</span></div></div>
-          <div style="flex:1"><div style="font-size:11px;color:var(--text-sub);font-weight:700">올해 누적 성장점수</div><div style="font-size:20px;font-weight:800;color:var(--text)"><span id="shop-yeartotal">0</span><span style="font-size:12px">P</span></div></div>
-        </div>
+      <div style="border-radius:16px;overflow:hidden;margin-bottom:14px;background:linear-gradient(135deg,#DFF3EA,#EAF6EF);padding:20px 18px;position:relative">
+        <div style="font-size:19px;font-weight:800;color:#2D6A55;line-height:1.35">작은 걸음이<br>큰 사랑이 되는 곳</div>
+        <div style="font-size:12.5px;color:#4E7D6B;margin-top:8px;font-weight:600">함께하는 오늘이 더 특별해져요.</div>
       </div>
-      <div class="filter-row" id="shop-cats" style="margin-bottom:12px"></div>
+      <div class="filter-row" id="shop-cats" style="margin-bottom:14px"></div>
       <div id="shop-items"></div>
+      <div class="card" style="margin-top:18px;background:var(--mint-light);padding:14px 15px">
+        <div style="font-size:13px;font-weight:800;color:#2D6A55;margin-bottom:8px">💡 포인트 이렇게 모아요!</div>
+        <div style="font-size:12px;color:var(--text-sub);line-height:1.9">✓ 주일 출석 시 100P 지급 (지각 시 50P)<br>✓ 연속 출석 시 추가 보너스 지급 (최대 +500P)<br>✓ 특별 활동 참여 시 추가 포인트 지급<br>✓ 획득한 포인트로 다양한 상품을 교환할 수 있어요!</div>
+      </div>
       <div style="margin-top:18px"><div id="shop-orders-title" style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:6px">최근 교환 내역</div><div id="shop-orders"></div></div>
     </div>
   </div>
@@ -1920,13 +1922,44 @@
     <button class="btn btn-primary" style="width:100%" onclick="closeModal('attend-done-modal')">확인</button>
   </div>
 </div>
-<!-- ══ 모달: 쿠폰함 ══ -->
-<div class="modal-overlay" id="coupon-modal">
-  <div class="modal-sheet">
+<!-- ══ 모달: 포인트 내역 ══ -->
+<div class="modal-overlay" id="point-history-modal">
+  <div class="modal-sheet" style="max-height:82vh;overflow-y:auto">
     <div class="modal-handle"></div>
-    <div class="modal-title-row"><span class="modal-title">🎟️ 내 쿠폰함</span><button class="modal-close" onclick="closeModal('coupon-modal')">✕</button></div>
-    <div style="font-size:11px;color:var(--text-light);margin-bottom:14px">등급을 달성하면 쿠폰이 자동으로 생겨요. 인증번호는 선생님께 문의해 받아보세요 🙏</div>
-    <div id="coupon-list"></div>
+    <div class="modal-title-row"><span class="modal-title">포인트 내역</span><button class="modal-close" onclick="closeModal('point-history-modal')">✕</button></div>
+    <div class="card" style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;color:var(--text-sub);font-weight:700">보유 포인트</span><span style="font-size:18px;font-weight:800;color:var(--primary-dark)"><span id="pth-balance">0</span>P</span></div>
+    <div id="pth-list"></div>
+  </div>
+</div>
+<!-- ══ 모달: 포인트 지급 (교사) ══ -->
+<div class="modal-overlay" id="point-grant-modal">
+  <div class="modal-sheet" style="max-height:85vh;overflow-y:auto">
+    <div class="modal-handle"></div>
+    <div class="modal-title-row"><span class="modal-title">⭐ 포인트 지급</span><button class="modal-close" onclick="closeModal('point-grant-modal')">✕</button></div>
+    <div class="form-group"><label class="form-label">학생 *</label><select class="form-select" id="pg-student"></select></div>
+    <div class="form-group"><label class="form-label">사유</label><div class="filter-row" id="pg-reasons" style="flex-wrap:wrap;gap:6px"></div><input class="form-input" type="text" id="pg-reason-custom" placeholder="직접 입력 (선택)" style="margin-top:8px"></div>
+    <div class="form-group"><label class="form-label">포인트 *</label><div class="filter-row" id="pg-amounts" style="gap:6px;margin-bottom:8px"></div><input class="form-input" type="number" inputmode="numeric" id="pg-amount" placeholder="직접 입력 (예: 100)"></div>
+    <button class="btn btn-primary" style="margin-top:6px" onclick="submitPointGrant()">지급하기</button>
+  </div>
+</div>
+<!-- ══ 모달: 상품 추가·수정 (교사) ══ -->
+<div class="modal-overlay" id="shop-item-modal">
+  <div class="modal-sheet" style="max-height:85vh;overflow-y:auto">
+    <div class="modal-handle"></div>
+    <div class="modal-title-row"><span class="modal-title" id="sim-title">상품 추가</span><button class="modal-close" onclick="closeModal('shop-item-modal')">✕</button></div>
+    <input type="hidden" id="sim-id">
+    <div class="form-group"><label class="form-label">상품명 *</label><input class="form-input" type="text" id="sim-name" placeholder="예: 음료 교환권"></div>
+    <div style="display:flex;gap:8px">
+      <div class="form-group" style="flex:1"><label class="form-label">가격(P) *</label><input class="form-input" type="number" inputmode="numeric" id="sim-price" placeholder="500"></div>
+      <div class="form-group" style="flex:1"><label class="form-label">재고</label><input class="form-input" type="number" inputmode="numeric" id="sim-stock" placeholder="20"></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <div class="form-group" style="flex:1"><label class="form-label">카테고리</label><select class="form-select" id="sim-cat"><option value="food">간식·음료</option><option value="goods">굿즈</option><option value="life">문구·생활</option><option value="event">이벤트</option></select></div>
+      <div class="form-group" style="flex:1"><label class="form-label">섹션</label><select class="form-select" id="sim-sec"><option value="rec">추천</option><option value="hot">인기</option><option value="event">이벤트</option></select></div>
+    </div>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;margin:4px 0 14px"><input type="checkbox" id="sim-active" checked style="width:18px;height:18px">상점에 노출</label>
+    <button class="btn btn-primary" onclick="saveShopItem()">저장</button>
+    <button class="btn btn-sm" id="sim-delete" style="width:100%;margin-top:8px;background:var(--coral-light);color:#B0463A;font-weight:800;display:none" onclick="deleteShopItem(document.getElementById('sim-id').value)">삭제</button>
   </div>
 </div>
 
@@ -2606,7 +2639,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="./assets.js"></script>
-<script src="./app.js?v=20260920d"></script>
+<script src="./app.js?v=20260920e"></script>
 
 <div id="theme-preview-bar" style="display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:88px;z-index:600;background:rgba(26,35,64,0.95);color:white;padding:10px 12px 10px 16px;border-radius:14px;box-shadow:var(--shadow-lg);align-items:center;gap:10px;max-width:410px;width:calc(100% - 32px);backdrop-filter:blur(4px)">
   <span id="theme-preview-label" style="font-size:13px;font-weight:700;flex:1">🎨 미리보기</span>
@@ -2630,7 +2663,7 @@
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-messaging-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-auth-compat.js"></script>
-<script src="./app-sync.js?v=20260920d"></script>
+<script src="./app-sync.js?v=20260920e"></script>
 
 </body>
 </html>
