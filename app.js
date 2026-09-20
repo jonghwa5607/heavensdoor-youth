@@ -514,7 +514,7 @@ function openLevelGuide(){
   el.innerHTML=LEVELS.map(function(L){
     var done=yt>=L.min;var isCur=L.lv===cur;
     return '<div style="display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;margin-bottom:8px;background:'+(isCur?'var(--primary-light)':'var(--bg)')+';border:'+(isCur?'1.5px solid var(--primary)':'1px solid var(--border-light)')+'">'
-      +'<div style="width:42px;height:42px;flex-shrink:0;border-radius:11px;background:#fff;display:flex;align-items:center;justify-content:center;'+(done?'':'opacity:.5;filter:grayscale(.5)')+'">'+_treeSVG(L.tree,32)+'</div>'
+      +'<div style="width:42px;height:42px;flex-shrink:0;border-radius:11px;background:#fff;display:flex;align-items:center;justify-content:center;'+(done?'':'opacity:.5;filter:grayscale(.5)')+'">'+_lvTree(L.lv,32)+'</div>'
       +'<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:800;color:var(--text)">Lv.'+L.lv+' '+L.stage+(isCur?' <span style="font-size:10px;color:var(--primary-dark);background:#fff;padding:2px 8px;border-radius:20px;margin-left:2px">현재</span>':'')+'</div>'
       +'<div style="font-size:11px;color:var(--text-light);margin-top:2px">'+(L.min===0?'시작 레벨':(L.min.toLocaleString()+'P 이상'))+'</div></div>'
       +(done?'<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--mint)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>':'<span style="font-size:11px;color:var(--primary-dark);font-weight:800;flex-shrink:0">'+Math.max(0,L.min-yt).toLocaleString()+'P 남음</span>')
@@ -553,7 +553,7 @@ function renderHomePoints(){
     s('home-level-next',li.next!=null?li.next.toLocaleString():'MAX');
     s('home-level-tonext',li.toNext.toLocaleString());
     var lb=document.getElementById('home-level-badge');if(lb)lb.textContent='Lv.'+li.lv+' '+li.stage;
-    var tr=document.getElementById('home-tree');if(tr&&typeof _treeSVG==='function')tr.innerHTML=_treeSVG(li.tree,42);
+    var tr=document.getElementById('home-tree');if(tr&&typeof _treeSVG==='function')tr.innerHTML=_lvTree(li.lv,44);
     var pf=document.getElementById('home-prog-fill');if(pf){var pct=100;if(li.next!=null){var span=li.next-li.min;pct=span>0?Math.round((yt-li.min)/span*100):0;}pf.style.width=Math.max(0,Math.min(100,pct))+'%';}
     s('home-streak',G.streak||0);s('home-maxstreak',Math.max(G.streak||0,G.maxStreak||0));s('home-total',(G.attendedWeeks||[]).length);
     var mw=[5,10,15,20,30,40],st=G.streak||0,nm=null;for(var i=0;i<mw.length;i++){if(mw[i]>st){nm=mw[i];break;}}
@@ -1163,6 +1163,27 @@ function _treeSVG(stage,size){
   }
   return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 66 82" aria-hidden="true">'+soil+body+'</svg>';
 }
+/* 레벨(1~10)별로 조금씩 성장하는 그림 — 같은 단계명이어도 다르게 */
+function _lvTree(lv,size){
+  size=size||42;lv=lv||1;
+  var soil='<ellipse cx="32" cy="58" rx="16" ry="4" fill="#E7DCC9"/>';var svg='';
+  if(lv===1){ soil='<ellipse cx="32" cy="56" rx="16" ry="4.5" fill="#E7DCC9"/>'; svg='<path d="M16 56 q16 -8 32 0z" fill="#C9A87E"/><ellipse cx="32" cy="49" rx="4.5" ry="6" fill="#8B5E3C"/><path d="M32 45 q2 3 0 6" stroke="#6E4327" stroke-width="1.1" fill="none"/>'; }
+  else if(lv===2){ svg='<path d="M32 58 v-9" stroke="#6FA05A" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M32 51 q-8 -1 -11 -8 q8 0 11 5z" fill="#8FD09A"/><path d="M32 49 q8 -1 11 -7 q-8 -1 -11 5z" fill="#7BC48A"/>'; }
+  else if(lv===3){ svg='<path d="M32 58 v-16" stroke="#6FA05A" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M32 48 q-11 -2 -14 -11 q11 0 14 7z" fill="#8FD09A"/><path d="M32 45 q11 -2 14 -10 q-11 -1 -14 7z" fill="#7BC48A"/><path d="M32 42 q-6 -3 -7 -9 q6 1 7 6z" fill="#9BDBA6"/>'; }
+  else{
+    var C={4:{th:14,fr:11,f:'#9CCB8E',tw:3.2},5:{th:18,fr:13,f:'#8BC47E',tw:3.6},6:{th:22,fr:16,f:'#6FB36A',tw:5},7:{th:26,fr:19,f:'#5DA85C',tw:5.4},8:{th:26,fr:19,f:'#5DA85C',tw:5.4},9:{th:27,fr:20,f:'#4E9E52',tw:5.6},10:{th:28,fr:21,f:'#3F9147',tw:5.8}}[lv]||{th:22,fr:16,f:'#6FB36A',tw:5};
+    var ty=58-C.th;
+    svg='<path d="M32 58 v-'+C.th+'" stroke="#8B5E3C" stroke-width="'+C.tw+'" fill="none" stroke-linecap="round"/>';
+    svg+='<circle cx="'+(32-C.fr*0.6).toFixed(1)+'" cy="'+(ty+C.fr*0.4).toFixed(1)+'" r="'+(C.fr*0.72).toFixed(1)+'" fill="'+C.f+'"/>';
+    svg+='<circle cx="'+(32+C.fr*0.6).toFixed(1)+'" cy="'+(ty+C.fr*0.4).toFixed(1)+'" r="'+(C.fr*0.72).toFixed(1)+'" fill="'+C.f+'"/>';
+    svg+='<circle cx="32" cy="'+ty.toFixed(1)+'" r="'+C.fr+'" fill="'+C.f+'"/>';
+    if(lv===8){ svg+='<circle cx="26" cy="'+(ty-2)+'" r="2.4" fill="#FBD3E0"/><circle cx="38" cy="'+(ty+3)+'" r="2.4" fill="#FBD3E0"/><circle cx="32" cy="'+(ty-6)+'" r="2.4" fill="#F8C7D8"/>'; }
+    else if(lv===9){ svg+='<circle cx="27" cy="'+(ty+3)+'" r="2.8" fill="#E8574C"/><circle cx="38" cy="'+(ty-2)+'" r="2.8" fill="#E8574C"/>'; }
+    else if(lv===10){ svg+='<circle cx="25" cy="'+(ty+2)+'" r="2.8" fill="#E8574C"/><circle cx="39" cy="'+(ty-1)+'" r="2.8" fill="#E8574C"/><circle cx="32" cy="'+(ty+7)+'" r="2.8" fill="#E8574C"/><circle cx="30" cy="'+(ty-7)+'" r="2.8" fill="#E8574C"/>'; }
+  }
+  var w=Math.round(size*0.92),h=size;
+  return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 64 64" aria-hidden="true">'+soil+svg+'</svg>';
+}
 function renderStudentGrowth(){try{
   var _ha=document.getElementById('home-student-avatar');if(_ha){_ha.innerHTML=_avatarHTML({avatar:G.avatar,name:G.displayName},50);}
   var gg=document.getElementById('student-greet');if(gg)gg.textContent='안녕, '+((G.name?G.name+' ':'')+(G.baptism||'')).trim()+'!';
@@ -1178,7 +1199,7 @@ function renderStudentGrowth(){try{
   if(ag){var _li=levelInfo(G.yearTotalPoints||0);var _yt=G.yearTotalPoints||0;var _pct=100;if(_li.next!=null){var _sp=_li.next-_li.min;_pct=_sp>0?Math.round((_yt-_li.min)/_sp*100):0;}_pct=Math.max(3,Math.min(100,_pct));
     ag.innerHTML='<div class="card" style="padding:15px;text-align:left;background:linear-gradient(120deg,var(--mint-light),var(--primary-light))">'
       +'<div style="display:flex;align-items:center;gap:13px;margin-bottom:12px">'
-        +'<div style="width:58px;height:58px;flex-shrink:0;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center">'+_treeSVG(_li.tree,44)+'</div>'
+        +'<div style="width:58px;height:58px;flex-shrink:0;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center">'+_lvTree(_li.lv,44)+'</div>'
         +'<div style="flex:1;min-width:0"><div style="font-size:17px;font-weight:800;color:var(--text)">Lv.'+_li.lv+' '+_li.stage+'</div>'
         +'<div style="font-size:11px;color:var(--text-sub);margin-top:2px">'+(_li.next!=null?('다음 레벨까지 <b style="color:var(--primary-dark)">'+_li.toNext.toLocaleString()+'P</b>'):'최고 레벨 달성 🍎')+'</div></div>'
       +'</div>'
