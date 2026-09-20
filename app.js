@@ -312,12 +312,15 @@ function renderDetailCoupons(u){dedupeBdayCoupons();const el=document.getElement
 function useCouponByTeacher(cid){const c=coupons.find(x=>x.id===cid);if(!c||c.used)return;const inp=document.getElementById('dcoupon-code-'+cid);const val=((inp&&inp.value)||'').trim();if(!val){showToast('인증번호를 입력해주세요');return;}if(val!==String(c.code)){showToast('❌ 인증번호가 일치하지 않아요');return;}c.used=true;c.usedAt=new Date().toLocaleDateString('ko-KR');saveCouponNow(c);const u=pendingList.find(x=>x.id===currentDetailStudentId);if(u)renderDetailCoupons(u);renderAdminCouponList();try{renderCouponList();}catch(e){}showToast('🎉 쿠폰이 사용 처리되었어요');}
 /* ══════════ 포인트제 (레벨/포인트 엔진) ══════════ */
 const LEVELS=[{lv:1,min:0,stage:'씨앗',tree:0},{lv:2,min:500,stage:'새싹',tree:1},{lv:3,min:1500,stage:'새싹',tree:1},{lv:4,min:3000,stage:'작은나무',tree:2},{lv:5,min:5000,stage:'작은나무',tree:2},{lv:6,min:7500,stage:'큰나무',tree:3},{lv:7,min:10000,stage:'큰나무',tree:3},{lv:8,min:13000,stage:'꽃',tree:4},{lv:9,min:17000,stage:'첫 열매',tree:5},{lv:10,min:20000,stage:'풍성한 열매',tree:5}];
-function ptCfg(){var c=(typeof appConfig!=='undefined'&&appConfig.pt)||{};return {full:c.full!=null?c.full:100,half:c.half!=null?c.half:50,bday:c.bday!=null?c.bday:300,feast:c.feast!=null?c.feast:300,streakBase:c.streakBase!=null?c.streakBase:50,milestones:c.milestones||{2:20,3:30,4:50,5:100,10:200,15:300,20:400,30:500,40:700}};}
+function ptCfg(){var c=(typeof appConfig!=='undefined'&&appConfig.pt)||{};return {full:c.full!=null?c.full:200,half:c.half!=null?c.half:100,bday:c.bday!=null?c.bday:300,feast:c.feast!=null?c.feast:300,tiers:c.tiers||{t2:25,t5:50,t10:75,t15:100,t20:125,t30:150,t40:175},milestones:c.milestones||{5:100,10:200,15:300,20:400,30:600,40:775,50:1000}};}
+/* 그 주의 일반 연속출석 보너스(구간별) */
+function _streakWeekly(s){var t=ptCfg().tiers;if(s<=1)return 0;if(s<=4)return t.t2;if(s<=9)return t.t5;if(s<=14)return t.t10;if(s<=19)return t.t15;if(s<=29)return t.t20;if(s<=39)return t.t30;return t.t40;}
 function levelInfo(pts){pts=pts||0;var cur=LEVELS[0];for(var i=0;i<LEVELS.length;i++){if(pts>=LEVELS[i].min)cur=LEVELS[i];}var nxt=LEVELS[cur.lv]||null;return {lv:cur.lv,stage:cur.stage,tree:cur.tree,min:cur.min,next:nxt?nxt.min:null,toNext:nxt?Math.max(0,nxt.min-pts):0};}
-function streakBonusOf(streak){var cfg=ptCfg();if(streak<=1)return {amount:0,milestone:false};var big=[5,10,15,20,30,40];if(cfg.milestones[streak]!=null)return {amount:cfg.milestones[streak],milestone:big.indexOf(streak)>=0};return {amount:cfg.streakBase,milestone:false};}
+function streakBonusOf(streak){var cfg=ptCfg();var ms=cfg.milestones[streak]||0;return {amount:_streakWeekly(streak)+ms,milestone:ms>0};}
 function _phPush(u,type,amount,reason,by,ref){u.pointHistory=u.pointHistory||[];u.pointHistory.push({type:type,amount:amount,reason:reason,createdAt:new Date().toLocaleDateString('ko-KR'),ts:Date.now(),createdBy:by||'시스템',ref:ref||''});if(u.pointHistory.length>500)u.pointHistory.splice(0,u.pointHistory.length-500);}
 function _ptSyncG(u){if(u&&G&&u.id===G.id){G.currentPoints=u.currentPoints||0;G.yearTotalPoints=u.yearTotalPoints||0;G.level=u.level||1;G.pendingStreakRewards=u.pendingStreakRewards||0;}}
-function earnPoints(u,amount,reason,by,ref){if(!u||!amount)return;u.currentPoints=(u.currentPoints||0)+amount;u.yearTotalPoints=(u.yearTotalPoints||0)+amount;u.level=levelInfo(u.yearTotalPoints).lv;_phPush(u,'earn',amount,reason,by,ref);_ptSyncG(u);try{saveMemberNow(u);}catch(e){}}
+/* growth=true 일 때만 성장점수(레벨) 반영. 생일/축일/교사/이벤트 포인트는 보유 포인트에만 지급 */
+function earnPoints(u,amount,reason,by,ref,growth){if(!u||!amount)return;u.currentPoints=(u.currentPoints||0)+amount;if(growth){u.yearTotalPoints=(u.yearTotalPoints||0)+amount;u.level=levelInfo(u.yearTotalPoints).lv;}_phPush(u,'earn',amount,reason,by,ref);_ptSyncG(u);try{saveMemberNow(u);}catch(e){}}
 function spendPoints(u,amount,reason,ref){if(!u||!amount)return false;if((u.currentPoints||0)<amount)return false;u.currentPoints-=amount;_phPush(u,'spend',-amount,reason,'',ref);_ptSyncG(u);try{saveMemberNow(u);}catch(e){}return true;}
 /* 주(週)단위 출석 포인트 — 상태를 바꿔도 중복지급 없이 재계산 */
 function awardAttendance(u,sat,status,by){
@@ -330,9 +333,9 @@ function awardAttendance(u,sat,status,by){
   u.pendingStreakRewards=Math.max(0,(u.pendingStreakRewards||0)-prev.pend);
   var cfg=ptCfg(),addPts=0,addPend=0,reason='',mile=false,streak=0;
   if(status!=='absent'){
-    streak=computeStreak(u);u.maxStreak=Math.max(u.maxStreak||0,streak);if(u.id===G.id)G.maxStreak=u.maxStreak;var sb=streakBonusOf(streak);mile=sb.milestone;
-    if(status==='half'){addPts=cfg.half;if(sb.milestone)addPend=sb.amount;reason='지각 출석';}
-    else{var rel=(u.pendingStreakRewards||0);addPts=cfg.full+sb.amount+rel;if(rel)u.pendingStreakRewards=0;reason='주일 출석'+(sb.amount?(' · 연속 '+streak+'주 보너스'):'')+(rel?(' · 보류 보너스'):'');}
+    streak=computeStreak(u);u.maxStreak=Math.max(u.maxStreak||0,streak);if(u.id===G.id)G.maxStreak=u.maxStreak;var wk=_streakWeekly(streak);var ms=cfg.milestones[streak]||0;mile=ms>0;
+    if(status==='half'){addPts=cfg.half;if(ms>0)addPend=ms;reason='지각 출석';}
+    else{var rel=(u.pendingStreakRewards||0);addPts=cfg.full+wk+ms+rel;if(rel)u.pendingStreakRewards=0;reason='주일 출석'+((wk+ms)?(' · 연속 '+streak+'주 보너스'):'')+(rel?(' · 보류 보너스'):'');}
   }
   u.currentPoints=(u.currentPoints||0)+addPts;
   u.yearTotalPoints=(u.yearTotalPoints||0)+addPts;
@@ -556,7 +559,7 @@ function renderHomePoints(){
     var tr=document.getElementById('home-tree');if(tr&&typeof _treeSVG==='function')tr.innerHTML=_lvTree(li.lv,44);
     var pf=document.getElementById('home-prog-fill');if(pf){var pct=100;if(li.next!=null){var span=li.next-li.min;pct=span>0?Math.round((yt-li.min)/span*100):0;}pf.style.width=Math.max(0,Math.min(100,pct))+'%';}
     s('home-streak',G.streak||0);s('home-maxstreak',Math.max(G.streak||0,G.maxStreak||0));s('home-total',(G.attendedWeeks||[]).length);
-    var mw=[5,10,15,20,30,40],st=G.streak||0,nm=null;for(var i=0;i<mw.length;i++){if(mw[i]>st){nm=mw[i];break;}}
+    var mw=[5,10,15,20,30,40,50],st=G.streak||0,nm=null;for(var i=0;i<mw.length;i++){if(mw[i]>st){nm=mw[i];break;}}
     var mel=document.getElementById('home-milestone');
     if(mel){if(nm){var bonus=(ptCfg().milestones[nm])||0;mel.style.display='';mel.innerHTML='🔥 '+nm+'주 연속 출석까지 '+(nm-st)+'주 남았어요! 달성 시 <b>+'+bonus+'P</b> 보너스가 지급돼요.';}else{mel.style.display='none';}}
   }catch(e){}
