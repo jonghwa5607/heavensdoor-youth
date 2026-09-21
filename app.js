@@ -383,6 +383,51 @@ function awardAttendance(u,sat,status,by){
   _ptSyncG(u);
   return {added:addPts+(msRes.granted||0)+(mpAdd>0?mpAdd:0),base:(status==='half'?cfg.half:(status==='absent'?0:cfg.full)),weekly:(status==='half'?0:wk),streak:streak,milestonePaid:(msRes.granted||0),milestone:(msRes.granted||0)>0,monthPerfect:(mpAdd>0?mpAdd:0)};
 }
+/* 출석 기록(attendedWeeks)으로 포인트 소급 재계산 — 출석 파생 포인트만 재구성, 특별/생일/축일·상점사용은 보존 */
+function recalcMemberPoints(u){
+  if(!u)return null;var cfg=ptCfg();
+  /* 출석 외 내역(특별/생일/축일/상점 등) 순합 보존 */
+  var nonAttNet=0;
+  (u.pointHistory||[]).forEach(function(h){var r=String(h.ref||'');if(r.indexOf('att-')===0||r.indexOf('mile-')===0||r.indexOf('mperfect-')===0)return;nonAttNet+=(h.amount||0);});
+  var keepHist=(u.pointHistory||[]).filter(function(h){var r=String(h.ref||'');return !(r.indexOf('att-')===0||r.indexOf('mile-')===0||r.indexOf('mperfect-')===0);});
+  var attSet={},halfSet={};
+  (u.attendedWeeks||[]).forEach(function(w){if(!(typeof isVacationDate==='function'&&isVacationDate(w)))attSet[w]=1;});
+  (u.halfWeeks||[]).forEach(function(w){halfSet[w]=1;});
+  var attList=Object.keys(attSet).sort();
+  u.weekAward={};u.milestonesAwarded={};u.monthPerfect={};u.pointHistory=keepHist.slice();
+  var growth=0,current=0,streak=0,count=0,maxS=0;
+  if(attList.length){
+    var first=new Date(attList[0]+'T00:00:00'),last=new Date(attList[attList.length-1]+'T00:00:00');
+    var d=new Date(first.getFullYear(),first.getMonth(),first.getDate());
+    var seq=[];while(d<=last){var ds=toDateStr(d);if(!(typeof isVacationDate==='function'&&isVacationDate(ds)))seq.push(ds);d.setDate(d.getDate()+7);}
+    seq.forEach(function(w){
+      if(attSet[w]){
+        streak++;count++;if(streak>maxS)maxS=streak;
+        var isHalf=!!halfSet[w];var base=isHalf?cfg.half:cfg.full;var wk=isHalf?0:_streakWeekly(streak);var add=base+wk;
+        growth+=add;current+=add;u.weekAward[w]={pts:add};
+        _phPush(u,'earn',add,(isHalf?'지각 출석':('주일 출석'+(wk?(' · 연속 '+streak+'주 보너스'):''))),'재계산','att-'+w);
+        var mb=cfg.milestones[count];
+        if(mb&&!u.milestonesAwarded[count]){growth+=mb;current+=mb;u.milestonesAwarded[count]=true;_phPush(u,'earn',mb,'누적 '+count+'회 출석 보너스','재계산','mile-'+count);}
+      }else{streak=0;}
+    });
+    var months={};attList.forEach(function(w){months[w.slice(0,7)]=1;});
+    Object.keys(months).forEach(function(ym){var sats=_satsOfMonth(ym);if(sats.length&&sats.every(function(w){return attSet[w];})){current+=cfg.monthPerfect;u.monthPerfect[ym]=true;_phPush(u,'earn',cfg.monthPerfect,(+ym.slice(5,7))+'월 개근 보너스','재계산','mperfect-'+ym);}});
+  }
+  u.yearTotalPoints=growth;u.currentPoints=Math.max(0,growth+nonAttNet);
+  u.level=levelInfo(u.yearTotalPoints).lv;
+  try{u.streak=computeStreak(u);}catch(e){u.streak=streak;}
+  u.maxStreak=Math.max(u.maxStreak||0,maxS,u.streak||0);
+  _ptSyncG(u);
+  return {growth:growth,current:u.currentPoints,att:attList.length};
+}
+function recalcAllPoints(){
+  if(!(G.type==='principal'||G.type==='admin'||G.isAdmin)){showToast('교감·교무·관리자만 가능해요');return;}
+  if(!confirm('모든 학생의 출석 기록(attendedWeeks)으로 포인트·성장점수·레벨을 다시 계산합니다.\n· 출석/연속/누적/개근 보너스는 재구성\n· 생일·축일·교사 특별포인트, 상점 사용 내역은 보존\n계속할까요?'))return;
+  var n=0;(pendingList||[]).forEach(function(u){if(u&&u.role==='student'){try{recalcMemberPoints(u);saveMemberNow(u);n++;}catch(e){console.warn('[RECALC]',u.id,e);}}});
+  try{if(typeof flushSync==='function')flushSync();}catch(e){}
+  try{renderHomePoints();}catch(e){}try{renderStorageStats();}catch(e){}
+  showToast('🔄 '+n+'명 포인트를 출석 기록으로 재계산했어요');
+}
 function checkLevelCoupons(u){}   /* 쿠폰 자동발급 폐지 — 포인트제로 전환 */
 /* ══════════ 포인트 상점 ══════════ */
 const SHOP_CATS=[['all','전체'],['food','간식·음료'],['goods','굿즈'],['life','문구·생활'],['event','이벤트']];
@@ -662,17 +707,7 @@ function _ptHistHtml(u){
 function openLevelGuide(){
   var yt=G.yearTotalPoints||0;var cur=levelInfo(yt).lv;
   var el=document.getElementById('level-guide-list');if(!el)return;
-  var _row=function(l,r){return '<div style="display:flex;justify-content:space-between;font-size:11.5px;padding:4px 0"><span style="color:var(--text-sub)">'+l+'</span><span style="font-weight:700;color:var(--text)">'+r+'</span></div>';};
-  var guide='<div class="card" style="margin-bottom:14px;padding:14px 15px">'
-    +'<div style="font-size:13px;font-weight:800;margin-bottom:8px">🎯 포인트 획득 방법</div>'
-    +_row('주일 정상 출석','+200P')+_row('지각 출석','+100P')
-    +'<div style="height:8px"></div><div style="font-size:11.5px;font-weight:800;color:var(--primary-dark);margin-bottom:4px">연속출석 매주 보너스</div>'
-    +_row('2~4주','+50P')+_row('5~14주','+100P')+_row('15~19주','+150P')+_row('20~29주','+200P')+_row('30주 이상','+250P')
-    +'<div style="height:8px"></div><div style="font-size:11.5px;font-weight:800;color:var(--primary-dark);margin-bottom:4px">누적출석 보너스 (연속 아니어도 OK)</div>'
-    +_row('누적 5회 / 10회 / 15회','+100 / +200 / +300P')+_row('누적 20회 / 30회 / 40회','+400 / +500 / +700P')
-    +'<div style="font-size:11px;color:var(--text-light);margin-top:10px;line-height:1.6">· 누적출석 보너스는 결석해도 사라지지 않아요 (총 출석 횟수 기준)<br>· 지각도 누적 1회로 인정돼요<br>· 방학은 결석·연속출석 끊김 없이 제외돼요<br>· 연간 개근(47회) 시 20,000P로 Lv.10 달성!<br>· 생일·축일·특별 포인트는 상점에서 쓸 수 있지만 레벨(성장점수)에는 반영되지 않아요</div>'
-    +'</div>';
-  el.innerHTML=guide+LEVELS.map(function(L){
+  el.innerHTML=LEVELS.map(function(L){
     var done=yt>=L.min;var isCur=L.lv===cur;
     return '<div style="display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;margin-bottom:8px;background:'+(isCur?'var(--primary-light)':'var(--bg)')+';border:'+(isCur?'1.5px solid var(--primary)':'1px solid var(--border-light)')+'">'
       +'<div style="width:42px;height:42px;flex-shrink:0;border-radius:11px;background:#fff;display:flex;align-items:center;justify-content:center;'+(done?'':'opacity:.5;filter:grayscale(.5)')+'">'+_lvTree(L.lv,32)+'</div>'
@@ -1294,7 +1329,7 @@ function startSession(u){
   show('board-teacher-top',isT);show('board-student-cats',isS);show('board-parent-cats',isP);
   show('fab-board',(isS&&!G.graduated)||isT);show('activity-write-btn',isT);
   if(isP)show('nav-jabumo-tab',true);
-  show('my-stats-student',isS);show('menu-attend',isS);show('menu-badge',isS);show('menu-coupon',isS);show('menu-diary',isS);show('menu-mycard',isS);show('menu-posts',true);show('menu-resource',isT);
+  show('my-stats-student',isS);show('menu-attend',isS);show('menu-coupon',isS);show('menu-diary',isS);show('menu-mycard',isS);show('menu-posts',true);show('menu-resource',isT);
   show('my-posts-resource-tab',isT);show('my-posts-board-tab',isT);show('my-posts-activity-tab',isT);show('my-posts-jabumo-tab',isP);const allTabEl=document.getElementById('my-posts-all-tab');if(allTabEl)allTabEl.textContent=isS?'자유게시판':'전체';
   show('qr-manage-section',isT);if(isT)syncQRUI();show('cal-add-btn',isT);
   if(isS){const gl=G.grade||({m1:'중1',m2:'중2',m3:'중3',h:'고등부'}[G.gradeKey]||'');G.displayName=G.name+' '+G.baptism+(gl?' ('+gl+')':'');document.getElementById('role-badge').textContent=G.graduated?'졸업생':gl;const sn=document.getElementById('stamp-name');if(sn)sn.textContent=G.displayName+crownMark(G);const mad=document.getElementById('my-attend-detail');if(mad)mad.textContent='이번 달 '+monthAttendCount(G)+'회 출석';initStamps();filterBoardStudent(G.gradeKey);}
@@ -4335,18 +4370,46 @@ async function recalcStorage(){
   }
   renderStorageStats();
 }
-function cleanupStorage(){
+async function cleanupStorage(){
   if(!(G.type==='principal'||G.type==='admin'||G.isAdmin)){showToast('교감·교무·관리자만 가능해요');return;}
-  if(!confirm('90일이 지난 알림과 만료된 이벤트 배너를 삭제합니다.\n사진과 게시글은 지우지 않습니다. 계속할까요?'))return;
+  if(!confirm('아래 항목을 정리합니다. 갤러리 사진과 게시글은 지우지 않아요.\n되돌릴 수 없어요.\n\n· 90일 지난 알림\n· 만료된 이벤트 배너\n· 사용하지 않는 쿠폰 전체\n· 지난 생일·축일 축하 댓글·하트 (오늘 대상 제외)\n· 참조 없는(미사용) 사진 원본\n\n계속할까요?'))return;
+  var _fb=(window.FB&&FB.enabled());
   const now=Date.now(),D=86400000;let n=0;
+  /* 1) 90일 지난 알림 */
   const nb=notifications.length;
   notifications=notifications.filter(x=>{const t=Number(String(x.id||'').replace(/\D/g,'').slice(0,13));return !(t&&now-t>90*D);});
   n+=nb-notifications.length;
+  /* 2) 만료된 이벤트 배너(30일 경과) */
   const oldEv=eventsData.filter(e=>e.deadline&&now-new Date(e.deadline).getTime()>30*D);
   oldEv.forEach(e=>{posts=posts.filter(p=>p.eventId!==e.id);});
   eventsData=eventsData.filter(e=>!oldEv.includes(e));n+=oldEv.length;
-  renderStorageStats();try{renderEventBanner();renderHomeNotices();updateNotifDot();}catch(e){}
-  showToast('🧹 '+n+'건을 정리했어요');
+  /* 3) 쿠폰 전체 정리 (포인트제 전환으로 미사용) */
+  const cN=(coupons||[]).length;
+  if(cN){if(_fb){coupons.forEach(function(c){try{FB.remove('coupons',c.id);}catch(e){}});}coupons=[];n+=cN;}
+  /* 4) 지난 생일·축일 축하 댓글·하트 (오늘 생일/축일 대상만 보존) */
+  var _m=new Date().getMonth()+1,_d=new Date().getDate(),_todayIds={};
+  (pendingList||[]).forEach(function(u){if((+u.birthMonth===_m&&+u.birthDay===_d)||(+u.feastMonth===_m&&+u.feastDay===_d))_todayIds[u.id]=1;});
+  var _bcN=(birthdayComments||[]).length;
+  birthdayComments=(birthdayComments||[]).filter(function(c){var keep=!!_todayIds[c.targetId];if(!keep&&_fb){try{FB.remove('birthdayComments',c.id);}catch(e){}}return keep;});
+  n+=_bcN-birthdayComments.length;
+  var _blN=(bdayLikes||[]).length;
+  bdayLikes=(bdayLikes||[]).filter(function(k){var tid=(k&&k.targetId)||String(_lkId(k)).split('|')[0];var keep=!!_todayIds[tid];if(!keep&&_fb){try{FB.remove('bdayLikes',_lkId(k));}catch(e){}}return keep;});
+  n+=_blN-bdayLikes.length;
+  /* 5) 참조 없는(미사용) 사진 원본 */
+  var orphN=0;
+  if(_fb&&FB.load){
+    try{
+      var refs={};
+      (posts||[]).forEach(function(p){(p.images||[]).forEach(function(im){if(im&&im.i)refs[im.i]=1;});});
+      (resources||[]).forEach(function(r){(r.images||[]).forEach(function(im){if(im&&im.i)refs[im.i]=1;});});
+      var imgs=await FB.load('images');
+      (imgs||[]).forEach(function(x){if(x&&x.id&&!refs[x.id]){try{FB.remove('images',x.id);}catch(e){}delete IMGC[x.id];orphN++;}});
+      n+=orphN;
+    }catch(e){console.warn('[CLEANUP] orphan img',e);}
+  }
+  try{if(typeof flushSync==='function')flushSync();}catch(e){}
+  _blobUsage=null;renderStorageStats();try{renderEventBanner();renderHomeNotices();updateNotifDot();}catch(e){}
+  showToast('🧹 총 '+n+'건 정리 완료'+(orphN?(' (미사용 사진 '+orphN+'장)'):''));
 }
 /* ── 사진 수동 삭제 ── */
 function openPhotoCleanup(){

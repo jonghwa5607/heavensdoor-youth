@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="하늘의문 중고등부">
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(e){console.warn('SW register failed',e);});});}</script>
-<link rel="stylesheet" href="./styles.css?v=20260922b">
+<link rel="stylesheet" href="./styles.css?v=20260922e">
 <style>
 /* 회의록: 플레이스홀더는 커서가 있는 빈 줄에만 표시 */
 #minutes-viewer-content .mb-txt[data-ph]::before,#minutes-viewer-content .mb-txt[data-ph]:empty:focus::before{content:none!important;display:none!important}
@@ -779,9 +779,12 @@
       <div class="cfg-sec-body">
         <div id="storage-stats" style="font-size:12px"></div>
         <button class="btn btn-primary btn-sm" style="width:100%;margin-top:10px" onclick="recalcStorage()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/></svg> 실제 사용량 다시 계산</button>
-        <button class="btn btn-outline btn-sm" style="width:100%;margin-top:8px" onclick="cleanupStorage()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> 오래된 알림 정리</button>
+        <button class="btn btn-outline btn-sm" style="width:100%;margin-top:8px" onclick="cleanupStorage()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> 오래된 데이터 정리</button>
         <button class="btn btn-outline btn-sm" style="width:100%;margin-top:8px" onclick="openPhotoCleanup()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> 사진 골라서 삭제</button>
-        <div style="font-size:11px;color:var(--text-light);margin-top:8px;line-height:1.6">사진은 <b>자동으로 삭제되지 않습니다.</b> '알림 정리'는 90일이 지난 알림과 만료된 이벤트 배너만 지웁니다. 사진을 지우려면 '사진 골라서 삭제'에서 직접 선택하세요. 되돌릴 수 없어요.</div>
+        <div style="font-size:11px;color:var(--text-light);margin-top:8px;line-height:1.6">갤러리 사진은 <b>자동으로 삭제되지 않습니다.</b> '오래된 데이터 정리'는 90일 지난 알림·만료 이벤트 배너·미사용 쿠폰·지난 생일축하 댓글/하트·<b>참조 없는(미사용) 사진 원본</b>을 지웁니다. 갤러리 사진을 지우려면 '사진 골라서 삭제'에서 직접 선택하세요. 되돌릴 수 없어요.</div>
+        <div style="height:1px;background:var(--border-light);margin:14px 0"></div>
+        <button class="btn btn-outline btn-sm" style="width:100%" onclick="recalcAllPoints()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/></svg> 출석 기록으로 포인트 재계산 (전체 학생)</button>
+        <div style="font-size:11px;color:var(--text-light);margin-top:6px;line-height:1.6">출석은 됐는데 포인트·성장점수가 안 맞을 때 눌러요. 저장된 출석 기록으로 출석·연속·누적·개근 보너스를 다시 계산합니다. (생일·축일·교사 특별포인트, 상점 사용 내역은 그대로 보존)</div>
       </div>
     </div>
     <div class="cfg-sec card" id="cfg-theme" style="margin-bottom:12px;padding:0">
@@ -1052,11 +1055,6 @@
       <div class="menu-item" id="menu-attend" style="display:none" onclick="switchTab('attend')">
         <div class="menu-icon-wrap" style="background:var(--mint-light)"><svg viewBox="0 0 24 24" fill="none" stroke="#1A9A88" stroke-width="2" stroke-linecap="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
         <div class="menu-info"><strong>출석 현황</strong><small id="my-attend-detail">-</small></div>
-        <div class="menu-right"><span class="menu-arrow">›</span></div>
-      </div>
-      <div class="menu-item" id="menu-badge" style="display:none" onclick="openBadgeInfo()">
-        <div class="menu-icon-wrap" style="background:var(--yellow-light)"><svg viewBox="0 0 24 24" fill="none" stroke="#9A7200" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg></div>
-        <div class="menu-info"><strong>내 등급</strong><small>획득한 등급 모아보기</small></div>
         <div class="menu-right"><span class="menu-arrow">›</span></div>
       </div>
       <div class="menu-item" id="menu-coupon" style="display:none" onclick="openPointHistory()">
@@ -1449,7 +1447,7 @@
   <div class="modal-sheet sheet-full">
     <div class="pg-head">
       <button class="pg-back" onclick="closeMinutesViewer()">‹</button>
-      <span class="pg-title">회의록 <span style="font-size:9px;font-weight:600;color:#2D9E8F;opacity:.75;vertical-align:middle">v44</span></span>
+      <span class="pg-title">회의록 <span style="font-size:9px;font-weight:600;color:#2D9E8F;opacity:.75;vertical-align:middle">v47</span></span>
       <div class="pg-acts">
         <button class="btn btn-sm" id="minutes-publish-btn" style="display:none;background:var(--coral);color:#fff;width:auto;padding:6px 11px;font-size:12px" onclick="publishMinutes()">📣 발행</button>
         <button class="btn btn-sm" id="minutes-save-btn" style="display:none;background:var(--primary);color:white;width:auto;padding:6px 13px;font-size:12px" onclick="stopMinutesEdit()">완료</button>
@@ -1904,14 +1902,24 @@
 
 <!-- 포인트 안내 모달 -->
 <div class="modal-overlay" id="shop-guide-modal">
-  <div class="modal-sheet">
+  <div class="modal-sheet" style="max-height:88vh;overflow-y:auto">
+    <div class="modal-handle"></div>
     <div class="modal-title-row"><span class="modal-title">포인트 안내</span><button class="modal-close" onclick="closeModal('shop-guide-modal')">✕</button></div>
-    <div style="display:flex;flex-direction:column;gap:12px;padding-top:4px">
-      <div style="display:flex;gap:11px;align-items:flex-start"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><div style="font-size:13px;color:var(--text-sub);line-height:1.5"><b style="color:var(--text)">기본 출석</b><br>정상 +200P · 지각 +100P</div></div>
-      <div style="display:flex;gap:11px;align-items:flex-start"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg><div style="font-size:13px;color:var(--text-sub);line-height:1.5"><b style="color:var(--text)">연속출석 보너스</b><br>길수록 매주 추가 (최대 +250P)</div></div>
-      <div style="display:flex;gap:11px;align-items:flex-start"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg><div style="font-size:13px;color:var(--text-sub);line-height:1.5"><b style="color:var(--text)">누적출석 보너스</b><br>누적 5·10·15·20·30·40회 (연속 아니어도 OK)</div></div>
-      <div style="display:flex;gap:11px;align-items:flex-start"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><div style="font-size:13px;color:var(--text-sub);line-height:1.5"><b style="color:var(--text)">방학</b><br>결석·연속출석 끊김 없이 제외</div></div>
-      <div style="display:flex;gap:11px;align-items:flex-start"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="8" r="6"/><path d="M15.5 13.5 17 22l-5-3-5 3 1.5-8.5"/></svg><div style="font-size:13px;color:var(--text-sub);line-height:1.5"><b style="color:var(--text)">연간 개근(47회)</b><br>20,000P로 최고 레벨(Lv.10) 달성!</div></div>
+    <div style="font-size:13px;font-weight:800;margin:2px 2px 8px"><span style="vertical-align:-2px;margin-right:4px">🎯</span>포인트 획득 방법</div>
+    <div class="card" style="padding:14px 15px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0"><span style="color:var(--text-sub)">주일 정상 출석</span><span style="font-weight:700">+200P</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0"><span style="color:var(--text-sub)">지각 출석</span><span style="font-weight:700">+100P</span></div>
+      <div style="height:8px"></div><div style="font-size:11.5px;font-weight:800;color:var(--primary-dark);margin-bottom:4px">연속출석 매주 보너스</div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0"><span style="color:var(--text-sub)">2~4주</span><span style="font-weight:700">+50P</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0"><span style="color:var(--text-sub)">5~14주</span><span style="font-weight:700">+100P</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0"><span style="color:var(--text-sub)">15~19주</span><span style="font-weight:700">+150P</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0"><span style="color:var(--text-sub)">20~29주</span><span style="font-weight:700">+200P</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0"><span style="color:var(--text-sub)">30주 이상</span><span style="font-weight:700">+250P</span></div>
+      <div style="height:8px"></div><div style="font-size:11.5px;font-weight:800;color:var(--primary-dark);margin-bottom:4px">누적출석 보너스 (연속 아니어도 OK)</div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0"><span style="color:var(--text-sub)">누적 5 / 10 / 15회</span><span style="font-weight:700">+100 / +200 / +300P</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0"><span style="color:var(--text-sub)">누적 20 / 30 / 40회</span><span style="font-weight:700">+400 / +500 / +700P</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0"><span style="color:var(--text-sub)">이번 달 개근</span><span style="font-weight:700">+100P</span></div>
+      <div style="font-size:11px;color:var(--text-light);margin-top:10px;line-height:1.6">· 누적출석 보너스는 결석해도 사라지지 않아요 (총 출석 횟수 기준)<br>· 지각도 누적 1회로 인정돼요<br>· 방학은 결석·연속출석 끊김 없이 제외돼요<br>· 연간 개근(47회) 시 20,000P로 Lv.10 달성!<br>· 생일·축일·특별 포인트는 상점에서 쓸 수 있지만 레벨(성장점수)에는 반영되지 않아요</div>
     </div>
   </div>
 </div>
@@ -2370,14 +2378,6 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="badge-modal">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-title-row"><span class="modal-title">🏆 내 등급</span><button class="modal-close" onclick="closeModal('badge-modal')">✕</button></div>
-    <div id="badge-detail"></div>
-  </div>
-</div>
-
 <!-- ══ 모달: 내 게시물 ══ -->
 <div class="modal-overlay" id="my-posts-modal">
   <div class="modal-sheet">
@@ -2697,7 +2697,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="./assets.js"></script>
-<script src="./app.js?v=20260922b"></script>
+<script src="./app.js?v=20260922e"></script>
 
 <div id="theme-preview-bar" style="display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:88px;z-index:600;background:rgba(26,35,64,0.95);color:white;padding:10px 12px 10px 16px;border-radius:14px;box-shadow:var(--shadow-lg);align-items:center;gap:10px;max-width:410px;width:calc(100% - 32px);backdrop-filter:blur(4px)">
   <span id="theme-preview-label" style="font-size:13px;font-weight:700;flex:1">🎨 미리보기</span>
@@ -2721,7 +2721,7 @@
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-messaging-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-auth-compat.js"></script>
-<script src="./app-sync.js?v=20260922b"></script>
+<script src="./app-sync.js?v=20260922e"></script>
 
 </body>
 </html>
