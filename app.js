@@ -617,6 +617,7 @@ function cancelSpecialGrant(sid,gid){
 function openSpecialSettings(){
   if(!(G.type==='principal'||G.type==='admin'||G.isAdmin)){showToast('관리자만 설정할 수 있어요');return;}
   var c=spCfg();document.getElementById('sp-join').value=c.join;document.getElementById('sp-help').value=c.help;document.getElementById('sp-contrib').value=c.contrib;document.getElementById('sp-scap').value=c.studentCap;document.getElementById('sp-tcap').value=c.teacherCap;
+  var pc=ptCfg();document.getElementById('sp-bday').value=pc.bday;document.getElementById('sp-feast').value=pc.feast;
   openModal('special-settings-modal');
 }
 function saveSpecialSettings(){
@@ -624,6 +625,7 @@ function saveSpecialSettings(){
   var gv=function(id,d){var v=parseInt(document.getElementById(id).value);return (isNaN(v)||v<0)?d:v;};
   var join=Math.min(SP_HARD_MAX,gv('sp-join',50)),help=Math.min(SP_HARD_MAX,gv('sp-help',100)),contrib=Math.min(SP_HARD_MAX,gv('sp-contrib',200));
   appConfig.pt=appConfig.pt||{};appConfig.pt.special={join:join,help:help,contrib:contrib,studentCap:gv('sp-scap',500),teacherCap:gv('sp-tcap',1500)};
+  appConfig.pt.bday=gv('sp-bday',300);appConfig.pt.feast=gv('sp-feast',300);
   try{if(window.flushCfg)window.flushCfg();}catch(e){}
   closeModal('special-settings-modal');showToast('특별포인트 설정을 저장했어요');
 }
