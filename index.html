@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="하늘의문 중고등부">
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(e){console.warn('SW register failed',e);});});}</script>
-<link rel="stylesheet" href="./styles.css?v=20260922e">
+<link rel="stylesheet" href="./styles.css?v=20260922f">
 <style>
 /* 회의록: 플레이스홀더는 커서가 있는 빈 줄에만 표시 */
 #minutes-viewer-content .mb-txt[data-ph]::before,#minutes-viewer-content .mb-txt[data-ph]:empty:focus::before{content:none!important;display:none!important}
@@ -1447,7 +1447,7 @@
   <div class="modal-sheet sheet-full">
     <div class="pg-head">
       <button class="pg-back" onclick="closeMinutesViewer()">‹</button>
-      <span class="pg-title">회의록 <span style="font-size:9px;font-weight:600;color:#2D9E8F;opacity:.75;vertical-align:middle">v47</span></span>
+      <span class="pg-title">회의록 <span style="font-size:9px;font-weight:600;color:#2D9E8F;opacity:.75;vertical-align:middle">v48</span></span>
       <div class="pg-acts">
         <button class="btn btn-sm" id="minutes-publish-btn" style="display:none;background:var(--coral);color:#fff;width:auto;padding:6px 11px;font-size:12px" onclick="publishMinutes()">📣 발행</button>
         <button class="btn btn-sm" id="minutes-save-btn" style="display:none;background:var(--primary);color:white;width:auto;padding:6px 13px;font-size:12px" onclick="stopMinutesEdit()">완료</button>
@@ -2560,7 +2560,7 @@
 <div id="coach-overlay" style="display:none;position:fixed;inset:0;z-index:320">
   <div id="coach-card-wrap" style="display:none;position:absolute;inset:0;background:rgba(18,22,42,.82);backdrop-filter:blur(2px);align-items:center;justify-content:center;padding:26px">
     <div id="coach-card-inner" style="max-width:330px;width:100%;background:var(--card,#fff);border-radius:20px;padding:24px 20px 18px;box-shadow:0 14px 44px rgba(0,0,0,.4);text-align:center">
-      <div id="coach-emoji" style="font-size:42px;line-height:1;margin-bottom:10px"></div>
+      <div id="coach-emoji" style="line-height:1;margin-bottom:10px;display:flex;justify-content:center"></div>
       <div id="coach-title" style="font-size:16px;font-weight:800;margin-bottom:8px;color:var(--text,#20263f)"></div>
       <div id="coach-desc" style="font-size:13px;line-height:1.75;color:var(--text-sub,#5b5f77)"></div>
       <div id="coach-dots" style="display:flex;gap:6px;justify-content:center;margin:16px 0 2px"></div>
@@ -2572,7 +2572,7 @@
   </div>
   <div id="coach-ring" style="display:none;position:absolute;border-radius:14px;box-shadow:0 0 0 9999px rgba(18,22,42,.82);border:2.5px solid var(--primary,#7c6cf0);pointer-events:none;transition:top .25s,left .25s,width .25s,height .25s"></div>
   <div id="coach-tip" style="display:none;position:absolute;width:284px;max-width:88vw;background:var(--card,#fff);border-radius:16px;padding:15px 16px 12px;box-shadow:0 10px 34px rgba(0,0,0,.4)">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span id="coach-tip-emoji" style="font-size:22px"></span><span id="coach-tip-title" style="font-size:14px;font-weight:800;color:var(--text,#20263f)"></span></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span id="coach-tip-emoji" style="display:inline-flex;align-items:center"></span><span id="coach-tip-title" style="font-size:14px;font-weight:800;color:var(--text,#20263f)"></span></div>
     <div id="coach-tip-desc" style="font-size:12.5px;line-height:1.7;color:var(--text-sub,#5b5f77)"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;gap:8px"><div id="coach-tip-dots" style="display:flex;gap:5px;flex-wrap:wrap"></div><div style="display:flex;gap:6px;flex-shrink:0"><button class="btn btn-sm btn-outline" style="width:auto;padding:5px 10px" onclick="coachSkip()">건너뛰기</button><button id="coach-tip-next" class="btn btn-sm btn-primary" style="width:auto;padding:5px 14px" onclick="coachNext()">다음</button></div></div>
     <div id="coach-arrow" style="position:absolute;width:15px;height:15px;background:var(--card,#fff);transform:rotate(45deg)"></div>
@@ -2697,7 +2697,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="./assets.js"></script>
-<script src="./app.js?v=20260922e"></script>
+<script src="./app.js?v=20260922f"></script>
 
 <div id="theme-preview-bar" style="display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:88px;z-index:600;background:rgba(26,35,64,0.95);color:white;padding:10px 12px 10px 16px;border-radius:14px;box-shadow:var(--shadow-lg);align-items:center;gap:10px;max-width:410px;width:calc(100% - 32px);backdrop-filter:blur(4px)">
   <span id="theme-preview-label" style="font-size:13px;font-weight:700;flex:1">🎨 미리보기</span>
@@ -2721,7 +2721,7 @@
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-messaging-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-auth-compat.js"></script>
-<script src="./app-sync.js?v=20260922e"></script>
+<script src="./app-sync.js?v=20260922f"></script>
 
 </body>
 </html>

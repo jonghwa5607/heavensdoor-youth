@@ -662,6 +662,7 @@ input[type="date"].form-input,input[type="time"].form-input{-webkit-appearance:n
 #coach-tip.coach-pop{animation:coachTipIn .34s cubic-bezier(.34,1.28,.5,1) both}
 #coach-card-wrap{animation:coachFade .28s ease both}
 #coach-tip-desc,#coach-desc,#coach-tip-title,#coach-title,#coach-tip-emoji,#coach-emoji{transition:opacity .2s ease}
+#coach-tip-emoji svg{width:20px;height:20px}
 
 /* 첨부 아이콘 버튼 (미리보기·다운로드·공유) */
 .ico-btn{width:38px;height:38px;border:1px solid var(--border);background:var(--card);color:var(--text-sub);border-radius:50%;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;transition:all .15s;}
