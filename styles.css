@@ -567,7 +567,7 @@ input[type="date"].form-input,input[type="time"].form-input{-webkit-appearance:n
 /* ── 모달 ── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(26,35,64,0.45);z-index:300;align-items:flex-end;justify-content:center;backdrop-filter:blur(3px);}
 .modal-overlay.open{display:flex;}
-.modal-sheet{background:white;border-radius:var(--radius-xl) var(--radius-xl) 0 0;padding:8px 20px 44px;width:100%;max-width:430px;max-height:88vh;overflow-y:auto;}
+.modal-sheet{background:white;border-radius:var(--radius-xl) var(--radius-xl) 0 0;padding:8px 20px 44px;width:100%;max-width:430px;max-height:88vh;overflow-y:auto;min-height:0;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;}
 /* ── 회의록·성가·전례 전체화면 시트 (뒤에 오는 .modal-sheet 규칙보다 나중에 두어 확실히 적용) ── */
 .modal-sheet.sheet-full{position:relative;width:100%;max-width:none;height:100%;max-height:none;
   border-radius:0;display:flex;flex-direction:column;overflow:hidden;padding:0;background:var(--bg);}
