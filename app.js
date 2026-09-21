@@ -316,7 +316,7 @@ const LEVELS=[{lv:1,min:0,stage:'씨앗',tree:0},{lv:2,min:500,stage:'새싹',tr
 var YEAR_TARGET_WEEKS=47;
 /* 포인트 정책 — 47주 개근 시 정확히 20,000P(성장점수) 도달하도록 보정
    기본 9,400 + 연속보너스 8,400 + 마일스톤 2,200 = 20,000 */
-function ptCfg(){var c=(typeof appConfig!=='undefined'&&appConfig.pt)||{};return {full:c.full!=null?c.full:200,half:c.half!=null?c.half:100,bday:c.bday!=null?c.bday:300,feast:c.feast!=null?c.feast:300,tiers:{t2:50,t5:100,t15:150,t20:200,t30:250},milestones:{5:100,10:200,15:300,20:400,30:500,40:700}};}
+function ptCfg(){var c=(typeof appConfig!=='undefined'&&appConfig.pt)||{};return {full:c.full!=null?c.full:200,half:c.half!=null?c.half:100,bday:c.bday!=null?c.bday:300,feast:c.feast!=null?c.feast:300,monthPerfect:c.monthPerfect!=null?c.monthPerfect:100,tiers:{t2:50,t5:100,t15:150,t20:200,t30:250},milestones:{5:100,10:200,15:300,20:400,30:500,40:700}};}
 /* 그 주의 일반 연속출석 보너스(구간별)
    1주:0 · 2~4주:+50 · 5~14주:+100 · 15~19주:+150 · 20~29주:+200 · 30주~:+250 */
 function _streakWeekly(s){var t=ptCfg().tiers;if(s<=1)return 0;if(s<=4)return t.t2;if(s<=14)return t.t5;if(s<=19)return t.t15;if(s<=29)return t.t20;return t.t30;}
@@ -336,6 +336,18 @@ function _reconcileMilestones(u,by){
     else if(!should&&has){u.currentPoints=(u.currentPoints||0)-bonus;u.yearTotalPoints=(u.yearTotalPoints||0)-bonus;u.milestonesAwarded[k]=false;u.pointHistory=(u.pointHistory||[]).filter(function(h){return h.ref!=='mile-'+T;});}
   });
   return {granted:granted};
+}
+/* 해당 월의 방학 제외 전체 토요일 목록 */
+function _satsOfMonth(ym){var y=+ym.slice(0,4),mo=+ym.slice(5,7)-1;var d=new Date(y,mo,1);while(d.getDay()!==6)d.setDate(d.getDate()+1);var out=[];while(d.getMonth()===mo){var ds=toDateStr(d);if(!(typeof isVacationDate==='function'&&isVacationDate(ds)))out.push(ds);d.setDate(d.getDate()+7);}return out;}
+/* 월별 개근 보너스 — 그 달 모든 주일 출석 시 +100P(보유 포인트만, 성장점수 미반영) */
+function _reconcileMonthPerfect(u,sat,by){
+  var ym=(sat||'').slice(0,7);if(!ym)return 0;
+  var sats=_satsOfMonth(ym);if(!sats.length)return 0;
+  var all=sats.every(function(w){return (u.attendedWeeks||[]).indexOf(w)>=0;});
+  u.monthPerfect=u.monthPerfect||{};var bonus=ptCfg().monthPerfect;
+  if(all&&!u.monthPerfect[ym]){u.currentPoints=(u.currentPoints||0)+bonus;u.monthPerfect[ym]=true;_phPush(u,'earn',bonus,(+ym.slice(5,7))+'월 개근 보너스',by||'시스템','mperfect-'+ym);return bonus;}
+  if(!all&&u.monthPerfect[ym]){u.currentPoints=(u.currentPoints||0)-bonus;u.monthPerfect[ym]=false;u.pointHistory=(u.pointHistory||[]).filter(function(h){return h.ref!=='mperfect-'+ym;});return -bonus;}
+  return 0;
 }
 function _phPush(u,type,amount,reason,by,ref){u.pointHistory=u.pointHistory||[];u.pointHistory.push({type:type,amount:amount,reason:reason,createdAt:new Date().toLocaleDateString('ko-KR'),ts:Date.now(),createdBy:by||'시스템',ref:ref||''});if(u.pointHistory.length>500)u.pointHistory.splice(0,u.pointHistory.length-500);}
 function _ptSyncG(u){if(u&&G&&u.id===G.id){G.currentPoints=u.currentPoints||0;G.yearTotalPoints=u.yearTotalPoints||0;G.level=u.level||1;G.pendingStreakRewards=u.pendingStreakRewards||0;}}
@@ -365,9 +377,11 @@ function awardAttendance(u,sat,status,by){
   if(addPts>0)_phPush(u,'earn',addPts,reason,by||'시스템','att-'+sat);
   /* 2) 누적출석 보너스 재조정 (누적 횟수 기준, 지각 포함) */
   var msRes=_reconcileMilestones(u,by);
+  /* 3) 월별 개근 보너스 (보유 포인트만, 성장점수 미반영) */
+  var mpAdd=_reconcileMonthPerfect(u,sat,by);
   u.level=levelInfo(u.yearTotalPoints).lv;
   _ptSyncG(u);
-  return {added:addPts+(msRes.granted||0),base:(status==='half'?cfg.half:(status==='absent'?0:cfg.full)),weekly:(status==='half'?0:wk),streak:streak,milestonePaid:(msRes.granted||0),milestone:(msRes.granted||0)>0};
+  return {added:addPts+(msRes.granted||0)+(mpAdd>0?mpAdd:0),base:(status==='half'?cfg.half:(status==='absent'?0:cfg.full)),weekly:(status==='half'?0:wk),streak:streak,milestonePaid:(msRes.granted||0),milestone:(msRes.granted||0)>0,monthPerfect:(mpAdd>0?mpAdd:0)};
 }
 function checkLevelCoupons(u){}   /* 쿠폰 자동발급 폐지 — 포인트제로 전환 */
 /* ══════════ 포인트 상점 ══════════ */
@@ -663,6 +677,7 @@ function showAttendDone(aw,streak){
     var rows=[[isHalf?'지각 출석':'기본 출석','+'+aw.base+'P']];
     if((aw.weekly||0)>0)rows.push([(aw.streak||streak||0)+'주 연속출석 보너스','+'+aw.weekly+'P']);
     if((aw.milestonePaid||0)>0)rows.push(['누적출석 달성 보너스','+'+aw.milestonePaid+'P']);
+    if((aw.monthPerfect||0)>0)rows.push(['이번 달 개근 보너스','+'+aw.monthPerfect+'P']);
     var body=document.getElementById('attdone-body');
     if(body)body.innerHTML=rows.map(function(r){return '<div style="display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:1px solid var(--border-light)"><span style="color:var(--text-sub)">'+r[0]+'</span><span style="font-weight:700">'+r[1]+'</span></div>';}).join('')
       +'<div style="display:flex;justify-content:space-between;align-items:center;background:var(--primary-light);border-radius:11px;padding:11px 13px;margin-top:9px"><span style="font-weight:800;color:var(--primary-dark)">획득 포인트</span><span style="font-weight:800;color:var(--primary-dark);font-size:15px">+'+(aw.added||0)+'P</span></div>';
@@ -843,7 +858,7 @@ function renderAttendRank(){
   body+='<div class="card" style="margin-top:13px"><div style="font-size:15px;font-weight:800;margin-bottom:11px">이번 달 출석 현황</div>'
     +'<div style="height:12px;background:var(--border-light);border-radius:20px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,var(--primary),var(--mint));border-radius:20px"></div></div>'
     +'<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--text-sub);margin-top:8px"><span>'+(rem>0?'이번 달 개근까지 '+rem+'회':'이번 달 개근 달성!')+'</span><span>'+mAtt+' / '+mTgt+'회</span></div>'
-    +'<div style="display:flex;align-items:center;gap:8px;background:var(--mint-light);border-radius:12px;padding:10px 12px;font-size:11.5px;color:var(--primary-dark);font-weight:700;margin-top:11px">🎁 이번 달 모든 주일에 출석하면 개근 보너스가 지급돼요</div></div>';
+    +'<div style="display:flex;align-items:center;gap:8px;background:var(--mint-light);border-radius:12px;padding:10px 12px;font-size:11.5px;color:var(--primary-dark);font-weight:700;margin-top:11px">🎁 이번 달 모든 주일에 출석하면 +100P 개근 보너스를 받아요</div></div>';
   // 다음 연속출석 목표
   var _cc=(G.attendedWeeks||[]).length,nm=_nextCumMilestone(_cc);
   if(nm){body+='<div class="card" style="margin-top:13px;display:flex;align-items:center;gap:13px"><div style="width:40px;height:40px;border-radius:12px;background:var(--mint-light);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🎯</div><div><div style="font-size:14px;font-weight:800">누적 '+nm.count+'회 출석까지 '+(nm.count-_cc)+'회</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">누적 '+nm.count+'회 출석 시 +'+nm.pt+'P 지급</div></div></div>';}
@@ -863,7 +878,7 @@ function renderAttendHistory(){
   html+='<div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div style="font-size:17px;font-weight:900;letter-spacing:-.3px">'+mlabel+' 출석 현황</div><span style="font-size:13px;font-weight:800;color:var(--primary-dark)">'+mAtt+' / '+mTgt+'회</span></div>'
     +'<div style="height:12px;background:var(--border-light);border-radius:20px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,var(--primary),var(--mint));border-radius:20px"></div></div>'
     +'<div style="font-size:12px;color:var(--text-sub);font-weight:600;margin-top:8px">'+(rem>0?'이번 달 개근까지 '+rem+'회 남았어요':'이번 달 개근을 달성했어요!')+'</div>'
-    +'<div style="display:flex;align-items:center;gap:8px;background:var(--mint-light);border-radius:12px;padding:10px 12px;font-size:11.5px;color:var(--primary-dark);font-weight:700;margin-top:11px">🎁 이번 달 모든 주일에 출석하면 개근 보너스가 지급돼요</div></div>';
+    +'<div style="display:flex;align-items:center;gap:8px;background:var(--mint-light);border-radius:12px;padding:10px 12px;font-size:11.5px;color:var(--primary-dark);font-weight:700;margin-top:11px">🎁 이번 달 모든 주일에 출석하면 +100P 개근 보너스를 받아요</div></div>';
   // 3칸 통계
   html+='<div class="card" style="display:flex;padding:0;text-align:center;margin-top:13px">'
     +'<div style="flex:1;padding:15px 4px"><div style="font-size:18px">📖</div><div style="font-size:22px;font-weight:900;color:var(--primary);margin-top:3px">'+total+'</div><div style="font-size:10px;color:var(--text-light);font-weight:600;margin-top:3px">누적 출석</div></div>'
