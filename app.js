@@ -428,10 +428,13 @@ function renderShop(){
   el.innerHTML=html||'<div class="empty" style="padding:28px"><div class="empty-title" style="font-size:13px">상품이 없어요</div></div>';
   renderShopOrders();
 }
+function openShopOrders(){try{renderShopOrders();}catch(e){}openModal('shop-orders-modal');}
+function openShopGuide(){openModal('shop-guide-modal');}
 function renderShopOrders(){
   var el=document.getElementById('shop-orders');if(!el)return;
-  var mine=(shopOrders||[]).filter(function(o){return o&&o.uid===G.id;}).sort(function(a,b){return (b.ts||0)-(a.ts||0);}).slice(0,8);
-  if(!mine.length){el.innerHTML='<div style="font-size:12px;color:var(--text-light);padding:10px 2px">아직 교환 내역이 없어요</div>';return;}
+  var empty='<div class="empty" style="padding:36px 0"><div style="display:flex;justify-content:center;margin-bottom:8px"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg></div><div class="empty-title" style="font-size:13px">아직 교환 내역이 없어요</div></div>';
+  var mine=(shopOrders||[]).filter(function(o){return o&&o.uid===G.id;}).sort(function(a,b){return (b.ts||0)-(a.ts||0);}).slice(0,30);
+  if(!mine.length){el.innerHTML=empty;return;}
   el.innerHTML=mine.map(function(o){var done=o.status==='done';return '<div style="display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--border-light)"><div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:700">'+_esc(o.itemName)+'</div><div style="font-size:10px;color:var(--text-light)">'+_esc(o.dateStr||'')+' · '+(o.price||0).toLocaleString()+'P</div></div>'+(done?'<span class="chip chip-gray">수령완료</span>':'<span class="chip chip-coral">수령대기</span><button class="btn btn-sm" style="width:auto;padding:5px 10px;background:var(--coral-light);color:#B0463A;font-weight:800;flex-shrink:0" onclick="cancelShopOrder(\''+o.id+'\')">취소</button>')+'</div>';}).join('');
 }
 function markOrderDone(id){var o=(shopOrders||[]).find(function(x){return x.id===id;});if(!o)return;o.status='done';o.doneBy=G.displayName;o.doneAt=Date.now();try{if(typeof flushSync==='function')flushSync();}catch(e){}try{renderShopAdmin();}catch(e){}try{renderShopOrders();}catch(e){}showToast('수령완료 처리했어요');}
