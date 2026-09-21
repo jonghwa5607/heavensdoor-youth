@@ -321,7 +321,22 @@ function ptCfg(){var c=(typeof appConfig!=='undefined'&&appConfig.pt)||{};return
    1주:0 · 2~4주:+50 · 5~14주:+100 · 15~19주:+150 · 20~29주:+200 · 30주~:+250 */
 function _streakWeekly(s){var t=ptCfg().tiers;if(s<=1)return 0;if(s<=4)return t.t2;if(s<=14)return t.t5;if(s<=19)return t.t15;if(s<=29)return t.t20;return t.t30;}
 function levelInfo(pts){pts=pts||0;var cur=LEVELS[0];for(var i=0;i<LEVELS.length;i++){if(pts>=LEVELS[i].min)cur=LEVELS[i];}var nxt=LEVELS[cur.lv]||null;return {lv:cur.lv,stage:cur.stage,tree:cur.tree,min:cur.min,next:nxt?nxt.min:null,toNext:nxt?Math.max(0,nxt.min-pts):0};}
-function streakBonusOf(streak){var cfg=ptCfg();var ms=cfg.milestones[streak]||0;return {amount:_streakWeekly(streak)+ms,milestone:ms>0};}
+function streakBonusOf(streak){return {amount:_streakWeekly(streak),milestone:false};}
+/* 누적 출석 횟수(지각 포함, 각 주 1회) */
+function _cumAttendCount(u){return ((u&&u.attendedWeeks)||[]).length;}
+/* 다음 누적출석 보너스 목표 */
+function _nextCumMilestone(count){var m=ptCfg().milestones;var ks=Object.keys(m).map(Number).sort(function(a,b){return a-b;});for(var i=0;i<ks.length;i++){if(ks[i]>(count||0))return {count:ks[i],pt:m[ks[i]]};}return null;}
+/* 누적출석 보너스 재조정 — 누적 횟수 기준으로 임계값 도달분을 지급/회수 (성장점수 반영) */
+function _reconcileMilestones(u,by){
+  var ms=ptCfg().milestones,count=_cumAttendCount(u);u.milestonesAwarded=u.milestonesAwarded||{};
+  var granted=0;
+  Object.keys(ms).forEach(function(k){
+    var T=+k,bonus=ms[k],should=count>=T,has=!!u.milestonesAwarded[k];
+    if(should&&!has){u.currentPoints=(u.currentPoints||0)+bonus;u.yearTotalPoints=(u.yearTotalPoints||0)+bonus;u.milestonesAwarded[k]=true;_phPush(u,'earn',bonus,'누적 '+T+'회 출석 보너스',by||'시스템','mile-'+T);granted+=bonus;}
+    else if(!should&&has){u.currentPoints=(u.currentPoints||0)-bonus;u.yearTotalPoints=(u.yearTotalPoints||0)-bonus;u.milestonesAwarded[k]=false;u.pointHistory=(u.pointHistory||[]).filter(function(h){return h.ref!=='mile-'+T;});}
+  });
+  return {granted:granted};
+}
 function _phPush(u,type,amount,reason,by,ref){u.pointHistory=u.pointHistory||[];u.pointHistory.push({type:type,amount:amount,reason:reason,createdAt:new Date().toLocaleDateString('ko-KR'),ts:Date.now(),createdBy:by||'시스템',ref:ref||''});if(u.pointHistory.length>500)u.pointHistory.splice(0,u.pointHistory.length-500);}
 function _ptSyncG(u){if(u&&G&&u.id===G.id){G.currentPoints=u.currentPoints||0;G.yearTotalPoints=u.yearTotalPoints||0;G.level=u.level||1;G.pendingStreakRewards=u.pendingStreakRewards||0;}}
 /* growth=true 일 때만 성장점수(레벨) 반영. 생일/축일/교사/이벤트 포인트는 보유 포인트에만 지급 */
@@ -332,25 +347,27 @@ function awardAttendance(u,sat,status,by){
   if(!u||!sat)return {added:0};
   if(typeof isVacationDate==='function'&&isVacationDate(sat))return {added:0};
   u.weekAward=u.weekAward||{};
-  var prev=u.weekAward[sat]||{pts:0,pend:0};
+  /* 1) 이번 주 기본+연속 보너스 재계산 (상태 변경 시 이전 지급분 되돌림) */
+  var prev=u.weekAward[sat]||{pts:0};
   u.currentPoints=(u.currentPoints||0)-prev.pts;
   u.yearTotalPoints=(u.yearTotalPoints||0)-prev.pts;
-  u.pendingStreakRewards=Math.max(0,(u.pendingStreakRewards||0)-prev.pend);
-  var cfg=ptCfg(),addPts=0,addPend=0,reason='',mile=false,streak=0,wk=0,ms=0,rel=0,msPaid=0;
+  var cfg=ptCfg(),addPts=0,reason='',streak=0,wk=0,base=0;
   if(status!=='absent'){
-    streak=computeStreak(u);u.maxStreak=Math.max(u.maxStreak||0,streak);if(u.id===G.id)G.maxStreak=u.maxStreak;wk=_streakWeekly(streak);ms=cfg.milestones[streak]||0;mile=ms>0;
-    if(status==='half'){addPts=cfg.half;if(ms>0)addPend=ms;reason='지각 출석';}
-    else{rel=(u.pendingStreakRewards||0);msPaid=ms;addPts=cfg.full+wk+ms+rel;if(rel)u.pendingStreakRewards=0;reason='주일 출석'+((wk+ms)?(' · 연속 '+streak+'주 보너스'):'')+(rel?(' · 보류 보너스'):'');}
+    streak=computeStreak(u);u.maxStreak=Math.max(u.maxStreak||0,streak);if(u.id===G.id)G.maxStreak=u.maxStreak;
+    if(status==='half'){base=cfg.half;wk=0;reason='지각 출석';}          /* 지각: 연속 보너스 없음, 연속기록은 유지 */
+    else{base=cfg.full;wk=_streakWeekly(streak);reason='주일 출석'+(wk?(' · 연속 '+streak+'주 보너스'):'');}
+    addPts=base+wk;
   }
   u.currentPoints=(u.currentPoints||0)+addPts;
   u.yearTotalPoints=(u.yearTotalPoints||0)+addPts;
-  u.pendingStreakRewards=(u.pendingStreakRewards||0)+addPend;
-  u.weekAward[sat]={pts:addPts,pend:addPend};
-  u.level=levelInfo(u.yearTotalPoints).lv;
+  u.weekAward[sat]={pts:addPts};
   u.pointHistory=(u.pointHistory||[]).filter(function(h){return h.ref!=='att-'+sat;});
   if(addPts>0)_phPush(u,'earn',addPts,reason,by||'시스템','att-'+sat);
+  /* 2) 누적출석 보너스 재조정 (누적 횟수 기준, 지각 포함) */
+  var msRes=_reconcileMilestones(u,by);
+  u.level=levelInfo(u.yearTotalPoints).lv;
   _ptSyncG(u);
-  return {added:addPts,pend:addPend,streak:streak,milestone:mile,base:(status==='half'?cfg.half:(status==='absent'?0:cfg.full)),weekly:(status==='half'?0:wk),milestonePaid:msPaid,released:rel};
+  return {added:addPts+(msRes.granted||0),base:(status==='half'?cfg.half:(status==='absent'?0:cfg.full)),weekly:(status==='half'?0:wk),streak:streak,milestonePaid:(msRes.granted||0),milestone:(msRes.granted||0)>0};
 }
 function checkLevelCoupons(u){}   /* 쿠폰 자동발급 폐지 — 포인트제로 전환 */
 /* ══════════ 포인트 상점 ══════════ */
@@ -415,9 +432,33 @@ function renderShopOrders(){
   var el=document.getElementById('shop-orders');if(!el)return;
   var mine=(shopOrders||[]).filter(function(o){return o&&o.uid===G.id;}).sort(function(a,b){return (b.ts||0)-(a.ts||0);}).slice(0,8);
   if(!mine.length){el.innerHTML='<div style="font-size:12px;color:var(--text-light);padding:10px 2px">아직 교환 내역이 없어요</div>';return;}
-  el.innerHTML=mine.map(function(o){var done=o.status==='done';return '<div style="display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--border-light)"><div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:700">'+_esc(o.itemName)+'</div><div style="font-size:10px;color:var(--text-light)">'+_esc(o.dateStr||'')+' · '+(o.price||0).toLocaleString()+'P</div></div><span class="chip '+(done?'chip-gray':'chip-coral')+'">'+(done?'수령완료':'수령대기')+'</span></div>';}).join('');
+  el.innerHTML=mine.map(function(o){var done=o.status==='done';return '<div style="display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--border-light)"><div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:700">'+_esc(o.itemName)+'</div><div style="font-size:10px;color:var(--text-light)">'+_esc(o.dateStr||'')+' · '+(o.price||0).toLocaleString()+'P</div></div>'+(done?'<span class="chip chip-gray">수령완료</span>':'<span class="chip chip-coral">수령대기</span><button class="btn btn-sm" style="width:auto;padding:5px 10px;background:var(--coral-light);color:#B0463A;font-weight:800;flex-shrink:0" onclick="cancelShopOrder(\''+o.id+'\')">취소</button>')+'</div>';}).join('');
 }
 function markOrderDone(id){var o=(shopOrders||[]).find(function(x){return x.id===id;});if(!o)return;o.status='done';o.doneBy=G.displayName;o.doneAt=Date.now();try{if(typeof flushSync==='function')flushSync();}catch(e){}try{renderShopAdmin();}catch(e){}try{renderShopOrders();}catch(e){}showToast('수령완료 처리했어요');}
+/* 교환 취소 — 포인트 환불 + 재고 복구 (교사/본인) */
+function cancelShopOrder(id){
+  var idx=(shopOrders||[]).findIndex(function(x){return x.id===id;});if(idx<0)return;var o=shopOrders[idx];
+  var self=(o.uid===G.id);
+  if(!self&&G.role!=='teacher'){showToast('본인 또는 교사만 취소할 수 있어요');return;}
+  appConfirm({icon:'warn',title:'교환을 취소할까요?',desc:o.itemName+'\n'+(o.price||0).toLocaleString()+'P 환불 · 재고 복구',okText:'취소하기'}).then(function(ok){
+    if(!ok)return;
+    var buyer=(pendingList||[]).find(function(x){return x.id===o.uid;});
+    if(buyer){buyer.currentPoints=(buyer.currentPoints||0)+(o.price||0);_phPush(buyer,'earn',(o.price||0),'교환 취소 환불 - '+o.itemName,G.displayName,'cancel-'+o.id);_ptSyncG(buyer);try{saveMemberNow(buyer);}catch(e){}}
+    var real=(shopItems||[]).find(function(x){return x.id===o.itemId;});if(real)real.stock=(real.stock||0)+1;
+    shopOrders.splice(idx,1);
+    try{notifications.unshift({pushed:false,id:'nt'+Date.now()+'cxl',text:'↩️ <b>'+_esc(o.itemName)+'</b> 교환이 취소되어 '+(o.price||0).toLocaleString()+'P가 환불되었어요',time:'방금',ts:Date.now(),readBy:[],forStudentId:o.uid});updateNotifDot();}catch(e){}
+    try{if(typeof flushSync==='function')flushSync();}catch(e){}
+    try{renderShopAdmin();}catch(e){}try{renderShopOrders();}catch(e){}try{renderShop();}catch(e){}try{renderHomePoints();}catch(e){}
+    showToast('교환을 취소하고 환불했어요');
+  });
+}
+/* 재고 빠른 추가 (교사) */
+function restockItem(id){
+  if(G.role!=='teacher'){showToast('교사만 재고를 관리할 수 있어요');return;}
+  var it=(shopItems||[]).find(function(x){return x.id===id;});if(!it){if(!(shopItems&&shopItems.length)){_shopSeed();it=(shopItems||[]).find(function(x){return x.id===id;});}if(!it)return;}
+  var v=prompt(it.name+' 재고를 몇 개 추가할까요?','10');if(v===null)return;var n=parseInt(v,10);if(!n||n<1){showToast('1 이상의 숫자를 입력해주세요');return;}
+  it.stock=(it.stock||0)+n;try{if(typeof flushSync==='function')flushSync();}catch(e){}try{renderShopAdmin();}catch(e){}try{renderShop();}catch(e){}showToast('재고 '+n+'개 추가 · 현재 '+it.stock+'개');
+}
 /* ── 교사 상점 관리 ── */
 function _isShopAdmin(){return G.role==='teacher';}
 function renderShopAdmin(){
@@ -427,9 +468,9 @@ function renderShopAdmin(){
   var catLbl={food:'간식·음료',goods:'굿즈',life:'문구·생활',event:'이벤트'};
   var pend=(shopOrders||[]).filter(function(o){return o&&o.status!=='done';}).sort(function(a,b){return (a.ts||0)-(b.ts||0);});
   var oh='<div style="font-size:13px;font-weight:800;margin:2px 0 8px">교환 처리 대기 '+(pend.length?('<span style="color:var(--coral)">'+pend.length+'</span>'):'0')+'건</div>';
-  oh+= pend.length? pend.map(function(o){return '<div style="display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--border-light)"><div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:700">'+_esc(o.name||'')+' · '+_esc(o.itemName)+'</div><div style="font-size:10px;color:var(--text-light)">'+_esc(o.dateStr||'')+' · '+(o.price||0).toLocaleString()+'P</div></div><button class="btn btn-sm" style="width:auto;padding:6px 12px;background:var(--mint);color:#fff;font-weight:800" onclick="markOrderDone(\''+o.id+'\')">수령완료</button></div>';}).join('') : '<div style="font-size:12px;color:var(--text-light);padding:8px 2px 14px">대기중인 교환이 없어요</div>';
+  oh+= pend.length? pend.map(function(o){return '<div style="display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--border-light)"><div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:700">'+_esc(o.name||'')+' · '+_esc(o.itemName)+'</div><div style="font-size:10px;color:var(--text-light)">'+_esc(o.dateStr||'')+' · '+(o.price||0).toLocaleString()+'P</div></div><div style="display:flex;gap:5px;flex-shrink:0"><button class="btn btn-sm" style="width:auto;padding:6px 10px;background:var(--coral-light);color:#B0463A;font-weight:800" onclick="cancelShopOrder(\''+o.id+'\')">취소</button><button class="btn btn-sm" style="width:auto;padding:6px 12px;background:var(--mint);color:#fff;font-weight:800" onclick="markOrderDone(\''+o.id+'\')">수령완료</button></div></div>';}).join('') : '<div style="font-size:12px;color:var(--text-light);padding:8px 2px 14px">대기중인 교환이 없어요</div>';
   var ih='<div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 8px"><span style="font-size:13px;font-weight:800">상품 '+items.length+'개</span><button class="btn btn-sm" style="width:auto;background:var(--primary);color:#fff;font-weight:800" onclick="openShopItemModal()">+ 상품 추가</button></div>';
-  ih+=items.map(function(it){return '<div class="card" style="margin-bottom:8px;display:flex;align-items:center;gap:10px;padding:11px 12px"><div style="width:40px;height:40px;border-radius:9px;background:var(--bg);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center">'+(it.img?'<img src="'+it.img+'" style="width:100%;height:100%;object-fit:cover">':'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+_shopIcon(it.cat)+'</svg>')+'</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+_esc(it.name)+(it.active===false?' <span class="chip chip-gray">숨김</span>':'')+'</div><div style="font-size:11px;color:var(--text-light);margin-top:2px">'+(it.price||0).toLocaleString()+'P · 재고 '+(it.stock||0)+' · '+(catLbl[it.cat]||it.cat)+'</div></div><button class="btn btn-sm btn-outline" style="width:auto;padding:6px 10px" onclick="openShopItemModal(\''+it.id+'\')">수정</button><button class="btn btn-sm" style="width:auto;padding:6px 10px;background:var(--coral-light);color:#B0463A" onclick="deleteShopItem(\''+it.id+'\')">삭제</button></div>';}).join('');
+  ih+=items.map(function(it){return '<div class="card" style="margin-bottom:8px;display:flex;align-items:center;gap:10px;padding:11px 12px"><div style="width:40px;height:40px;border-radius:9px;background:var(--bg);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center">'+(it.img?'<img src="'+it.img+'" style="width:100%;height:100%;object-fit:cover">':'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+_shopIcon(it.cat)+'</svg>')+'</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+_esc(it.name)+(it.active===false?' <span class="chip chip-gray">숨김</span>':'')+'</div><div style="font-size:11px;color:var(--text-light);margin-top:2px">'+(it.price||0).toLocaleString()+'P · 재고 '+(it.stock||0)+' · '+(catLbl[it.cat]||it.cat)+'</div></div><button class="btn btn-sm" style="width:auto;padding:6px 9px;background:var(--mint-light);color:var(--primary-dark);font-weight:800" onclick="restockItem(\''+it.id+'\')">재고+</button><button class="btn btn-sm btn-outline" style="width:auto;padding:6px 10px" onclick="openShopItemModal(\''+it.id+'\')">수정</button><button class="btn btn-sm" style="width:auto;padding:6px 10px;background:var(--coral-light);color:#B0463A" onclick="deleteShopItem(\''+it.id+'\')">삭제</button></div>';}).join('');
   el.innerHTML=oh+ih;
 }
 function openShopItemModal(id){
@@ -518,6 +559,18 @@ function checkBirthdayPoints(){
     updateNotifDot();
   }catch(e){}
 }
+/* ── 축일 포인트 (성장점수 미반영, 보유 포인트만) ── */
+function checkFeastPoints(){
+  try{
+    var now=new Date();var m=now.getMonth()+1,d=now.getDate(),yr=now.getFullYear();var amt=ptCfg().feast;
+    pendingList.filter(function(u){return u.approved&&u.role==='student'&&!u.hidden&&!u.graduated&&+u.feastMonth===m&&+u.feastDay===d;}).forEach(function(u){
+      if(u.feastPtYear===yr)return;u.feastPtYear=yr;
+      earnPoints(u,amt,'축일 축하 포인트',G.displayName||'시스템','feast');
+      try{notifications.unshift({pushed:false,id:'nt'+Date.now()+'fp'+u.id,text:'✨ 축일 축하해요! <b>축일 축하 포인트 +'+amt+'P</b>가 지급됐어요.',time:'방금',ts:Date.now(),readBy:[],forStudentId:u.id,tap:{type:'attend'}});}catch(e){}
+    });
+    updateNotifDot();
+  }catch(e){}
+}
 /* ── 학생 포인트 내역 ── */
 function _ptHistHtml(u){
   var h=(u.pointHistory||[]).slice().reverse();
@@ -533,9 +586,9 @@ function openLevelGuide(){
     +_row('주일 정상 출석','+200P')+_row('지각 출석','+100P')
     +'<div style="height:8px"></div><div style="font-size:11.5px;font-weight:800;color:var(--primary-dark);margin-bottom:4px">연속출석 매주 보너스</div>'
     +_row('2~4주','+50P')+_row('5~14주','+100P')+_row('15~19주','+150P')+_row('20~29주','+200P')+_row('30주 이상','+250P')
-    +'<div style="height:8px"></div><div style="font-size:11.5px;font-weight:800;color:var(--primary-dark);margin-bottom:4px">연속출석 마일스톤 특별 보너스</div>'
-    +_row('5주 / 10주 / 15주','+100 / +200 / +300P')+_row('20주 / 30주 / 40주','+400 / +500 / +700P')
-    +'<div style="font-size:11px;color:var(--text-light);margin-top:10px;line-height:1.6">· 방학은 결석·연속출석 끊김 없이 제외돼요<br>· 연간 개근(47주) 시 20,000P로 Lv.10 달성!<br>· 생일·축일·특별 포인트는 상점에서 쓸 수 있지만 레벨(성장점수)에는 반영되지 않아요</div>'
+    +'<div style="height:8px"></div><div style="font-size:11.5px;font-weight:800;color:var(--primary-dark);margin-bottom:4px">누적출석 보너스 (연속 아니어도 OK)</div>'
+    +_row('누적 5회 / 10회 / 15회','+100 / +200 / +300P')+_row('누적 20회 / 30회 / 40회','+400 / +500 / +700P')
+    +'<div style="font-size:11px;color:var(--text-light);margin-top:10px;line-height:1.6">· 누적출석 보너스는 결석해도 사라지지 않아요 (총 출석 횟수 기준)<br>· 지각도 누적 1회로 인정돼요<br>· 방학은 결석·연속출석 끊김 없이 제외돼요<br>· 연간 개근(47회) 시 20,000P로 Lv.10 달성!<br>· 생일·축일·특별 포인트는 상점에서 쓸 수 있지만 레벨(성장점수)에는 반영되지 않아요</div>'
     +'</div>';
   el.innerHTML=guide+LEVELS.map(function(L){
     var done=yt>=L.min;var isCur=L.lv===cur;
@@ -582,7 +635,7 @@ function renderHomePoints(){
     var tr=document.getElementById('home-tree');if(tr&&typeof _treeSVG==='function')tr.innerHTML=_lvTree(li.lv,44);
     var pf=document.getElementById('home-prog-fill');if(pf){var pct=100;if(li.next!=null){var span=li.next-li.min;pct=span>0?Math.round((yt-li.min)/span*100):0;}pf.style.width=Math.max(0,Math.min(100,pct))+'%';}
     s('home-streak',G.streak||0);s('home-maxstreak',Math.max(G.streak||0,G.maxStreak||0));s('home-total',(G.attendedWeeks||[]).length);
-    var mms=ptCfg().milestones,mw=[5,10,15,20,30,40],st=G.streak||0,nm=null;for(var i=0;i<mw.length;i++){if(mw[i]>st){nm=mw[i];break;}}
+    var st=G.streak||0,cumCnt=(G.attendedWeeks||[]).length,nm=_nextCumMilestone(cumCnt);
     var mel=document.getElementById('home-milestone');
     if(mel){
       var cfg2=ptCfg();
@@ -592,9 +645,9 @@ function renderHomePoints(){
       var parts=[];
       if(vacThis){parts.push('🏖️ 이번 주는 방학이에요 · 연속출석 기록은 유지돼요');}
       else if(doneThis){parts.push('✅ 이번 주 출석 완료 · 현재 <b>'+st+'주</b> 연속출석');}
-      else{var nx=st+1,wk=_streakWeekly(nx),msn=mms[nx]||0,pend=G.pendingStreakRewards||0,tot=cfg2.full+wk+msn+pend;
-        parts.push('이번 주 정상 출석 시 <b>+'+tot+'P</b>'+(msn>0?(' · '+nx+'주 달성 특별 보너스 +'+msn+'P!'):''));}
-      if(nm&&nm!==(st+1)){var bonus=mms[nm]||0;parts.push('🔥 '+nm+'주 연속출석까지 '+(nm-st)+'주! 달성 시 <b>+'+bonus+'P</b> 특별 보너스');}
+      else{var nx=st+1,wk=_streakWeekly(nx),nextCnt=cumCnt+1,cumBonus=(cfg2.milestones[nextCnt]||0),tot=cfg2.full+wk+cumBonus;
+        parts.push('이번 주 정상 출석 시 <b>+'+tot+'P</b>'+(cumBonus>0?(' · 누적 '+nextCnt+'회 달성 +'+cumBonus+'P!'):''));}
+      if(nm){parts.push('🔥 누적 '+nm.count+'회 출석까지 '+(nm.count-cumCnt)+'회! 달성 시 <b>+'+nm.pt+'P</b> 보너스');}
       mel.style.display='';mel.innerHTML=parts.join('<br>');
     }
   }catch(e){}
@@ -606,15 +659,14 @@ function showAttendDone(aw,streak){
     var cfg=ptCfg();var isHalf=aw.base===cfg.half;
     var rows=[[isHalf?'지각 출석':'기본 출석','+'+aw.base+'P']];
     if((aw.weekly||0)>0)rows.push([(aw.streak||streak||0)+'주 연속출석 보너스','+'+aw.weekly+'P']);
-    if((aw.milestonePaid||0)>0)rows.push([(aw.streak||streak||0)+'주 달성 특별 보너스','+'+aw.milestonePaid+'P']);
-    if((aw.released||0)>0)rows.push(['보류된 마일스톤 보너스','+'+aw.released+'P']);
+    if((aw.milestonePaid||0)>0)rows.push(['누적출석 달성 보너스','+'+aw.milestonePaid+'P']);
     var body=document.getElementById('attdone-body');
     if(body)body.innerHTML=rows.map(function(r){return '<div style="display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:1px solid var(--border-light)"><span style="color:var(--text-sub)">'+r[0]+'</span><span style="font-weight:700">'+r[1]+'</span></div>';}).join('')
       +'<div style="display:flex;justify-content:space-between;align-items:center;background:var(--primary-light);border-radius:11px;padding:11px 13px;margin-top:9px"><span style="font-weight:800;color:var(--primary-dark)">획득 포인트</span><span style="font-weight:800;color:var(--primary-dark);font-size:15px">+'+(aw.added||0)+'P</span></div>';
     var s=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
     s('attdone-streak',streak||0);s('attdone-maxstreak',Math.max(streak||0,G.maxStreak||0));
     var sub=document.getElementById('attdone-sub');
-    if(sub)sub.innerHTML=isHalf?('연속출석 기록은 유지돼요.'+(aw.milestone?' 마일스톤 보너스는 다음 정상 출석 시 지급돼요.':' 이번 주 연속 보너스는 지급되지 않아요.')):'';
+    if(sub)sub.innerHTML=isHalf?'지각도 연속출석 기록과 누적 횟수는 인정돼요. (이번 주 연속 보너스만 미지급)':'';
     openModal('attend-done-modal');
   }catch(e){try{showToast('✅ 출석 완료! +'+(aw.added||0)+'P');}catch(_){}}
 }
@@ -730,7 +782,7 @@ function selCatTab(btn){btn.closest('.tab-bar').querySelectorAll('.tab-btn').for
 function showAttendTab(tab){try{renderStudentGrowth();}catch(e){}try{if(typeof stopQRScan==='function')stopQRScan();}catch(e){}show('attend-scan-tab',tab==='scan');show('attend-history-tab',tab==='history');show('attend-rank-tab',tab==='rank');const bar=document.querySelector('#screen-attend .tab-bar');if(bar)bar.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.getAttribute('onclick').includes(`showAttendTab('${tab}')`)));if(tab==='history')renderAttendHistory();if(tab==='rank')renderAttendRank();}
 function _ymOf(ts){var d=new Date(ts||0);return d.getFullYear()+'-'+pad2(d.getMonth()+1);}
 function _monthEarned(u){var ym=currentYM();var s=0;((u&&u.pointHistory)||[]).forEach(function(x){if(x&&x.type==='earn'&&(x.amount>0)&&_ymOf(x.ts)===ym)s+=x.amount;});return s;}
-function _monthSats(){var ym=currentYM();return getSaturdays(60).filter(function(w){return w.startsWith(ym)&&!isVacationDate(w);}).sort();}
+function _monthSats(){var now=new Date();var y=now.getFullYear(),mo=now.getMonth();var d=new Date(y,mo,1);while(d.getDay()!==6)d.setDate(d.getDate()+1);var out=[];while(d.getMonth()===mo){var s=toDateStr(d);if(!(typeof isVacationDate==='function'&&isVacationDate(s)))out.push(s);d.setDate(d.getDate()+7);}return out;}
 function _nextStreakMilestone(st){var m=ptCfg().milestones;var ks=Object.keys(m).map(Number).sort(function(a,b){return a-b;});for(var i=0;i<ks.length;i++){if(ks[i]>(st||0))return {week:ks[i],pt:m[ks[i]]};}return null;}
 function renderAttendRank(){
   var el=document.getElementById('attend-rank-list');if(!el)return;
@@ -790,8 +842,8 @@ function renderAttendRank(){
     +'<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--text-sub);margin-top:8px"><span>'+(rem>0?'이번 달 개근까지 '+rem+'회':'이번 달 개근 달성!')+'</span><span>'+mAtt+' / '+mTgt+'회</span></div>'
     +'<div style="display:flex;align-items:center;gap:8px;background:var(--mint-light);border-radius:12px;padding:10px 12px;font-size:11.5px;color:var(--primary-dark);font-weight:700;margin-top:11px">🎁 이번 달 모든 주일에 출석하면 개근 보너스가 지급돼요</div></div>';
   // 다음 연속출석 목표
-  var nm=_nextStreakMilestone(G.streak||0);
-  if(nm){body+='<div class="card" style="margin-top:13px;display:flex;align-items:center;gap:13px"><div style="width:40px;height:40px;border-radius:12px;background:var(--mint-light);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🎯</div><div><div style="font-size:14px;font-weight:800">다음 연속출석 보너스까지 '+(nm.week-(G.streak||0))+'주</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">'+nm.week+'주 연속 출석 시 +'+nm.pt+'P 지급</div></div></div>';}
+  var _cc=(G.attendedWeeks||[]).length,nm=_nextCumMilestone(_cc);
+  if(nm){body+='<div class="card" style="margin-top:13px;display:flex;align-items:center;gap:13px"><div style="width:40px;height:40px;border-radius:12px;background:var(--mint-light);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🎯</div><div><div style="font-size:14px;font-weight:800">누적 '+nm.count+'회 출석까지 '+(nm.count-_cc)+'회</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">누적 '+nm.count+'회 출석 시 +'+nm.pt+'P 지급</div></div></div>';}
   body+='<div style="text-align:center;padding:20px 10px 4px"><div style="font-size:14px;color:var(--primary-dark);font-weight:800;line-height:1.5">작은 걸음이 모여, 멋진 성장이 됩니다</div><div style="font-size:12px;color:var(--text-sub);font-weight:600;margin-top:5px">오늘도 함께해줘서 고마워요</div></div>';
   el.innerHTML=head+top+body;
 }
@@ -815,8 +867,8 @@ function renderAttendHistory(){
     +'<div style="flex:1;padding:15px 4px;border-left:1px solid var(--border-light);border-right:1px solid var(--border-light)"><div style="font-size:18px">📅</div><div style="font-size:22px;font-weight:900;color:var(--mint);margin-top:3px">'+Math.floor(mAtt)+'</div><div style="font-size:10px;color:var(--text-light);font-weight:600;margin-top:3px">이번 달 출석</div></div>'
     +'<div style="flex:1;padding:15px 4px"><div style="font-size:18px">🔥</div><div style="font-size:22px;font-weight:900;color:var(--yellow);margin-top:3px">'+streak+'</div><div style="font-size:10px;color:var(--text-light);font-weight:600;margin-top:3px">연속 출석</div></div></div>';
   // 다음 연속출석 목표
-  var nm=_nextStreakMilestone(streak);
-  if(nm){html+='<div class="card" style="margin-top:13px;display:flex;align-items:center;gap:13px"><div style="width:40px;height:40px;border-radius:12px;background:var(--mint-light);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🎯</div><div><div style="font-size:14px;font-weight:800">'+nm.week+'주 연속 출석까지 '+(nm.week-streak)+'주</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">'+nm.week+'주 연속 출석 시 +'+nm.pt+'P 지급</div></div></div>';}
+  var _cc2=(G.attendedWeeks||[]).length,nm=_nextCumMilestone(_cc2);
+  if(nm){html+='<div class="card" style="margin-top:13px;display:flex;align-items:center;gap:13px"><div style="width:40px;height:40px;border-radius:12px;background:var(--mint-light);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🎯</div><div><div style="font-size:14px;font-weight:800">누적 '+nm.count+'회 출석까지 '+(nm.count-_cc2)+'회</div><div style="font-size:12px;color:var(--text-sub);margin-top:2px">누적 '+nm.count+'회 출석 시 +'+nm.pt+'P 지급</div></div></div>';}
   // 명언 카드
   html+='<div class="card" style="margin-top:13px;background:linear-gradient(135deg,var(--mint-light),var(--card));display:flex;gap:14px;align-items:center"><div style="font-size:36px">🌳</div><div><div style="font-size:15px;font-weight:800;color:var(--primary-dark);line-height:1.5">작은 걸음이 모여,<br>멋진 성장이 됩니다</div><div style="font-size:11.5px;color:var(--text-sub);margin-top:5px">하느님과 함께하는 매주가 소중해요</div></div></div>';
   // 최근 출석 내역
@@ -1878,10 +1930,14 @@ function _relTime(ts){if(!ts)return '';var d=Date.now()-ts;var m=Math.floor(d/60
 function _setStoryAuthor(p){
   var post=null;try{post=(posts||[]).find(function(x){return x.photoId===p.id;});}catch(e){}
   var name='',avatar='',ts=(post&&post.ts)||0;
+  var authorId=(post&&post.authorId)||'';
   if(post){name=post.authorName||'';var m=(pendingList||[]).find(function(u){return u.id===post.authorId;});if(m){avatar=m.avatar||'';if(!name)name=m.displayName||((m.name||'')+' '+(m.baptism||''));}}
-  _setAvatarEl(document.getElementById('story-top-av'),avatar);
+  var av=document.getElementById('story-top-av');
+  _setAvatarEl(av,avatar);
+  if(av){if(authorId){av.style.cursor='pointer';av.onclick=function(e){if(e)e.stopPropagation();openStoryProfile(authorId);};}else{av.style.cursor='';av.onclick=null;}}
   var de=document.getElementById('story-viewer-date');
-  if(de){var rt=_relTime(ts);de.textContent=(name?name+' · ':'')+(rt||p.date||'');}
+  if(de){var rt=_relTime(ts);de.textContent=(name?name+' · ':'')+(rt||p.date||'');
+    if(authorId){de.style.cursor='pointer';de.onclick=function(e){if(e)e.stopPropagation();openStoryProfile(authorId);};}else{de.style.cursor='';de.onclick=null;}}
 }
 function showStorySlide(){if(storyIdx<0||storyIdx>=storyList.length){closeStory();return;}const p=storyList[storyIdx];const imgs=getStoryImgs(p);if(storyImgIdx>=imgs.length){if(!p.readBy)p.readBy=[];if(!p.readBy.includes(G.id))p.readBy.push(G.id);renderStoryRow();storyIdx++;storyImgIdx=0;showStorySlide();return;}if(storyImgIdx<0){storyIdx--;if(storyIdx<0){closeStory();return;}storyImgIdx=getStoryImgs(storyList[storyIdx]).length-1;showStorySlide();return;}storyPaused=false;collapseStoryContent();closeStoryCommentSheet();currentStoryPost=p;const bar=document.getElementById('story-progress-bar');bar.innerHTML=imgs.map((_,i)=>`<div style="flex:1;height:2px;background:rgba(255,255,255,.35);border-radius:2px;overflow:hidden"><div class="story-prog-fill" style="height:100%;background:white;width:${i<storyImgIdx?'100%':'0%'}"></div></div>`).join('');const imgEl=document.getElementById('story-viewer-img-el');const fallback=document.getElementById('story-viewer-fallback');const cur=imgs[storyImgIdx];const curSrc=typeof cur==='object'?cur.src:cur;currentStoryImgObj=typeof cur==='object'?cur:null;try{refreshStoryLikeUI();renderStoryComments();refreshStoryOwnerBtns();}catch(e){}imgEl.style.opacity='0';setTimeout(()=>{if(curSrc){imgEl.src=curSrc;imgEl.style.display='';fallback.style.display='none';}else{imgEl.style.display='none';fallback.style.display='';}imgEl.style.opacity='1';var _amb=document.getElementById('story-ambient');if(_amb)_amb.style.backgroundImage=curSrc?("url('"+curSrc+"')"):'';},150);document.getElementById('story-viewer-title').textContent=p.title+(imgs.length>1?` (${storyImgIdx+1}/${imgs.length})`:'');try{_setStoryAuthor(p);}catch(e){document.getElementById('story-viewer-date').textContent=p.date;}const arrow=document.getElementById('story-expand-arrow');if(arrow)arrow.style.display=p.content?'inline':'none';const likeBtn=document.getElementById('story-like-btn');if(likeBtn&&currentStoryImgObj){const liked=(currentStoryImgObj.likes||[]).includes(G.id);likeBtn.querySelector('.like-icon').innerHTML=_heartHTML(liked);likeBtn.querySelector('.like-count').textContent=(currentStoryImgObj.likes||[]).length;}renderStoryComments();document.getElementById('story-comment-input').value='';clearStoryTimer();const fills=bar.querySelectorAll('.story-prog-fill');if(fills[storyImgIdx]){requestAnimationFrame(()=>{fills[storyImgIdx].style.transition='width 3s linear';fills[storyImgIdx].style.width='100%';});}storyTimer=setTimeout(()=>storyTap(1),3000);}
 function storyTap(dir){if(storyContentExpanded)return;storyImgIdx+=dir;showStorySlide();}
@@ -5787,5 +5843,6 @@ try{renderCouponList=function(){};}catch(e){}
 try{renderAdminCouponList=function(){};}catch(e){}
 try{renderDetailCoupons=function(u){try{renderDetailPoints(u);}catch(e){}};}catch(e){}
 try{checkBirthdayCoupons=function(){try{checkBirthdayPoints();}catch(e){}};}catch(e){}
+try{checkFeastCoupons=function(){try{checkFeastPoints();}catch(e){}};}catch(e){}
 try{openCouponBox=function(){try{openPointHistory();}catch(e){}};}catch(e){}
 try{openCouponIssueModal=function(){try{openPointGrant();}catch(e){}};}catch(e){}
