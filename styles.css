@@ -580,7 +580,7 @@ input[type="date"].form-input,input[type="time"].form-input{-webkit-appearance:n
   .modal-sheet.sheet-full #minutes-viewer-content{font-size:15.5px;line-height:1.9;}
 }
 
-.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 20px;}
+.modal-handle{width:44px;height:5px;background:var(--border);border-radius:3px;margin:0 auto 8px;padding:14px 30px 12px;background-clip:content-box;box-sizing:content-box;cursor:grab;touch-action:none;}
 .modal-title-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
 .modal-title{font-size:18px;font-weight:800;}
 .modal-close{background:var(--bg);border:none;border-radius:10px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--text-sub);}

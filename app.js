@@ -5939,3 +5939,39 @@ try{checkBirthdayCoupons=function(){try{checkBirthdayPoints();}catch(e){}};}catc
 try{checkFeastCoupons=function(){try{checkFeastPoints();}catch(e){}};}catch(e){}
 try{openCouponBox=function(){try{openPointHistory();}catch(e){}};}catch(e){}
 try{openCouponIssueModal=function(){try{openPointGrant();}catch(e){}};}catch(e){}
+
+/* ── 바텀시트 모달: 핸들/헤더를 아래로 끌어내려 닫기 (swipe-to-dismiss) ── */
+(function(){
+  var drag=false,startY=0,sheet=null,overlay=null;
+  function grabbable(t){
+    if(!t||!t.closest)return null;
+    if(t.closest('.modal-close,button,input,select,textarea,a'))return null;
+    var h=t.closest('.modal-handle,.modal-title-row');if(!h)return null;
+    var s=h.closest('.modal-sheet');if(!s||s.classList.contains('sheet-full'))return null;
+    return s;
+  }
+  function start(y,t){
+    var s=grabbable(t);
+    if(!s&&t&&t.closest){                       /* 상단 손잡이 영역: 시트 최상단 56px에서 잡아 끌기 */
+      if(!t.closest('button,input,select,textarea,a')){
+        var sh=t.closest('.modal-sheet');
+        if(sh&&!sh.classList.contains('sheet-full')&&(sh.scrollTop||0)<=0){var r=sh.getBoundingClientRect();if(y-r.top<=56)s=sh;}
+      }
+    }
+    if(!s)return;sheet=s;overlay=s.closest('.modal-overlay');drag=true;startY=y;sheet.style.transition='none';
+  }
+  function move(y,e){if(!drag||!sheet)return;var dy=y-startY;if(dy<0)dy=0;sheet.style.transform='translateY('+dy+'px)';if(overlay)overlay.style.background='rgba(26,35,64,'+Math.max(0,0.45-dy/700)+')';if(e&&e.cancelable&&dy>0)e.preventDefault();}
+  function end(y){
+    if(!drag||!sheet)return;var dy=y-startY;var s=sheet,ov=overlay;drag=false;sheet=null;overlay=null;
+    s.style.transition='transform .25s ease';
+    if(dy>90){s.style.transform='translateY(110%)';setTimeout(function(){try{if(ov)closeModal(ov.id);else s.classList.remove('open');}catch(e){if(ov)ov.classList.remove('open');}s.style.transform='';s.style.transition='';if(ov)ov.style.background='';},220);}
+    else{s.style.transform='';if(ov)ov.style.background='';setTimeout(function(){s.style.transition='';},260);}
+  }
+  document.addEventListener('touchstart',function(e){if(e.touches&&e.touches.length===1)start(e.touches[0].clientY,e.target);},{passive:true});
+  document.addEventListener('touchmove',function(e){if(e.touches&&e.touches.length===1)move(e.touches[0].clientY,e);},{passive:false});
+  document.addEventListener('touchend',function(e){if(drag)end((e.changedTouches&&e.changedTouches[0]&&e.changedTouches[0].clientY)||startY);},{passive:true});
+  document.addEventListener('touchcancel',function(){if(drag)end(startY);},{passive:true});
+  document.addEventListener('mousedown',function(e){start(e.clientY,e.target);});
+  document.addEventListener('mousemove',function(e){if(drag)move(e.clientY,e);});
+  document.addEventListener('mouseup',function(e){if(drag)end(e.clientY);});
+})();
