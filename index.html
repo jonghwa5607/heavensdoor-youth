@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="하늘의문 중고등부">
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(e){console.warn('SW register failed',e);});});}</script>
-<link rel="stylesheet" href="./styles.css?v=20260921u">
+<link rel="stylesheet" href="./styles.css?v=20260921v">
 <style>
 /* 회의록: 플레이스홀더는 커서가 있는 빈 줄에만 표시 */
 #minutes-viewer-content .mb-txt[data-ph]::before,#minutes-viewer-content .mb-txt[data-ph]:empty:focus::before{content:none!important;display:none!important}
@@ -741,7 +741,12 @@
 
   <!-- 출석 통계 -->
   <div id="admin-shop-tab" style="display:none;padding:14px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><span style="font-size:14px;font-weight:800">포인트 상점 관리</span><button class="btn btn-sm" style="width:auto;background:var(--card);border:1.5px solid var(--border);color:var(--text);font-weight:800" onclick="openPointGrant()">⭐ 포인트 지급</button></div>
+    <div style="margin-bottom:12px"><span style="font-size:14px;font-weight:800">포인트 상점 관리</span></div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+      <button class="btn btn-sm" style="flex:1;min-width:120px;width:auto;background:var(--primary);color:#fff;font-weight:800" onclick="openPointGrant()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polygon points="12 2 15 9 22 9.3 16.5 14 18.5 21 12 17 5.5 21 7.5 14 2 9.3 9 9"/></svg> 특별포인트 지급</button>
+      <button class="btn btn-sm" style="flex:1;min-width:120px;width:auto;background:var(--card);border:1.5px solid var(--border);color:var(--text);font-weight:800" onclick="openSpecialAdmin()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg> 지급내역</button>
+      <button id="sp-settings-btn" class="btn btn-sm" style="flex:1;min-width:120px;width:auto;background:var(--card);border:1.5px solid var(--border);color:var(--text);font-weight:800;display:none" onclick="openSpecialSettings()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-sub)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> 설정</button>
+    </div>
     <div id="admin-shop-list"></div>
   </div>
   <div id="admin-stats-tab" style="display:none;padding:14px">
@@ -1445,7 +1450,7 @@
   <div class="modal-sheet sheet-full">
     <div class="pg-head">
       <button class="pg-back" onclick="closeMinutesViewer()">‹</button>
-      <span class="pg-title">회의록 <span style="font-size:9px;font-weight:600;color:#2D9E8F;opacity:.75;vertical-align:middle">v37</span></span>
+      <span class="pg-title">회의록 <span style="font-size:9px;font-weight:600;color:#2D9E8F;opacity:.75;vertical-align:middle">v38</span></span>
       <div class="pg-acts">
         <button class="btn btn-sm" id="minutes-publish-btn" style="display:none;background:var(--coral);color:#fff;width:auto;padding:6px 11px;font-size:12px" onclick="publishMinutes()">📣 발행</button>
         <button class="btn btn-sm" id="minutes-save-btn" style="display:none;background:var(--primary);color:white;width:auto;padding:6px 13px;font-size:12px" onclick="stopMinutesEdit()">완료</button>
@@ -1952,13 +1957,35 @@
 </div>
 <!-- ══ 모달: 포인트 지급 (교사) ══ -->
 <div class="modal-overlay" id="point-grant-modal">
-  <div class="modal-sheet" style="max-height:85vh;overflow-y:auto">
+  <div class="modal-sheet" style="max-height:88vh;overflow-y:auto">
     <div class="modal-handle"></div>
-    <div class="modal-title-row"><span class="modal-title">⭐ 포인트 지급</span><button class="modal-close" onclick="closeModal('point-grant-modal')">✕</button></div>
-    <div class="form-group"><label class="form-label">학생 *</label><select class="form-select" id="pg-student"></select></div>
-    <div class="form-group"><label class="form-label">사유</label><div class="filter-row" id="pg-reasons" style="flex-wrap:wrap;gap:6px"></div><input class="form-input" type="text" id="pg-reason-custom" placeholder="직접 입력 (선택)" style="margin-top:8px"></div>
-    <div class="form-group"><label class="form-label">포인트 *</label><div class="filter-row" id="pg-amounts" style="gap:6px;margin-bottom:8px"></div><input class="form-input" type="number" inputmode="numeric" id="pg-amount" placeholder="직접 입력 (예: 100)"></div>
+    <div class="modal-title-row"><span class="modal-title">특별포인트 지급</span><button class="modal-close" onclick="closeModal('point-grant-modal')">✕</button></div>
+    <div id="pg-teacher-usage" style="background:var(--mint-light);border-radius:12px;padding:11px 13px;margin-bottom:12px;font-size:12px;color:var(--primary-dark);font-weight:700"></div>
+    <div class="form-group"><label class="form-label">학생 *</label><select class="form-select" id="pg-student" onchange="pgOnStudentChange()"></select></div>
+    <div id="pg-student-remain" style="font-size:11.5px;color:var(--text-sub);font-weight:600;margin:-6px 2px 12px;display:none"></div>
+    <div class="form-group"><label class="form-label">지급 유형 *</label><div id="pg-types" style="display:flex;flex-direction:column;gap:8px"></div></div>
+    <div class="form-group"><label class="form-label" id="pg-reason-label">지급 사유</label><input class="form-input" type="text" id="pg-reason" placeholder="예: 행사 정리정돈을 끝까지 도와줌"></div>
     <button class="btn btn-primary" style="margin-top:6px" onclick="submitPointGrant()">지급하기</button>
+  </div>
+</div>
+
+<!-- 특별포인트 지급내역 (관리자/교사) -->
+<div class="modal-overlay" id="special-admin-modal">
+  <div class="modal-sheet" style="max-height:85vh;display:flex;flex-direction:column">
+    <div class="modal-title-row"><span class="modal-title">특별포인트 지급내역</span><button class="modal-close" onclick="closeModal('special-admin-modal')">✕</button></div>
+    <div id="special-admin-sum" style="font-size:12px;color:var(--text-sub);font-weight:600;margin-bottom:10px"></div>
+    <div id="special-admin-list" style="flex:1;overflow-y:auto"></div>
+  </div>
+</div>
+
+<!-- 특별포인트 설정 (관리자) -->
+<div class="modal-overlay" id="special-settings-modal">
+  <div class="modal-sheet" style="max-height:88vh;overflow-y:auto">
+    <div class="modal-title-row"><span class="modal-title">특별포인트 설정</span><button class="modal-close" onclick="closeModal('special-settings-modal')">✕</button></div>
+    <div style="font-size:11.5px;color:var(--text-light);margin-bottom:14px;line-height:1.6">유형별 지급 금액과 월 한도를 설정해요. (1회 최대 200P)</div>
+    <div style="display:flex;gap:8px"><div class="form-group" style="flex:1"><label class="form-label">참여</label><input class="form-input" type="number" inputmode="numeric" id="sp-join" placeholder="50"></div><div class="form-group" style="flex:1"><label class="form-label">봉사·도움</label><input class="form-input" type="number" inputmode="numeric" id="sp-help" placeholder="100"></div><div class="form-group" style="flex:1"><label class="form-label">특별 기여</label><input class="form-input" type="number" inputmode="numeric" id="sp-contrib" placeholder="200"></div></div>
+    <div style="display:flex;gap:8px"><div class="form-group" style="flex:1"><label class="form-label">학생 월 한도</label><input class="form-input" type="number" inputmode="numeric" id="sp-scap" placeholder="500"></div><div class="form-group" style="flex:1"><label class="form-label">교사 월 한도</label><input class="form-input" type="number" inputmode="numeric" id="sp-tcap" placeholder="1500"></div></div>
+    <button class="btn btn-primary" style="margin-top:6px" onclick="saveSpecialSettings()">저장</button>
   </div>
 </div>
 <!-- ══ 모달: 상품 추가·수정 (교사) ══ -->
@@ -2667,7 +2694,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="./assets.js"></script>
-<script src="./app.js?v=20260921u"></script>
+<script src="./app.js?v=20260921v"></script>
 
 <div id="theme-preview-bar" style="display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:88px;z-index:600;background:rgba(26,35,64,0.95);color:white;padding:10px 12px 10px 16px;border-radius:14px;box-shadow:var(--shadow-lg);align-items:center;gap:10px;max-width:410px;width:calc(100% - 32px);backdrop-filter:blur(4px)">
   <span id="theme-preview-label" style="font-size:13px;font-weight:700;flex:1">🎨 미리보기</span>
@@ -2691,7 +2718,7 @@
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-messaging-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-auth-compat.js"></script>
-<script src="./app-sync.js?v=20260921u"></script>
+<script src="./app-sync.js?v=20260921v"></script>
 
 </body>
 </html>

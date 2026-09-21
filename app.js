@@ -480,6 +480,7 @@ function restockItem(id){
 function _isShopAdmin(){return G.role==='teacher';}
 function renderShopAdmin(){
   var el=document.getElementById('admin-shop-list');if(!el)return;
+  try{var _sb=document.getElementById('sp-settings-btn');if(_sb)_sb.style.display=(G.type==='principal'||G.type==='admin'||G.isAdmin)?'':'none';}catch(e){}
   if(!(shopItems&&shopItems.length)){_shopSeed();}
   var items=_shopList();
   var catLbl={food:'간식·음료',goods:'굿즈',life:'문구·생활',event:'이벤트'};
@@ -533,36 +534,98 @@ function deleteShopItem(id){
     closeModal('shop-item-modal');renderShopAdmin();showToast('삭제했어요');
   });
 }
-/* ── 교사 포인트 지급 ── */
-var _grantReason='';
-function openPointGrant(){
+/* ── 교사 특별포인트 지급 (유형·한도·기록 관리) ── */
+var SP_HARD_MAX=200;   /* 1회 최대 (고정 상한) */
+function spCfg(){var c=(typeof appConfig!=='undefined'&&appConfig.pt&&appConfig.pt.special)||{};return {join:c.join!=null?c.join:50,help:c.help!=null?c.help:100,contrib:c.contrib!=null?c.contrib:200,studentCap:c.studentCap!=null?c.studentCap:500,teacherCap:c.teacherCap!=null?c.teacherCap:1500};}
+function _spTypes(){var c=spCfg();return [{key:'join',label:'참여',pt:c.join,needReason:false},{key:'help',label:'봉사·도움',pt:c.help,needReason:false},{key:'contrib',label:'특별 기여',pt:c.contrib,needReason:true}];}
+function _spType(key){return _spTypes().filter(function(t){return t.key===key;})[0]||null;}
+function _studentSpecialThisMonth(u){var ym=currentYM();return ((u&&u.specialGrants)||[]).filter(function(g){return g&&!g.cancelled&&_ymOf(g.ts)===ym;}).reduce(function(s,g){return s+(g.points||0);},0);}
+function _teacherSpecialThisMonth(tid){var ym=currentYM(),s=0;(pendingList||[]).forEach(function(u){((u.specialGrants)||[]).forEach(function(g){if(g&&!g.cancelled&&g.by===tid&&_ymOf(g.ts)===ym)s+=(g.points||0);});});return s;}
+var _pgType=null;
+function openPointGrant(prefillSid){
   if(G.role!=='teacher'){showToast('교사만 지급할 수 있어요');return;}
   var sel=document.getElementById('pg-student');
   var students=pendingList.filter(function(u){return u.approved&&u.role==='student'&&!u.hidden&&!u.graduated;}).sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
   if(!students.length){showToast('지급할 학생이 없어요');return;}
-  sel.innerHTML='<option value="">학생 선택</option>'+students.map(function(u){return '<option value="'+u.id+'">'+_esc(u.name+' '+u.baptism)+' ('+(u.gradeLabel||'')+')</option>';}).join('');
-  _grantReason='';document.getElementById('pg-amount').value='';document.getElementById('pg-reason-custom').value='';
-  var rc=document.getElementById('pg-reasons');
-  var reasons=['적극적인 활동 참여','봉사','미션 참여','행사 참여','친구 도움/배려','기타'];
-  if(rc)rc.innerHTML=reasons.map(function(r){return '<button type="button" class="filter-chip" onclick="pgSetReason(this,\''+r+'\')">'+r+'</button>';}).join('');
-  var ac=document.getElementById('pg-amounts');
-  if(ac)ac.innerHTML=[50,100,200].map(function(a){return '<button type="button" class="filter-chip" onclick="document.getElementById(\'pg-amount\').value='+a+'">+'+a+'P</button>';}).join('');
+  sel.innerHTML='<option value="">학생 선택</option>'+students.map(function(u){return '<option value="'+u.id+'"'+(prefillSid===u.id?' selected':'')+'>'+_esc(u.name+' '+u.baptism)+' ('+(u.gradeLabel||'')+')</option>';}).join('');
+  _pgType=null;var ri=document.getElementById('pg-reason');if(ri)ri.value='';
+  var cfg=spCfg(),used=_teacherSpecialThisMonth(G.id),rem=Math.max(0,cfg.teacherCap-used);
+  var tu=document.getElementById('pg-teacher-usage');if(tu)tu.innerHTML='이번 달 특별포인트 <b>'+used.toLocaleString()+' / '+cfg.teacherCap.toLocaleString()+'P</b> 지급 · 남은 <b>'+rem.toLocaleString()+'P</b>';
+  var tw=document.getElementById('pg-types');
+  if(tw)tw.innerHTML=_spTypes().map(function(t){return '<button type="button" id="pgt-'+t.key+'" onclick="pgSelType(\''+t.key+'\')" style="display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1.5px solid var(--border-light);border-radius:12px;padding:12px 14px;cursor:pointer;font-family:inherit"><span style="font-size:13.5px;font-weight:700;color:var(--text)">'+t.label+(t.needReason?' <span style="font-size:10px;color:var(--coral);font-weight:700">사유 필수</span>':'')+'</span><span style="font-size:14px;font-weight:900;color:var(--primary-dark)">+'+t.pt+'P</span></button>';}).join('');
+  pgOnStudentChange();_pgUpdateReasonLabel();
   openModal('point-grant-modal');
 }
-function pgSetReason(btn,r){_grantReason=r;var p=btn.parentNode;if(p)Array.prototype.forEach.call(p.children,function(b){b.classList.remove('active');});btn.classList.add('active');}
+function pgSelType(key){_pgType=key;_spTypes().forEach(function(t){var el=document.getElementById('pgt-'+t.key);if(el){var on=t.key===key;el.style.borderColor=on?'var(--primary)':'var(--border-light)';el.style.background=on?'var(--mint-light)':'var(--card)';}});_pgUpdateReasonLabel();}
+function _pgUpdateReasonLabel(){var t=_pgType?_spType(_pgType):null;var lb=document.getElementById('pg-reason-label');var ri=document.getElementById('pg-reason');if(lb)lb.innerHTML='지급 사유'+(t&&t.needReason?' <span style="color:var(--coral)">*</span>':' <span style="font-size:10px;color:var(--text-light);font-weight:500">(선택)</span>');if(ri)ri.placeholder=(t&&t.needReason)?'예: 행사 정리정돈을 끝까지 도와줌 (필수)':'예: 미사 봉사, 친구 도움 등';}
+function pgOnStudentChange(){var sid=document.getElementById('pg-student').value;var el=document.getElementById('pg-student-remain');if(!el)return;if(!sid){el.style.display='none';return;}var u=pendingList.find(function(x){return x.id===sid;});if(!u){el.style.display='none';return;}var cfg=spCfg(),used=_studentSpecialThisMonth(u),rem=Math.max(0,cfg.studentCap-used);el.style.display='';el.innerHTML='이 학생 이번 달 특별포인트 <b>'+used.toLocaleString()+' / '+cfg.studentCap.toLocaleString()+'P</b> · 남은 <b style="color:'+(rem>0?'var(--primary-dark)':'var(--coral)')+'">'+rem.toLocaleString()+'P</b>';}
 function submitPointGrant(){
   var sid=document.getElementById('pg-student').value;if(!sid){showToast('학생을 선택해주세요');return;}
-  var amt=parseInt(document.getElementById('pg-amount').value)||0;if(amt<=0){showToast('포인트를 입력해주세요');return;}
-  var custom=(document.getElementById('pg-reason-custom').value||'').trim();
-  var reason=custom||_grantReason||'교사 특별 포인트';
+  if(!_pgType){showToast('지급 유형을 선택해주세요');return;}
+  var t=_spType(_pgType);if(!t)return;
+  var amt=t.pt;if(amt>SP_HARD_MAX){showToast('1회 최대 '+SP_HARD_MAX+'P까지 지급할 수 있어요');return;}
+  var reason=(document.getElementById('pg-reason').value||'').trim();
+  if(t.needReason&&!reason){showToast('특별 기여는 지급 사유를 꼭 입력해주세요');return;}
   var u=pendingList.find(function(x){return x.id===sid;});if(!u)return;
-  appConfirm({icon:'info',title:'포인트를 지급할까요?',desc:(u.name+' '+(u.baptism||''))+'\n+'+amt.toLocaleString()+'P · '+reason,okText:'지급하기'}).then(function(ok){
+  var cfg=spCfg();
+  var sUsed=_studentSpecialThisMonth(u);if(sUsed+amt>cfg.studentCap){showToast('이 학생은 이번 달 한도('+cfg.studentCap.toLocaleString()+'P)에 도달했어요 · 남은 '+Math.max(0,cfg.studentCap-sUsed).toLocaleString()+'P');return;}
+  var tUsed=_teacherSpecialThisMonth(G.id);if(tUsed+amt>cfg.teacherCap){showToast('이번 달 지급 한도('+cfg.teacherCap.toLocaleString()+'P)에 도달했어요 · 남은 '+Math.max(0,cfg.teacherCap-tUsed).toLocaleString()+'P');return;}
+  appConfirm({icon:'info',title:'특별포인트를 지급할까요?',desc:(u.name+' '+(u.baptism||''))+'\n'+t.label+' +'+amt.toLocaleString()+'P'+(reason?('\n사유: '+reason):''),okText:'지급하기'}).then(function(ok){
     if(!ok)return;
-    earnPoints(u,amt,'교사 특별 포인트 - '+reason,G.displayName,'grant');
-    try{notifications.unshift({pushed:false,id:'nt'+Date.now()+'pg',text:'⭐ 선생님이 <b>+'+amt+'P</b>를 지급했어요 · '+_esc(reason),time:'방금',ts:Date.now(),readBy:[],forStudentId:sid,tap:{type:'attend'}});updateNotifDot();}catch(e){}
+    _applySpecialGrant(u,t,amt,reason,G);
     try{if(typeof flushSync==='function')flushSync();}catch(e){}
-    closeModal('point-grant-modal');showToast(u.name+' 학생에게 +'+amt.toLocaleString()+'P 지급했어요');
+    closeModal('point-grant-modal');showToast(u.name+' 학생에게 '+t.label+' +'+amt.toLocaleString()+'P 지급했어요');
   });
+}
+function _applySpecialGrant(u,t,amt,reason,teacher){
+  var id='sp'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  var d=new Date();var ds=pad2(d.getMonth()+1)+'.'+pad2(d.getDate());
+  u.specialGrants=u.specialGrants||[];
+  u.specialGrants.push({id:id,ts:Date.now(),dateStr:ds,by:teacher.id,byName:teacher.displayName||teacher.name,type:t.key,typeLabel:t.label,points:amt,reason:reason||'',cancelled:false});
+  /* 보유 포인트만 (성장점수 미반영) */
+  u.currentPoints=(u.currentPoints||0)+amt;_phPush(u,'earn',amt,'교사 특별포인트 · '+t.label+(reason?(' - '+reason):''),teacher.displayName,'special-'+id);_ptSyncG(u);try{saveMemberNow(u);}catch(e){}
+  try{notifications.unshift({pushed:false,id:'nt'+Date.now()+'sp',text:'⭐ 선생님이 특별포인트 <b>+'+amt+'P</b>를 지급했어요 · '+_esc(t.label)+(reason?(' ('+_esc(reason)+')'):''),time:'방금',ts:Date.now(),readBy:[],forStudentId:u.id,tap:{type:'attend'}});updateNotifDot();}catch(e){}
+}
+/* 관리자: 전체 특별포인트 지급내역 조회 */
+function _allSpecialGrants(){var out=[];(pendingList||[]).forEach(function(u){((u.specialGrants)||[]).forEach(function(g){out.push({g:g,sid:u.id,sname:(u.name||'')+' '+(u.baptism||'')});});});out.sort(function(a,b){return (b.g.ts||0)-(a.g.ts||0);});return out;}
+function openSpecialAdmin(){renderSpecialAdmin();openModal('special-admin-modal');}
+function renderSpecialAdmin(){
+  var el=document.getElementById('special-admin-list');if(!el)return;var isAdmin=(G.type==='principal'||G.type==='admin'||G.isAdmin);
+  var all=_allSpecialGrants();
+  var ym=currentYM();var monthTotal=all.filter(function(x){return !x.g.cancelled&&_ymOf(x.g.ts)===ym;}).reduce(function(s,x){return s+(x.g.points||0);},0);
+  var sum=document.getElementById('special-admin-sum');if(sum)sum.innerHTML='이번 달 지급 합계 <b style="color:var(--primary-dark)">'+monthTotal.toLocaleString()+'P</b> · 전체 '+all.length+'건'+(isAdmin?'':' · 취소는 관리자만 가능');
+  if(!all.length){el.innerHTML='<div class="empty" style="padding:34px 0"><div class="empty-title" style="font-size:13px">지급 내역이 없어요</div></div>';return;}
+  el.innerHTML=all.slice(0,100).map(function(x){var g=x.g;var cx=!!g.cancelled;
+    return '<div style="display:flex;align-items:flex-start;gap:10px;padding:11px 2px;border-bottom:1px solid var(--border-light)'+(cx?';opacity:.55':'')+'"><div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:700'+(cx?';text-decoration:line-through':'')+'">'+_esc(g.byName||'교사')+' → '+_esc(x.sname)+' <span style="color:var(--primary-dark)">+'+(g.points||0)+'P</span></div><div style="font-size:11px;color:var(--text-light);margin-top:2px">'+_esc(g.dateStr||'')+' · '+_esc(g.typeLabel||'')+(g.reason?(' · '+_esc(g.reason)):'')+(cx?' · <span style="color:var(--coral);font-weight:700">취소됨</span>':'')+'</div></div>'+((!cx&&isAdmin)?'<button class="btn btn-sm" style="width:auto;padding:6px 10px;background:var(--coral-light);color:#B0463A;font-weight:800;flex-shrink:0" onclick="cancelSpecialGrant(\''+x.sid+'\',\''+g.id+'\')">취소</button>':'')+'</div>';
+  }).join('');
+}
+function cancelSpecialGrant(sid,gid){
+  if(!(G.type==='principal'||G.type==='admin'||G.isAdmin)){showToast('관리자만 취소할 수 있어요');return;}
+  var u=pendingList.find(function(x){return x.id===sid;});if(!u)return;var g=(u.specialGrants||[]).find(function(x){return x.id===gid;});if(!g||g.cancelled)return;
+  appConfirm({icon:'warn',title:'이 지급을 취소할까요?',desc:_esc(g.typeLabel)+' +'+(g.points||0)+'P\n학생 보유 포인트에서 차감돼요',okText:'취소하기'}).then(function(ok){
+    if(!ok)return;
+    g.cancelled=true;g.cancelledBy=G.displayName;g.cancelledAt=Date.now();
+    u.currentPoints=Math.max(0,(u.currentPoints||0)-(g.points||0));
+    u.pointHistory=(u.pointHistory||[]).filter(function(h){return h.ref!=='special-'+gid;});
+    _ptSyncG(u);try{saveMemberNow(u);}catch(e){}
+    try{notifications.unshift({pushed:false,id:'nt'+Date.now()+'spc',text:'특별포인트 <b>+'+(g.points||0)+'P</b> 지급이 취소되었어요 · '+_esc(g.typeLabel||''),time:'방금',ts:Date.now(),readBy:[],forStudentId:sid});updateNotifDot();}catch(e){}
+    try{if(typeof flushSync==='function')flushSync();}catch(e){}
+    renderSpecialAdmin();try{renderHomePoints();}catch(e){}showToast('지급을 취소하고 회수했어요');
+  });
+}
+/* 관리자: 특별포인트 설정 */
+function openSpecialSettings(){
+  if(!(G.type==='principal'||G.type==='admin'||G.isAdmin)){showToast('관리자만 설정할 수 있어요');return;}
+  var c=spCfg();document.getElementById('sp-join').value=c.join;document.getElementById('sp-help').value=c.help;document.getElementById('sp-contrib').value=c.contrib;document.getElementById('sp-scap').value=c.studentCap;document.getElementById('sp-tcap').value=c.teacherCap;
+  openModal('special-settings-modal');
+}
+function saveSpecialSettings(){
+  if(!(G.type==='principal'||G.type==='admin'||G.isAdmin)){showToast('관리자만 설정할 수 있어요');return;}
+  var gv=function(id,d){var v=parseInt(document.getElementById(id).value);return (isNaN(v)||v<0)?d:v;};
+  var join=Math.min(SP_HARD_MAX,gv('sp-join',50)),help=Math.min(SP_HARD_MAX,gv('sp-help',100)),contrib=Math.min(SP_HARD_MAX,gv('sp-contrib',200));
+  appConfig.pt=appConfig.pt||{};appConfig.pt.special={join:join,help:help,contrib:contrib,studentCap:gv('sp-scap',500),teacherCap:gv('sp-tcap',1500)};
+  try{if(window.flushCfg)window.flushCfg();}catch(e){}
+  closeModal('special-settings-modal');showToast('특별포인트 설정을 저장했어요');
 }
 /* ── 생일 포인트 (쿠폰 대체) ── */
 function checkBirthdayPoints(){
