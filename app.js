@@ -197,24 +197,27 @@ function submitWeeklyNotice(){
   closeModal('weekly-notice-modal');
   showToast(ex?'주간공지를 수정했어요':'주간공지를 올렸어요 · 전체 알림 발송');
 }
-/* 목요일 알림 — 그 주에 한 번만 */
+/* 주간공지 리마인더 — 목·금 오전 10시대에만, 각 요일 그 주 1회. 이미 올렸으면 발송 안 함 (밤 알림 없음) */
 function checkThursdayNotice(){
   try{
     if(!(G&&G.id))return;
     var n=new Date();
-    if(n.getDay()!==4||n.getHours()<10)return;           /* 목요일 오전 10시 이후 */
+    var dow=n.getDay();
+    if(dow!==4&&dow!==5)return;                           /* 목요일·금요일만 */
+    if(n.getHours()!==10)return;                          /* 오전 10시대(10:00~10:59)에만 — 밤 알림 방지 */
     var sat=_wnSat();
     if(_wnPost(sat))return;                               /* 이미 올렸으면 안 보냄 */
     if(appConfig&&appConfig.wnScheduled===sat)return;     /* 예약 발송 등록돼 있으면 안 보냄 */
+    var dtag=dow===4?'thu':'fri', dlbl=dow===4?'목요일':'금요일';
     /* 교감·교무·관리자에게만 개별 발송 */
     var targets=pendingList.filter(function(u){
       return u.approved&&u.role==='teacher'&&!u.hidden&&(u.teacherType==='principal'||u.teacherType==='admin'||u.isAdmin);
     });
     var made=false;
     targets.forEach(function(u){
-      var nid='nt-wnrem-'+sat+'-'+u.id;
+      var nid='nt-wnrem-'+sat+'-'+dtag+'-'+u.id;
       if(notifications.some(function(x){return x.id===nid;}))return;
-      notifications.unshift({pushed:false,id:nid,text:'📢 <b>'+_wnTitle(sat)+'</b>를 올려주세요 (목요일)',
+      notifications.unshift({pushed:false,id:nid,text:'📢 <b>'+_wnTitle(sat)+'</b>를 올려주세요 ('+dlbl+')',
         time:'방금',ts:Date.now(),readBy:[],forTeacherId:u.id,tap:{type:'weekly-notice'}});
       made=true;
     });
