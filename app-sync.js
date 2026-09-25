@@ -223,11 +223,11 @@ document.addEventListener('click',function(e){try{var c=e.target.closest&&e.targ
    홈에서 한 번 더 누르면 종료 확인 후 앱을 나갑니다.
    ══════════════════════════════════════════════════════════ */
 (function(){
-  var _seq=0, _ignore=false, _exitAt=0, _suppress=false;
+  var _seq=0, _ignore=0, _exitAt=0, _suppress=false;   /* _ignore: 되감기 예약 카운터(동시 닫힘 여러 건 대응) */
   window._curTab='home';
 
   function navPush(tag){ _seq++; try{ history.pushState({app:_seq,tag:tag},''); }catch(e){} }
-  function navBack(){ if(_seq>0){ _ignore=true; try{history.back();}catch(e){_ignore=false;} } }
+  function navBack(){ if(_seq>0){ _ignore++; try{history.back();}catch(e){_ignore=Math.max(0,_ignore-1);} } }
   window._navPush=navPush;
 
   /* ── 열려 있는 오버레이 중 가장 위의 것 닫기 ── */
@@ -316,7 +316,7 @@ document.addEventListener('click',function(e){try{var c=e.target.closest&&e.targ
   }
 
   window.addEventListener('popstate', function(){
-    if(_ignore){ _ignore=false; _seq=Math.max(0,_seq-1); return; }
+    if(_ignore>0){ _ignore--; _seq=Math.max(0,_seq-1); return; }
     _seq=Math.max(0,_seq-1);
 
     _suppress=true;
@@ -333,7 +333,7 @@ document.addEventListener('click',function(e){try{var c=e.target.closest&&e.targ
 
     /* 홈(최상위)에서 뒤로가기 → 2.5초 안에 한 번 더 누르면 종료 */
     var now=Date.now();
-    if(now-_exitAt<2500){ _ignore=true; try{ history.back(); }catch(e){ _ignore=false; } return; }
+    if(now-_exitAt<2500){ _ignore++; try{ history.back(); }catch(e){ _ignore=Math.max(0,_ignore-1); } return; }
     _exitAt=now;
     try{ history.pushState({app:0,tag:'guard'},''); }catch(e){}
     try{ showToast('뒤로가기를 한 번 더 누르면 앱이 종료돼요'); }catch(e){}

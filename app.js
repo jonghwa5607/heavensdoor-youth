@@ -446,9 +446,13 @@ const DEFAULT_SHOP_ITEMS=[
  {id:'si-retreat',name:'가을 피정 참가권',price:1000,stock:30,cat:'event',sec:'event',active:true}
 ];
 var _shopCat='all';
-function _shopList(){return (shopItems&&shopItems.length)?shopItems:DEFAULT_SHOP_ITEMS;}
+function _shopInited(){return !!(appConfig&&appConfig.shopSeeded);}
+function _shopMarkInited(){try{if(appConfig&&!appConfig.shopSeeded){appConfig.shopSeeded=true;if(window.flushCfg)window.flushCfg();}}catch(e){}}
+function _shopList(){if(_shopInited())return shopItems||[];return (shopItems&&shopItems.length)?shopItems:DEFAULT_SHOP_ITEMS;}
 function _shopIcon(cat){var m={food:'<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>',goods:'<path d="M20 7h-4V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2H4a1 1 0 0 0-1 1v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a1 1 0 0 0-1-1z"/><path d="M9 7h6"/>',life:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',event:'<rect x="3" y="8" width="18" height="13" rx="1"/><path d="M12 8v13"/><path d="M3 12h18"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8"/><path d="M16.5 8a2.5 2.5 0 0 0 0-5C13 3 12 8 12 8"/>'};return m[cat]||m.goods;}
-function _shopSeed(){if(!(shopItems&&shopItems.length)){shopItems=DEFAULT_SHOP_ITEMS.map(function(x){return Object.assign({},x);});try{if(typeof flushSync==='function')flushSync();}catch(e){}return true;}return false;}
+function _shopSeed(){if(_shopInited())return false;   /* 한 번 초기화된 뒤에는 예시 상품을 자동 생성하지 않음 (자유롭게 삭제·생성 가능) */
+  if(!(shopItems&&shopItems.length)){shopItems=DEFAULT_SHOP_ITEMS.map(function(x){return Object.assign({},x);});}
+  _shopMarkInited();try{if(typeof flushSync==='function')flushSync();}catch(e){}return true;}
 function openShop(){_shopCat='all';renderShop();openModal('shop-modal');}
 function shopSetCat(c){_shopCat=c;renderShop();}
 function _shopCard(it){
@@ -569,14 +573,14 @@ function saveShopItem(){
   if(price<=0){showToast('가격을 입력해주세요');return;}
   if(id){var it=shopItems.find(function(x){return x.id===id;});if(it){it.name=name;it.price=price;it.stock=stock;it.cat=cat;it.sec=sec;it.active=active;it.img=img;}}
   else{shopItems.push({id:'si'+Date.now().toString(36),name:name,price:price,stock:stock,cat:cat,sec:sec,active:active,img:img});}
-  try{if(typeof flushSync==='function')flushSync();}catch(e){}
+  _shopMarkInited();try{if(typeof flushSync==='function')flushSync();}catch(e){}
   closeModal('shop-item-modal');renderShopAdmin();showToast('저장했어요');
 }
 function onShopImgPick(input){if(!input.files||!input.files[0])return;compressImg(input.files[0],500,0.7).then(function(src){var d=document.getElementById('sim-img-data');if(d)d.value=src||'';var pv=document.getElementById('sim-img-preview');if(pv)pv.innerHTML=src?'<img src="'+src+'" style="width:100%;height:100%;object-fit:cover">':'<span style="font-size:12px;color:var(--text-light)">＋ 사진 추가</span>';input.value='';});}
 function deleteShopItem(id){
   if(!_isShopAdmin())return;
   appConfirm({icon:'trash',title:'상품을 삭제할까요?',desc:'삭제하면 상점에서 사라져요.',okText:'삭제',danger:true}).then(function(ok){
-    if(!ok)return;shopItems=(shopItems||[]).filter(function(x){return x.id!==id;});
+    if(!ok)return;shopItems=(shopItems||[]).filter(function(x){return x.id!==id;});_shopMarkInited();
     try{if(window.FB&&FB.enabled()&&FB.remove)FB.remove('shopItems',id);}catch(e){}
     try{if(typeof flushSync==='function')flushSync();}catch(e){}
     closeModal('shop-item-modal');renderShopAdmin();showToast('삭제했어요');
