@@ -37,7 +37,7 @@ let appConfig={title:'하늘의문 중고등부 주일학교',color:'#5B9BD5',ve
   Object.defineProperty(window,'adminVote',{configurable:true,get:function(){return appConfig.adminVote||null;},set:function(v){appConfig.adminVote=v||null;}});
 })();
 let previewMode=false,previewBackupUser=null,currentLoginUser=null;
-function startPreview(role){if(!previewMode){previewBackupUser=currentLoginUser;previewMode=true;}const samples={student:{role:'student',name:'미리보기',baptism:'요셉',id:'preview-student',gradeKey:'m1',gradeLabel:'중1',attendTotal:5,streak:2,approved:true,birthMonth:0,birthDay:0,feastMonth:0,feastDay:0,children:[]},parent:{role:'parent',name:'미리보기',baptism:'안나',id:'preview-parent',children:[{name:'김하늘'}],approved:true,isJabumo:false,birthMonth:0,birthDay:0,feastMonth:0,feastDay:0},teacher:{role:'teacher',name:'미리보기',baptism:'베드로',id:'preview-teacher',teacherType:'m1',gradeLabel:'중1',approved:true,isAdmin:false,birthMonth:0,birthDay:0,feastMonth:0,feastDay:0}};const labels={student:'학생',parent:'학부모',teacher:'교사'};if(role==='student'){const real=pendingList.find(u=>u.approved&&u.role==='student'&&!u.hidden&&!u.graduated);if(real)samples.student=Object.assign({},real);}try{startSession(samples[role]);}catch(e){document.getElementById('bottom-nav').style.display='flex';goScreen('home');switchTab('home');showToast('미리보기 화면 전환 중 일부 요소를 불러오지 못했어요');}setPreviewBarVisible(true,'🔍 미리보기 모드: '+labels[role]+' 화면');}
+function startPreview(role){if(!previewMode){previewBackupUser=currentLoginUser;previewMode=true;}const samples={student:{role:'student',name:'미리보기',baptism:'요셉',id:'preview-student',gradeKey:'m1',gradeLabel:'중1',approved:true,birthMonth:0,birthDay:0,feastMonth:0,feastDay:0,children:[],attendedWeeks:[],halfWeeks:[]},parent:{role:'parent',name:'미리보기',baptism:'안나',id:'preview-parent',children:[{name:'김하늘'}],approved:true,isJabumo:false,birthMonth:0,birthDay:0,feastMonth:0,feastDay:0},teacher:{role:'teacher',name:'미리보기',baptism:'베드로',id:'preview-teacher',teacherType:'m1',gradeLabel:'중1',approved:true,isAdmin:false,birthMonth:0,birthDay:0,feastMonth:0,feastDay:0}};const labels={student:'학생',parent:'학부모',teacher:'교사'};if(role==='student'){const real=pendingList.find(u=>u.approved&&u.role==='student'&&!u.hidden&&!u.graduated);if(real)samples.student=Object.assign({},real);else{try{var _ps=samples.student;var _sw=(typeof getSaturdays==='function')?getSaturdays(2):[];_ps.attendedWeeks=_sw.slice().reverse();_ps.halfWeeks=[];if(typeof recalcMemberPoints==='function')recalcMemberPoints(_ps);_ps.attendTotal=(typeof calcAttendTotal==='function')?calcAttendTotal(_ps):(_ps.attendedWeeks||[]).length;}catch(e){}}}try{startSession(samples[role]);}catch(e){document.getElementById('bottom-nav').style.display='flex';goScreen('home');switchTab('home');showToast('미리보기 화면 전환 중 일부 요소를 불러오지 못했어요');}setPreviewBarVisible(true,'🔍 미리보기 모드: '+labels[role]+' 화면');}
 function exitPreview(){previewMode=false;setPreviewBarVisible(false);if(previewBackupUser){startSession(previewBackupUser);switchTab('admin');showAdminTab('settings');}}
 function setPreviewBarVisible(v,text){const bar=document.getElementById('preview-bar');if(bar)bar.style.display=v?'flex':'none';document.querySelectorAll('.app-header').forEach(h=>h.style.marginTop=v?'34px':'0');const t=document.getElementById('preview-bar-text');if(v&&t)t.textContent=text;}
 function loadAppConfigForm(){try{loadThemeGreetInputs();}catch(e){}try{applyLogo();}catch(e){}document.getElementById('cfg-title').value=appConfig.title;document.getElementById('cfg-color').value=appConfig.color;document.getElementById('cfg-verse').value=appConfig.verse;document.getElementById('cfg-verse-ref').value=appConfig.verseRef;document.getElementById('cfg-notion-url').value=appConfig.notionUrl||'';try{renderDriveCfg();}catch(e){}const vm=appConfig.vacMsg||VAC_MSG_DEFAULT;document.getElementById('cfg-vac-edu-title').value=vm.eduTitle;document.getElementById('cfg-vac-edu-body').value=vm.eduBody;document.getElementById('cfg-vac-full-title').value=vm.fullTitle;document.getElementById('cfg-vac-full-body').value=vm.fullBody;document.getElementById('cfg-reward-bday').value=appConfig.bdayReward||BDAY_REWARD_DEFAULT;ATTEND_LEVELS.forEach(L=>{const el=document.getElementById('cfg-reward-'+L.n);if(el)el.value=L.r||'';});}
@@ -79,10 +79,10 @@ function _wnSat(){return currentSaturday();}
 function _wnTitle(ds){var d=(ds||_wnSat()).split('-');return (+d[1])+'월 '+(+d[2])+'일 주간공지';}
 function _wnId(ds){return 'wn-'+(ds||_wnSat());}
 function _wnPost(ds){var id=_wnId(ds);return posts.find(function(p){return p.id===id;})||null;}
-function _canWriteWeekly(){return G.role==='teacher'&&(G.type==='principal'||G.type==='admin');}
-function _isWeeklyWatcher(){return G.role==='teacher'&&(G.type==='principal'||G.type==='admin'||G.isAdmin);}
+function _canWriteWeekly(){return G.role==='teacher';}
+function _isWeeklyWatcher(){return G.role==='teacher';}
 function openWeeklyNotice(){
-  if(!_isWeeklyWatcher()){showToast('교감·교무만 작성할 수 있어요');return;}
+  if(!_isWeeklyWatcher()){showToast('교사만 작성할 수 있어요');return;}
   var sat=_wnSat(), ex=_wnPost(sat);
   try{if(ex)loadAttachBuf('wn',ex);else resetAttachBuf('wn');}catch(e){}
   var mine=ex&&ex.authorId===G.id;
@@ -150,7 +150,7 @@ function wnPreview(){
   _renderNoticeCards(b,el);
 }
 function submitWeeklyNotice(){
-  if(!_canWriteWeekly()){showToast('교감·교무만 올릴 수 있어요');return;}
+  if(!_canWriteWeekly()){showToast('교사만 올릴 수 있어요');return;}
   var _ex0=_wnPost(_wnSat());
   if(_ex0&&_ex0.authorId!==G.id){showToast('이미 다른 분이 올렸어요');return;}
   var body=_wnBuild();
@@ -1319,8 +1319,11 @@ async function doLogin(){
       startSession(rec);return;
     }
     /* 회원 레코드가 없음 → 최초 설치이거나 관리자 부재 시 비상 복구 */
-    const anyAdmin=pendingList.some(u=>u.approved&&u.role==='teacher'&&u.isAdmin);
     if(hp!==ADMIN.pwh){showToast('아이디 또는 비밀번호가 올바르지 않아요');return;}
+    /* ⚠️ 서버에서 회원 데이터가 아직 안 왔으면(캐시 삭제 직후 등) 잠깐 기다린다.
+       빈 임시 문서로 로그인하면 클라우드의 진짜 프로필(사진)을 덮어써 사라지기 때문. */
+    if(window.FB&&FB.enabled()&&!window._membersServerLoaded){showToast('서버에 연결 중이에요. 잠시 후 다시 시도해주세요');return;}
+    const anyAdmin=pendingList.some(u=>u.approved&&u.role==='teacher'&&u.isAdmin);
     if(appConfig.adminSeeded&&anyAdmin){showToast('탈퇴한 계정이에요. 관리자에게 문의해주세요');return;}
     ensureAdminMember();
     startSession(adminRec()||ADMIN);return;
@@ -2398,7 +2401,7 @@ renderPdComments(p);
 const canAdmin=G.role==='teacher'&&(G.type==='principal'||G.type==='admin'||G.isAdmin);show('pd-more',p.authorId===G.id||canAdmin);openModal('post-detail-modal');}
 function openImgFull(pid,idx){const p=posts.find(x=>x.id===pid);if(!p)return;const imgs=p.images?p.images.map(im=>typeof im==='object'?im.src:im):(p.image?[p.image]:[]);if(!imgs[idx])return;document.getElementById('img-full-src').src=imgs[idx];openModal('img-full-modal');}
 
-function onWriteTopChange(){const v=document.getElementById('write-top').value;show('write-mid-wrap',!!v&&v!=='all');const mid=document.getElementById('write-mid');if(v==='student')mid.innerHTML='<option value="">선택</option><option value="all-s">전체</option><option value="m1">중1</option><option value="m2">중2</option><option value="m3">중3</option><option value="h">고등</option>';else if(v==='parent')mid.innerHTML='<option value="">선택</option><option value="all-p">전체</option>';}
+function onWriteTopChange(){const v=document.getElementById('write-top').value;show('write-mid-wrap',v==='student'||v==='parent');const mid=document.getElementById('write-mid');if(v==='student')mid.innerHTML='<option value="">선택</option><option value="all-s">전체</option><option value="m1">중1</option><option value="m2">중2</option><option value="m3">중3</option><option value="h">고등</option>';else if(v==='parent')mid.innerHTML='<option value="">선택</option><option value="all-p">전체</option>';}
 /* ── 공지 예약발송 (scheduledPosts 컬렉션 · Worker가 정시 발행) ── */
 function _kstMs(date,time){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(date);var t=/^(\d{1,2}):(\d{2})/.exec(time);if(!m||!t)return NaN;return Date.UTC(+m[1],+m[2]-1,+m[3],+t[1],+t[2])-9*3600*1000;}
 function _endOfDayMs(dateStr){if(!dateStr)return 0;var t=new Date(dateStr+'T23:59:59');var ms=t.getTime();return isNaN(ms)?0:ms;}
@@ -3116,10 +3119,22 @@ function _minBlockHtml(b,editable,idx){
   return '<div class="mb'+(b.t==='todo'&&b.done?' done':'')+'" data-t="'+b.t+'" data-ind="'+ind+'"'+st+'>'+hd+mk
     +'<div class="mb-txt" data-ph="'+_esc(d.ph)+'">'+_mdInline(b.c)+'</div></div>';
 }
+/* 번호 목록 매기기: 같은 섹션 안에서는 사이에 글머리·문단이 끼어도 번호가 이어짐.
+   제목(h1~h3)·구분선(div)에서만 초기화. 들여쓰기 단계별로 따로 셈. */
+function _minNumberOf(blocks){
+  var counters={},out=[];
+  for(var i=0;i<blocks.length;i++){
+    var b=blocks[i],t=b.t,ind=parseInt(b.ind,10)||0;
+    if(t==='h1'||t==='h2'||t==='h3'||t==='div'){counters={};out.push(0);continue;}
+    if(t==='ol'){Object.keys(counters).forEach(function(k){if(+k>ind)delete counters[k];});counters[ind]=(counters[ind]||0)+1;out.push(counters[ind]);}
+    else out.push(0);
+  }
+  return out;
+}
 function _minRender(blocks,editable){
   var ed=document.getElementById('minutes-viewer-content');if(!ed)return;
-  var n=0;
-  ed.innerHTML=blocks.map(function(b){ if(b.t==='ol')n++;else n=0; return _minBlockHtml(b,editable,n); }).join('');
+  var nums=_minNumberOf(blocks);
+  ed.innerHTML=blocks.map(function(b,i){ return _minBlockHtml(b,editable,nums[i]); }).join('');
   ed.contentEditable=editable?'true':'false';
   ed.oncopy=onMinutesCopy;
   ed.onbeforeinput=editable?_minGuardBeforeInput:null;
@@ -3151,9 +3166,11 @@ function _minGuardBeforeInput(e){
   }catch(err){}
 }
 function _minRenumber(){
-  var ed=document.getElementById('minutes-viewer-content');if(!ed)return;var n=0;
+  var ed=document.getElementById('minutes-viewer-content');if(!ed)return;var counters={};
   Array.prototype.forEach.call(ed.querySelectorAll('.mb'),function(b){
-    if(b.dataset.t==='ol'){n++;var m=b.querySelector('.mb-mk');if(m)m.textContent=n+'.';}else n=0;
+    var t=b.dataset.t,ind=parseInt(b.dataset.ind,10)||0;
+    if(t==='h1'||t==='h2'||t==='h3'||t==='div'){counters={};return;}
+    if(t==='ol'){Object.keys(counters).forEach(function(k){if(+k>ind)delete counters[k];});counters[ind]=(counters[ind]||0)+1;var m=b.querySelector('.mb-mk');if(m)m.textContent=counters[ind]+'.';}
   });
 }
 function _minCaretEnd(el){ if(!el)return; el.focus(); try{var r=document.createRange();r.selectNodeContents(el);r.collapse(false);var sel=getSelection();sel.removeAllRanges();sel.addRange(r);}catch(e){} }
@@ -3826,12 +3843,17 @@ function ensureAdminMember(){
     /* 단, 지금 관리자 계정으로 로그인 중인데 문서가 없다면 복구한다.
        (문서가 없으면 직책이 매번 기본값으로 되돌아감) */
     var _loggedInAsAdmin=(typeof G!=='undefined'&&G&&G.id===ADMIN.id);
+    /* ⚠️ 서버에서 회원 데이터가 실제로 도착하기 전에는 (아바타·프로필이 빠진) 임시 문서를 만들지 않는다.
+       그렇지 않으면 캐시 삭제 후 로그인 시 빈 문서가 클라우드의 진짜 프로필(사진 등)을 덮어써 사라짐. */
+    if(window.FB&&FB.enabled()&&!window._membersServerLoaded&&!_loggedInAsAdmin)return;
     if(appConfig.adminSeeded&&!_loggedInAsAdmin)return;
     pendingList.push({
       id:ADMIN.id,pwh:ADMIN.pwh,name:ADMIN.name,baptism:ADMIN.baptism,phone:'',
       role:'teacher',teacherType:(typeof G!=='undefined'&&G.id===ADMIN.id&&G.type)||(appConfig.adminPos&&appConfig.adminPos.t)||ADMIN.teacherType||ADMIN.type||'etc',
       gradeLabel:(typeof G!=='undefined'&&G.id===ADMIN.id&&G.grade)||(appConfig.adminPos&&appConfig.adminPos.l)||ADMIN.gradeLabel||'기타',
       approved:true,isAdmin:true,hidden:false,dept:[],
+      avatar:(typeof G!=='undefined'&&G.id===ADMIN.id&&G.avatar)||ADMIN.avatar||'',
+      statusMsg:(typeof G!=='undefined'&&G.id===ADMIN.id&&G.statusMsg)||ADMIN.statusMsg||'',
       fcm:(appConfig.adminFcm||[]).slice(0,5),
       joinedAt:new Date().toISOString().slice(0,10)
     });
