@@ -434,25 +434,14 @@ function recalcAllPoints(){
 function checkLevelCoupons(u){}   /* 쿠폰 자동발급 폐지 — 포인트제로 전환 */
 /* ══════════ 포인트 상점 ══════════ */
 const SHOP_CATS=[['all','전체'],['food','간식·음료'],['goods','굿즈'],['life','문구·생활'],['event','이벤트']];
-const DEFAULT_SHOP_ITEMS=[
- {id:'si-drink',name:'음료 교환권',price:500,stock:20,cat:'food',sec:'rec',active:true},
- {id:'si-snack',name:'간식 교환권',price:300,stock:20,cat:'food',sec:'rec',active:true},
- {id:'si-note',name:'주일학교 노트',price:800,stock:15,cat:'life',sec:'rec',active:true},
- {id:'si-choco',name:'초코바 교환권',price:500,stock:12,cat:'food',sec:'hot',active:true},
- {id:'si-tumbler',name:'텀블러',price:2000,stock:8,cat:'goods',sec:'hot',active:true},
- {id:'si-eco',name:'에코백',price:2500,stock:5,cat:'goods',sec:'hot',active:true},
- {id:'si-movie',name:'영화 관람권 (추첨 응모)',price:200,stock:50,cat:'event',sec:'event',active:true},
- {id:'si-letter',name:'손편지 이벤트 (추첨 응모)',price:100,stock:50,cat:'event',sec:'event',active:true},
- {id:'si-retreat',name:'가을 피정 참가권',price:1000,stock:30,cat:'event',sec:'event',active:true}
-];
+/* 초기 예시 상품 없음 — 상점은 비어서 시작하고, 관리자가 추가한 상품만 표시·동기화됨 (자동 생성/초기화 안 함) */
+const DEFAULT_SHOP_ITEMS=[];
 var _shopCat='all';
-function _shopInited(){return !!(appConfig&&appConfig.shopSeeded);}
-function _shopMarkInited(){try{if(appConfig&&!appConfig.shopSeeded){appConfig.shopSeeded=true;if(window.flushCfg)window.flushCfg();}}catch(e){}}
-function _shopList(){if(_shopInited())return shopItems||[];return (shopItems&&shopItems.length)?shopItems:DEFAULT_SHOP_ITEMS;}
+function _shopInited(){return true;}
+function _shopMarkInited(){}
+function _shopList(){return shopItems||[];}
 function _shopIcon(cat){var m={food:'<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>',goods:'<path d="M20 7h-4V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2H4a1 1 0 0 0-1 1v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a1 1 0 0 0-1-1z"/><path d="M9 7h6"/>',life:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',event:'<rect x="3" y="8" width="18" height="13" rx="1"/><path d="M12 8v13"/><path d="M3 12h18"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8"/><path d="M16.5 8a2.5 2.5 0 0 0 0-5C13 3 12 8 12 8"/>'};return m[cat]||m.goods;}
-function _shopSeed(){if(_shopInited())return false;   /* 한 번 초기화된 뒤에는 예시 상품을 자동 생성하지 않음 (자유롭게 삭제·생성 가능) */
-  if(!(shopItems&&shopItems.length)){shopItems=DEFAULT_SHOP_ITEMS.map(function(x){return Object.assign({},x);});}
-  _shopMarkInited();try{if(typeof flushSync==='function')flushSync();}catch(e){}return true;}
+function _shopSeed(){return false;}   /* 예시 상품 자동 생성 제거 — 아무 것도 만들지 않음 */
 function openShop(){_shopCat='all';renderShop();openModal('shop-modal');}
 function shopSetCat(c){_shopCat=c;renderShop();}
 function _shopCard(it){
@@ -526,7 +515,7 @@ function restockItem(id){
   if(G.role!=='teacher'){showToast('교사만 재고를 관리할 수 있어요');return;}
   var it=(shopItems||[]).find(function(x){return x.id===id;});if(!it){if(!(shopItems&&shopItems.length)){_shopSeed();it=(shopItems||[]).find(function(x){return x.id===id;});}if(!it)return;}
   var v=prompt(it.name+' 재고를 몇 개 추가할까요?','10');if(v===null)return;var n=parseInt(v,10);if(!n||n<1){showToast('1 이상의 숫자를 입력해주세요');return;}
-  it.stock=(it.stock||0)+n;try{if(typeof flushSync==='function')flushSync();}catch(e){}try{renderShopAdmin();}catch(e){}try{renderShop();}catch(e){}showToast('재고 '+n+'개 추가 · 현재 '+it.stock+'개');
+  it.stock=(it.stock||0)+n;try{if(window.FB&&FB.enabled()&&FB.save)FB.save('shopItems',it.id,it);}catch(e){}try{if(typeof flushSync==='function')flushSync();}catch(e){}try{renderShopAdmin();}catch(e){}try{renderShop();}catch(e){}showToast('재고 '+n+'개 추가 · 현재 '+it.stock+'개');
 }
 /* ── 교사 상점 관리 ── */
 function _isShopAdmin(){return G.role==='teacher';}
@@ -571,10 +560,12 @@ function saveShopItem(){
   var img=(document.getElementById('sim-img-data')||{}).value||'';
   if(!name){showToast('상품명을 입력해주세요');return;}
   if(price<=0){showToast('가격을 입력해주세요');return;}
-  if(id){var it=shopItems.find(function(x){return x.id===id;});if(it){it.name=name;it.price=price;it.stock=stock;it.cat=cat;it.sec=sec;it.active=active;it.img=img;}}
-  else{shopItems.push({id:'si'+Date.now().toString(36),name:name,price:price,stock:stock,cat:cat,sec:sec,active:active,img:img});}
-  _shopMarkInited();try{if(typeof flushSync==='function')flushSync();}catch(e){}
-  closeModal('shop-item-modal');renderShopAdmin();showToast('저장했어요');
+  var _saved;
+  if(id){var it=shopItems.find(function(x){return x.id===id;});if(it){it.name=name;it.price=price;it.stock=stock;it.cat=cat;it.sec=sec;it.active=active;it.img=img;_saved=it;}}
+  else{_saved={id:'si'+Date.now().toString(36),name:name,price:price,stock:stock,cat:cat,sec:sec,active:active,img:img};shopItems.push(_saved);}
+  try{if(_saved&&window.FB&&FB.enabled()&&FB.save)FB.save('shopItems',_saved.id,_saved);}catch(e){}
+  try{if(typeof flushSync==='function')flushSync();}catch(e){}
+  closeModal('shop-item-modal');renderShopAdmin();showToast('저장했어요 · 모두에게 반영돼요');
 }
 function onShopImgPick(input){if(!input.files||!input.files[0])return;compressImg(input.files[0],500,0.7).then(function(src){var d=document.getElementById('sim-img-data');if(d)d.value=src||'';var pv=document.getElementById('sim-img-preview');if(pv)pv.innerHTML=src?'<img src="'+src+'" style="width:100%;height:100%;object-fit:cover">':'<span style="font-size:12px;color:var(--text-light)">＋ 사진 추가</span>';input.value='';});}
 function deleteShopItem(id){
