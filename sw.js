@@ -1,13 +1,13 @@
 /* 하늘의문 중고등부 PWA service worker
    버전을 올리면(예: hd-v2) 배포 시 기존 캐시가 자동 정리됩니다. */
-const CACHE = 'hd-v62';
+const CACHE = 'hd-v64';
 const SHELL = [
   './',
   './index.html',
-  './styles.css?v=20260922o',
+  './styles.css?v=20260922q',
   './assets.js',
-  './app.js?v=20260922o',
-  './app-sync.js?v=20260922o',
+  './app.js?v=20260922q',
+  './app-sync.js?v=20260922q',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',
@@ -20,6 +20,26 @@ self.addEventListener('install', function (e) {
     caches.open(CACHE)
       .then(function (c) { return c.addAll(SHELL); })
       .then(function () { return self.skipWaiting(); })
+  );
+});
+
+/* 알림 클릭 → 앱을 열고(또는 포커스) 해당 알림 페이지로 이동 */
+self.addEventListener('notificationclick', function (e) {
+  e.notification.close();
+  var data = (e.notification && e.notification.data) || {};
+  var nid = data.nid || '';
+  var openUrl = nid ? ('/?hdnid=' + encodeURIComponent(nid)) : '/?opennotif=1';
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (list) {
+      for (var i = 0; i < list.length; i++) {
+        var c = list[i];
+        if ('focus' in c) {
+          try { c.postMessage({ type: 'hd-notif-open', nid: nid }); } catch (_) {}
+          return c.focus();
+        }
+      }
+      if (clients.openWindow) return clients.openWindow(openUrl);
+    })
   );
 });
 

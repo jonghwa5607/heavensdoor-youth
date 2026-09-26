@@ -48,20 +48,30 @@ messaging.onBackgroundMessage(function (payload) {
       renotify: false,
       silent: silent,               // 무음이면 소리·진동 없음
       vibrate: silent ? [] : [200, 100, 200],
-      data: { url: d.url || '/' }
+      // 클릭 시 앱이 해당 페이지로 이동할 수 있도록 알림번호(nid)·이동주소를 함께 저장
+      data: { url: d.url || '/', nid: d.nid || '' }
     });
   });
 });
 
 self.addEventListener('notificationclick', function (e) {
   e.notification.close();
-  const url = (e.notification.data && e.notification.data.url) || '/';
+  var data = (e.notification && e.notification.data) || {};
+  var nid = data.nid || '';
+  // 앱을 열 주소: 알림번호가 있으면 ?hdnid= 로 넘겨 정확한 페이지로 이동, 없으면 최근 알림으로
+  var openUrl = nid ? ('/?hdnid=' + encodeURIComponent(nid)) : '/?opennotif=1';
   e.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (list) {
-      for (const c of list) {
-        if ('focus' in c) return c.focus();
+      for (var i = 0; i < list.length; i++) {
+        var c = list[i];
+        // 이미 앱이 열려 있으면: 그 창에 알림번호를 전달하고(→해당 페이지로 이동) 포커스
+        if ('focus' in c) {
+          try { c.postMessage({ type: 'hd-notif-open', nid: nid }); } catch (_) {}
+          return c.focus();
+        }
       }
-      if (clients.openWindow) return clients.openWindow(url);
+      // 열린 창이 없으면 새로 연다 (앱이 로드되며 ?hdnid= 를 읽어 이동)
+      if (clients.openWindow) return clients.openWindow(openUrl);
     })
   );
 });

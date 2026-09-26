@@ -6083,3 +6083,46 @@ try{openCouponIssueModal=function(){try{openPointGrant();}catch(e){}};}catch(e){
   document.addEventListener('mousemove',function(e){if(drag)move(e.clientY,e);});
   document.addEventListener('mouseup',function(e){if(drag)end(e.clientY);});
 })();
+
+/* ── 푸시 알림 클릭 → 해당 페이지로 이동 ──
+   서비스워커(sw.js / firebase-messaging-sw.js)가 알림번호(nid)를 넘겨주면
+   그 알림의 tap 정보대로 화면을 이동한다. 데이터가 늦게 도착할 수 있어 재시도로 감싼다. */
+var _pendingNotifNav=null;
+function _handleNotifOpen(nid){ _pendingNotifNav=(nid&&String(nid))||'__latest__'; _tryNotifNav(0); }
+function _tryNotifNav(attempt){
+  try{
+    if(_pendingNotifNav==null)return;
+    if(!(G&&G.id)){ if(attempt<40)return setTimeout(function(){_tryNotifNav(attempt+1);},300); _pendingNotifNav=null; return; }
+    var nid=_pendingNotifNav, n=null;
+    if(nid&&nid!=='__latest__'){
+      n=(notifications||[]).find(function(x){return x.id===nid;});
+      if(!n&&attempt<15)return setTimeout(function(){_tryNotifNav(attempt+1);},300);   /* 동기화 대기 */
+    }
+    if(!n){
+      /* nid를 못 찾으면 방금 온 알림(내게 보이는 것 중 최신, 안 읽은 것 우선)으로 이동 */
+      var mine=(notifications||[]).filter(function(x){return notifMatch(x)&&x.tap;}).sort(function(a,b){return _notifTs(b)-_notifTs(a);});
+      n=mine.filter(function(x){return !nRead(x);})[0]||mine[0]||null;
+      if(!n&&attempt<10)return setTimeout(function(){_tryNotifNav(attempt+1);},300);
+    }
+    _pendingNotifNav=null;
+    if(n&&n.tap){ try{notifTap(n.id);}catch(e){} }
+    else { try{ if(typeof openNotifModal==='function')openNotifModal(); }catch(e){} }
+  }catch(e){ _pendingNotifNav=null; }
+}
+(function(){
+  try{
+    /* 1) 이미 열린 앱: 서비스워커가 보낸 메시지 수신 */
+    if(navigator.serviceWorker&&navigator.serviceWorker.addEventListener){
+      navigator.serviceWorker.addEventListener('message',function(ev){
+        var m=(ev&&ev.data)||{}; if(m&&m.type==='hd-notif-open'){ _handleNotifOpen(m.nid||''); }
+      });
+    }
+    /* 2) 새로 열린 앱: URL 파라미터(?hdnid= / ?opennotif=1)를 읽어 이동 후 주소 정리 */
+    var qs=new URLSearchParams(location.search||'');
+    var hdnid=qs.get('hdnid'), openN=qs.get('opennotif');
+    if(hdnid||openN){
+      try{ qs.delete('hdnid'); qs.delete('opennotif'); var q=qs.toString(); history.replaceState(null,'',location.pathname+(q?('?'+q):'')+location.hash); }catch(e){}
+      setTimeout(function(){ _handleNotifOpen(hdnid||''); }, 800);
+    }
+  }catch(e){}
+})();
