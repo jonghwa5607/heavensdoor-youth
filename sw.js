@@ -1,18 +1,18 @@
 /* 하늘의문 중고등부 PWA service worker
    버전을 올리면(예: hd-v2) 배포 시 기존 캐시가 자동 정리됩니다. */
-const CACHE = 'hd-v64';
+const CACHE = 'hd-v66';
 const SHELL = [
   './',
   './index.html',
-  './styles.css?v=20260922q',
+  './styles.css?v=20260922s',
   './assets.js',
-  './app.js?v=20260922q',
-  './app-sync.js?v=20260922q',
+  './app.js?v=20260922s',
+  './app-sync.js?v=20260922s',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',
   './icon-maskable-512.png',
-  './apple-touch-icon.png'
+  './apple-touch-icon.png',
 ];
 
 self.addEventListener('install', function (e) {
