@@ -1670,7 +1670,7 @@ function renderBdayBanner(list){const section=document.getElementById('bday-bann
   /* 무한 루프: 슬라이드가 2개 이상이면 첫 카드를 끝에 복제 → 마지막에서 넘어가면 앞으로 이어져 자연스럽게 처음으로 */
   const html=cardHtml.slice();if(cards.length>1)html.push(cardHtml[0]);slides.innerHTML=html.join('');
   if(dots)dots.innerHTML=cards.map((_,i)=>`<div class="bday-dot${i===0?' active':''}" onclick="goBdaySlide(${i})" style="cursor:pointer;padding:4px"></div>`).join('');
-  section.style.display='block';bdaySlideIdx=0;bdayPos=0;bdaySlideTotal=cards.length;const sl=document.getElementById('bday-slides');sl.style.transition='none';sl.style.transform='translateX(0)';if(cards.length>1)initBdaySwipe(sl);_bdayAutoArm();}
+  section.style.display='block';bdaySlideTotal=cards.length;bdayPos=bdaySlideIdx=(cards.length>1?Math.floor(Math.random()*cards.length):0);const sl=document.getElementById('bday-slides');sl.style.transition='none';sl.style.transform=`translateX(-${bdayPos*100}%)`;void sl.offsetWidth;document.querySelectorAll('.bday-dot').forEach((d,x)=>d.classList.toggle('active',x===bdaySlideIdx));if(cards.length>1)initBdaySwipe(sl);_bdayAutoArm();}
 function _bdayAutoStop(){if(bdaySlideTimer){clearTimeout(bdaySlideTimer);bdaySlideTimer=null;}}
 function _bdayAutoArm(){_bdayAutoStop();if(bdaySlideTotal>1){bdaySlideTimer=setTimeout(_bdayNext,4000);}}
 function _bdayApply(anim){const sl=document.getElementById('bday-slides');if(!sl)return;sl.style.transition=anim?'transform .35s ease':'none';sl.style.transform=`translateX(-${bdayPos*100}%)`;if(!anim){void sl.offsetWidth;}document.querySelectorAll('.bday-dot').forEach((d,x)=>d.classList.toggle('active',x===bdaySlideIdx));}
