@@ -2720,14 +2720,17 @@ function openMinutesBackups(){var el=document.getElementById('min-bk-body');if(e
   }).catch(function(){if(el)el.innerHTML='<div class="empty" style="padding:24px"><div class="empty-title" style="font-size:13px">불러오지 못했어요</div></div>';});}
 function restoreCloudBackup(id){if(!(window.FB&&FB.enabled()&&FB.load)){showToast('클라우드 연결이 필요해요');return;}FB.load('minuteBackups').then(function(arr){var bk=(arr||[]).find(function(x){return x.id===id;});if(!bk||!bk.minutes){showToast('백업을 찾지 못했어요');return;}var n=_applyMinutesBackup(bk.minutes);showToast(n?('클라우드 백업에서 '+n+'건 복원했어요'):'복원할 내용이 없어요(이미 최신)');}).catch(function(){showToast('불러오기 실패');});}
 function ensureWeeklyMinutes(){
-  try{_hydrateYP();}catch(e){}
-  try{_backupMinutes();}catch(e){}try{_cloudBackupMinutes();}catch(e){}
-  var _dd=false;try{_dd=_dedupMinutes();}catch(e){}
   try{
     if(G.role!=='teacher')return false;
+    if(!_isLiveYear(minutesHubYear))return false;
+    /* v76: 3초마다 돌지 않고 "이번 주 1회"만 생성. 이번 주 이미 처리했으면 즉시 종료 */
+    var _wk=(typeof currentSaturday==='function')?currentSaturday():'';
+    if(_wk&&typeof appConfig!=='undefined'&&appConfig.minGenWeek===_wk)return false;
+    try{_hydrateYP();}catch(e){}
+    try{_backupMinutes();}catch(e){}try{_cloudBackupMinutes();}catch(e){}
+    var _dd=false;try{_dd=_dedupMinutes();}catch(e){}
     /* v64: 자동생성 회의록(id 'wm' 접두)의 작성자를 '자동생성됨'으로 정규화 (실제 편집자는 updatedBy에 보존됨) */
     try{var _mg=false;(resources||[]).forEach(function(r){if(r&&r.cat==='minutes'&&!r.deleted&&/^wm/.test(r.id||'')&&r.authorName!=='자동생성됨'){r.authorName='자동생성됨';r.authorId='';_mg=true;}});if(_mg){try{if(typeof flushSync==='function')flushSync();}catch(e){}}}catch(e){}
-    if(!_isLiveYear(minutesHubYear))return false;
     var yr=(typeof _curSchoolYr==='function')?_curSchoolYr():LIVE_YEAR;
     var st=(typeof _termStart==='function')?_termStart(yr):null;
     var en=(typeof _termEnd==='function')?_termEnd(yr):null;
@@ -2745,17 +2748,15 @@ function ensureWeeklyMinutes(){
       }
       if(isVacationDate(ds)&&!ag)return;        /* 방학 토요일 제외(단, 안건 있으면 회의록 생성) */
       var ex=(resources||[]).find(function(r){return r.cat==='minutes'&&!r.deleted&&r.mdate===ds;});
+      if(ex)return;   /* 이미 있는 주차는 절대 다시 건드리지 않음(미리 써둔 내용 보존) — 없는 주차만 새로 생성 */
       var d=ds.split('-');
       var title=(+d[1])+'월 '+(+d[2])+'일 회의록';
-      if(ex){
-        if(ex.title!==title){ex.title=title;made++;}
-        if((ex.agendaText||'')!==ag){ex.agendaText=ag;made++;}
-        return;
-      }
       resources.unshift({id:'wm'+ds,cat:'minutes',year:String(+d[0]),mdate:ds,
         title:title,content:'',agendaText:(ag||''),authorId:'',authorName:'자동생성됨',date:_minDateStr(),updatedAt:_minDateStr(),updatedBy:'자동생성됨'});
       made++;
     });
+    /* 이번 주 생성 완료 표시 → 다음 주까지 다시 돌지 않음(전체 공용, 동기화됨) */
+    if(_wk&&typeof appConfig!=='undefined'&&appConfig.minGenWeek!==_wk){appConfig.minGenWeek=_wk;try{if(window.flushCfg)window.flushCfg();}catch(e){}}
     if(made||_dd){try{if(typeof flushSync==='function')flushSync();}catch(e){}}
     return made>0;
   }catch(e){return false;}
