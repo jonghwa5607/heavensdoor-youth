@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="하늘의문 중고등부">
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(e){console.warn('SW register failed',e);});});}</script>
-<link rel="stylesheet" href="./styles.css?v=20260923f">
+<link rel="stylesheet" href="./styles.css?v=20260923g">
 <style>
 /* 회의록: 플레이스홀더는 커서가 있는 빈 줄에만 표시 */
 #minutes-viewer-content .mb-txt[data-ph]::before,#minutes-viewer-content .mb-txt[data-ph]:empty:focus::before{content:none!important;display:none!important}
@@ -679,24 +679,6 @@
         <button id="qr-reset-btn" style="display:none;background:none;border:none;color:var(--coral);font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;padding:12px 20px;margin-top:2px" onclick="resetQR()">⚠️ QR 초기화</button>
       </div>
     </div>
-    <div id="geo-manage-section" style="display:none;margin-top:18px">
-      <div style="font-size:13px;font-weight:800;margin-bottom:10px">📍 위치 기반 출석</div>
-      <div class="card" style="padding:16px">
-        <label style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;cursor:pointer">
-          <span style="font-size:13px;font-weight:700">성당 근처에서만 출석 허용</span>
-          <input type="checkbox" id="geo-enabled" onchange="saveGeoCfg()" style="width:20px;height:20px;flex-shrink:0">
-        </label>
-        <div id="geo-status" style="font-size:11.5px;color:var(--text-light);line-height:1.5;margin-bottom:12px;text-align:left">아직 성당 위치가 설정되지 않았어요</div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-          <span style="font-size:12px;color:var(--text-sub);white-space:nowrap">허용 반경</span>
-          <input type="number" id="geo-radius" min="30" max="2000" step="10" value="200" onchange="saveGeoCfg()" style="width:88px;padding:8px 10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;background:var(--surface);color:var(--text)">
-          <span style="font-size:12px;color:var(--text-sub)">m</span>
-        </div>
-        <button class="btn btn-primary btn-sm" style="width:100%;margin-bottom:8px" onclick="openGeoMap()">🗺️ 지도에서 위치 선택</button>
-        <button class="btn btn-outline btn-sm" style="width:100%" onclick="setGeoHere()">📍 지금 내 위치를 성당으로 설정</button>
-        <div style="font-size:10.5px;color:var(--text-light);margin-top:8px;line-height:1.5;text-align:left">※ 성당 안(또는 입구)에서 눌러주세요. 학생은 이 반경 안에 있어야 출석할 수 있어요. 실내 GPS 오차를 감안해 반경은 150~300m를 권장해요.</div>
-      </div>
-    </div>
     <button id="attend-check-toggle" class="btn btn-outline" style="width:100%;margin-top:16px" onclick="toggleAttendCheck()">✅ 이번 주 출석 체크하기</button>
     <div id="attend-check-wrap" style="display:none;margin-top:14px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -853,6 +835,24 @@
         <div class="form-group"><label class="form-label">📖 교리방학 내용</label><textarea class="form-input" id="cfg-vac-edu-body" rows="3" style="resize:none"></textarea></div>
         <div class="form-group"><label class="form-label">🏖️ 방학(미사없음) 제목</label><input class="form-input" type="text" id="cfg-vac-full-title"></div>
         <div class="form-group"><label class="form-label">🏖️ 방학(미사없음) 내용</label><textarea class="form-input" id="cfg-vac-full-body" rows="3" style="resize:none"></textarea></div>
+      </div>
+    </div>
+    <div class="cfg-sec" id="cfg-geo-sec">
+      <button class="cfg-sec-head" onclick="toggleCfgSec(this);try{loadGeoCfg()}catch(e){}"><span style="display:flex;align-items:center;gap:6px;min-width:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> 위치 기반 출석</span> <span class="cfg-sec-arrow">▾</span></button>
+      <div class="cfg-sec-body">
+        <label style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;cursor:pointer">
+          <span style="font-size:13px;font-weight:700">성당 근처에서만 출석 허용</span>
+          <input type="checkbox" id="geo-enabled" onchange="saveGeoCfg()" style="width:20px;height:20px;flex-shrink:0">
+        </label>
+        <div id="geo-status" style="font-size:11.5px;color:var(--text-light);line-height:1.5;margin-bottom:12px;text-align:left">아직 성당 위치가 설정되지 않았어요</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span style="font-size:12px;color:var(--text-sub);white-space:nowrap">허용 반경</span>
+          <input type="number" id="geo-radius" min="30" max="2000" step="10" value="200" onchange="saveGeoCfg()" style="width:88px;padding:8px 10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;background:var(--surface);color:var(--text)">
+          <span style="font-size:12px;color:var(--text-sub)">m</span>
+        </div>
+        <button class="btn btn-primary btn-sm" style="width:100%;margin-bottom:8px" onclick="openGeoMap()">🗺️ 지도에서 위치 선택</button>
+        <button class="btn btn-outline btn-sm" style="width:100%" onclick="setGeoHere()">📍 지금 내 위치를 성당으로 설정</button>
+        <div style="font-size:10.5px;color:var(--text-light);margin-top:8px;line-height:1.5;text-align:left">※ 한 번 설정하면 전체에 적용돼요. 지도에서 성당을 찾아 찍거나 성당에서 '내 위치'로 설정하세요. 실내 GPS 오차를 감안해 반경은 150~300m를 권장해요.</div>
       </div>
     </div>
     <div class="cfg-sec">
@@ -1467,7 +1467,7 @@
   <div class="modal-sheet sheet-full">
     <div class="pg-head">
       <button class="pg-back" onclick="closeMinutesViewer()">‹</button>
-      <span class="pg-title">회의록 <span style="font-size:9px;font-weight:600;color:#2D9E8F;opacity:.75;vertical-align:middle">v74</span></span>
+      <span class="pg-title">회의록 <span style="font-size:9px;font-weight:600;color:#2D9E8F;opacity:.75;vertical-align:middle">v75</span></span>
       <div class="pg-acts">
         <button class="btn btn-sm" id="minutes-publish-btn" style="display:none;background:var(--coral);color:#fff;width:auto;padding:6px 11px;font-size:12px" onclick="publishMinutes()">📣 발행</button>
         <button class="btn btn-sm" id="minutes-save-btn" style="display:none;background:var(--primary);color:white;width:auto;padding:6px 13px;font-size:12px" onclick="stopMinutesEdit()">완료</button>
@@ -2735,7 +2735,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="./assets.js"></script>
-<script src="./app.js?v=20260923f"></script>
+<script src="./app.js?v=20260923g"></script>
 
 <div id="theme-preview-bar" style="display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:88px;z-index:600;background:rgba(26,35,64,0.95);color:white;padding:10px 12px 10px 16px;border-radius:14px;box-shadow:var(--shadow-lg);align-items:center;gap:10px;max-width:410px;width:calc(100% - 32px);backdrop-filter:blur(4px)">
   <span id="theme-preview-label" style="font-size:13px;font-weight:700;flex:1">🎨 미리보기</span>
@@ -2759,7 +2759,7 @@
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-messaging-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-auth-compat.js"></script>
-<script src="./app-sync.js?v=20260923f"></script>
+<script src="./app-sync.js?v=20260923g"></script>
 
 </body>
 </html>
