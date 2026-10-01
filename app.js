@@ -2722,6 +2722,8 @@ function restoreCloudBackup(id){if(!(window.FB&&FB.enabled()&&FB.load)){showToas
 function ensureWeeklyMinutes(){
   try{
     if(G.role!=='teacher')return false;
+    /* v78: 클라우드 회의록이 서버에서 로딩되기 전엔 절대 생성/정리하지 않음(로딩 전 빈 껍데기로 기존 발행본을 덮어쓰는 사고 방지) */
+    if(window.FB&&FB.enabled&&FB.enabled()&&!window._resServerLoaded)return false;
     if(!_isLiveYear(minutesHubYear))return false;
     /* v76: 3초마다 돌지 않고 "이번 주 1회"만 생성. 이번 주 이미 처리했으면 즉시 종료 */
     var _wk=(typeof currentSaturday==='function')?currentSaturday():'';
@@ -2740,6 +2742,7 @@ function ensureWeeklyMinutes(){
     var made=0;
     var _lim=(typeof _dateStrOffset==='function')?_dateStrOffset(28):'9999-12-31';
     sats.forEach(function(ds){
+      if(_wk&&ds<_wk)return;   /* v78: 지난 주차는 자동생성/정리 대상 아님 — 이미 지난 회의록(발행본 포함)은 절대 건드리지 않음 */
       var ag=_agendaLine((litFor(ds)||{}).agenda);
       if(ds>_lim){ /* 4주 뒤 이후: 자동 생성 안 함 + 완전히 빈(미발행) 자동 회의록만 정리 */
         var exF=(resources||[]).find(function(r){return r.cat==='minutes'&&!r.deleted&&r.mdate===ds;});
