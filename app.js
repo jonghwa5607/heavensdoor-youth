@@ -677,9 +677,13 @@ function checkBirthdayPoints(){
   try{
     var now=new Date();var m=now.getMonth()+1,d=now.getDate(),yr=now.getFullYear();var amt=ptCfg().bday;
     pendingList.filter(function(u){return u.approved&&u.role==='student'&&!u.hidden&&!u.graduated&&+u.birthMonth===m&&+u.birthDay===d;}).forEach(function(u){
-      if(u.bdayPtYear===yr)return;u.bdayPtYear=yr;
+      if(u.bdayPtYear===yr)return;
+      /* v79: 연 1회 고정 ID + 이미 있으면 재지급·재알림 금지 (중복 푸시 원인 제거) */
+      var _bid='nt-bdaypt-'+u.id+'-'+yr;
+      if(notifications.some(function(x){return x&&x.id===_bid;})){u.bdayPtYear=yr;try{saveMemberNow(u);}catch(e){}return;}
+      u.bdayPtYear=yr;
       earnPoints(u,amt,'생일 축하 포인트',G.displayName||'시스템','bday');
-      try{notifications.unshift({pushed:false,id:'nt'+Date.now()+'bp'+u.id,text:'🎂 생일 축하해요! <b>생일 축하 포인트 +'+amt+'P</b>가 지급됐어요.',time:'방금',ts:Date.now(),readBy:[],forStudentId:u.id,tap:{type:'attend'}});}catch(e){}
+      notifications.unshift({pushed:false,id:_bid,text:'🎂 생일 축하해요! <b>생일 축하 포인트 +'+amt+'P</b>가 지급됐어요.',time:'방금',ts:Date.now(),readBy:[],forStudentId:u.id,tap:{type:'attend'}});
     });
     updateNotifDot();
   }catch(e){}
@@ -689,9 +693,13 @@ function checkFeastPoints(){
   try{
     var now=new Date();var m=now.getMonth()+1,d=now.getDate(),yr=now.getFullYear();var amt=ptCfg().feast;
     pendingList.filter(function(u){return u.approved&&u.role==='student'&&!u.hidden&&!u.graduated&&+u.feastMonth===m&&+u.feastDay===d;}).forEach(function(u){
-      if(u.feastPtYear===yr)return;u.feastPtYear=yr;
+      if(u.feastPtYear===yr)return;
+      /* v79: 연 1회 고정 ID + 이미 있으면 재지급·재알림 금지 (중복 푸시 원인 제거) */
+      var _fid='nt-feastpt-'+u.id+'-'+yr;
+      if(notifications.some(function(x){return x&&x.id===_fid;})){u.feastPtYear=yr;try{saveMemberNow(u);}catch(e){}return;}
+      u.feastPtYear=yr;
       earnPoints(u,amt,'축일 축하 포인트',G.displayName||'시스템','feast');
-      try{notifications.unshift({pushed:false,id:'nt'+Date.now()+'fp'+u.id,text:'✨ 축일 축하해요! <b>축일 축하 포인트 +'+amt+'P</b>가 지급됐어요.',time:'방금',ts:Date.now(),readBy:[],forStudentId:u.id,tap:{type:'attend'}});}catch(e){}
+      notifications.unshift({pushed:false,id:_fid,text:'✨ 축일 축하해요! <b>축일 축하 포인트 +'+amt+'P</b>가 지급됐어요.',time:'방금',ts:Date.now(),readBy:[],forStudentId:u.id,tap:{type:'attend'}});
     });
     updateNotifDot();
   }catch(e){}
