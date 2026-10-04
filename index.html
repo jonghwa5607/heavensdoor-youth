@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="하늘의문 중고등부">
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(e){console.warn('SW register failed',e);});});}</script>
-<link rel="stylesheet" href="./styles.css?v=20260923z">
+<link rel="stylesheet" href="./styles.css?v=20260924b">
 <style>
 /* 회의록: 플레이스홀더는 커서가 있는 빈 줄에만 표시 */
 #minutes-viewer-content .mb-txt[data-ph]::before,#minutes-viewer-content .mb-txt[data-ph]:empty:focus::before{content:none!important;display:none!important}
@@ -922,7 +922,6 @@
         <button class="btn btn-outline btn-sm" style="width:100%" onclick="startPreview('teacher')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C6FF0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 2v20" stroke="#7C6FF0"/><path d="M7 8h10" stroke="#EBA23B"/></svg> 교사</button>
       </div>
       <div style="font-size:10.5px;color:var(--text-light);margin-top:10px;line-height:1.5">미리보기는 실제 학생 데이터(포인트·프로필)에 영향을 주지 않아요.</div>
-      <button class="btn btn-outline btn-sm" style="width:100%;margin-top:9px;border-color:#E8A23B;color:#9a6a12" onclick="cleanupPreviewMission()">🧹 잘못 지급된 미션 포인트 정리 (1회용)</button>
     </div>
   </div>
 </div>
@@ -2532,7 +2531,31 @@
     <div class="form-group"><label class="form-label">마감일</label><input class="form-input" type="date" id="event-deadline"></div>
     <div class="form-group"><label class="form-label">내용</label><textarea class="form-input" id="event-content" rows="3" style="resize:none" placeholder="내용을 입력하세요"></textarea></div>
     <div class="form-group"><label class="form-label">유튜브 링크 (선택)</label><input class="form-input" type="text" id="event-youtube" placeholder="https://youtu.be/... 붙여넣으면 썸네일 자동"></div>
+    <div class="form-group" style="border-top:1px solid var(--border-light);padding-top:13px">
+      <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin:0">
+        <span style="display:flex;flex-direction:column"><span style="font-size:13.5px;font-weight:800">🎮 게임 첨부</span><span style="font-size:11px;color:var(--text-light);margin-top:2px">학생이 게임을 완료하면 포인트 지급</span></span>
+        <input type="checkbox" id="ev-game-on" onchange="toggleEvGame()" style="width:20px;height:20px;flex-shrink:0">
+      </label>
+      <div id="ev-game-body" style="display:none;margin-top:12px;border:1.5px dashed var(--mint);border-radius:12px;padding:12px;background:var(--bg)">
+        <label class="form-label">게임 종류</label>
+        <div style="display:flex;gap:7px;margin-bottom:11px">
+          <div id="ev-ty-quiz" onclick="setEvGameType('quiz')" style="flex:1;border:1.5px solid var(--primary);background:var(--primary-light);border-radius:11px;padding:10px 6px;text-align:center;cursor:pointer;font-size:12px;font-weight:800;color:var(--primary-dark)">❓ 퀴즈/OX</div>
+          <div style="flex:1;border:1.5px solid var(--border-light);border-radius:11px;padding:10px 6px;text-align:center;font-size:11.5px;font-weight:700;color:var(--text-light)">🔡 십자말<br><span style="font-size:9px">곧 추가</span></div>
+          <div style="flex:1;border:1.5px solid var(--border-light);border-radius:11px;padding:10px 6px;text-align:center;font-size:11.5px;font-weight:700;color:var(--text-light)">🖼️ 다른그림<br><span style="font-size:9px">곧 추가</span></div>
+        </div>
+        <div class="form-group" style="margin-bottom:8px"><label class="form-label">완료 포인트</label><input class="form-input" type="number" id="ev-game-points" value="30" min="1"></div>
+        <div id="ev-quiz-auth"></div>
+      </div>
+    </div>
     <button class="btn btn-primary" style="margin-top:10px" onclick="submitEventPost()" id="event-submit-btn">등록하기</button>
+  </div>
+</div>
+<!-- ══ 모달: 이벤트 게임 플레이 ══ -->
+<div class="modal-overlay" id="event-game-modal">
+  <div class="modal-sheet" style="max-height:88vh;overflow-y:auto">
+    <div class="modal-handle"></div>
+    <div class="modal-title-row"><span class="modal-title" id="evgame-title">게임</span><button class="modal-close" onclick="closeModal('event-game-modal')">✕</button></div>
+    <div id="evgame-body"></div>
   </div>
 </div>
 
@@ -2755,7 +2778,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="./assets.js"></script>
-<script src="./app.js?v=20260923z"></script>
+<script src="./app.js?v=20260924b"></script>
 
 <div id="theme-preview-bar" style="display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:88px;z-index:600;background:rgba(26,35,64,0.95);color:white;padding:10px 12px 10px 16px;border-radius:14px;box-shadow:var(--shadow-lg);align-items:center;gap:10px;max-width:410px;width:calc(100% - 32px);backdrop-filter:blur(4px)">
   <span id="theme-preview-label" style="font-size:13px;font-weight:700;flex:1">🎨 미리보기</span>
@@ -2779,7 +2802,7 @@
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-messaging-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-auth-compat.js"></script>
-<script src="./app-sync.js?v=20260923z"></script>
+<script src="./app-sync.js?v=20260924b"></script>
 
 </body>
 </html>
