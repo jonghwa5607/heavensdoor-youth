@@ -931,43 +931,89 @@ function renderAttendRank(){
   var mlabel=(new Date().getMonth()+1)+'월';
   var studs=(pendingList||[]).filter(function(u){return u&&u.approved&&u.role==='student'&&!u.hidden&&!u.graduated;});
   studs.forEach(function(u){u._mp=_monthEarned(u);});
-  studs.sort(function(a,b){return (b._mp||0)-(a._mp||0)||((a.name||'')>(b.name||'')?1:-1);});
+  /* 동점 표시순: 연속출석 → 누적출석 → 이름 (등수 숫자는 공동) */
+  studs.sort(function(a,b){return (b._mp||0)-(a._mp||0)||((b.streak||0)-(a.streak||0))||((b.attendTotal||0)-(a.attendTotal||0))||((a.name||'')>(b.name||'')?1:-1);});
+  /* 공동 순위(동점=같은 등수) 부여 */
+  (function(){var rk=0,seen=0,prev=null;studs.forEach(function(u){seen++;if(prev===null||u._mp!==prev){rk=seen;prev=u._mp;}u._rank=rk;});})();
+  var ranked=studs.filter(function(u){return (u._mp||0)>0;});
+  var tieCount=function(r){var n=0;ranked.forEach(function(u){if(u._rank===r)n++;});return n;};
+  var rankLabel=function(r){return (tieCount(r)>1?'공동 ':'')+r+'위';};
+  var medal=function(r){return r===1?'🥇':r===2?'🥈':r===3?'🥉':'🏅';};
+  var byRank=function(r){return ranked.filter(function(u){return u._rank===r;});};
   var head='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><div><div style="font-size:19px;font-weight:900;letter-spacing:-.3px">'+mlabel+' 포인트 순위</div></div><div onclick="openLevelGuide()" style="font-size:12px;font-weight:800;color:var(--primary-dark);background:var(--mint-light);border-radius:20px;padding:7px 12px;cursor:pointer">레벨 안내 ›</div></div>';
-  if(!studs.length){el.innerHTML=head+'<div class="empty" style="padding:32px"><div class="empty-emoji" style="font-size:32px">🏆</div><div class="empty-title" style="font-size:13px">순위 정보가 없어요</div></div>';return;}
-  var order=[1,0,2],rkl=['','1위','2위','3위'];
-  var top='<div style="display:flex;gap:9px;align-items:flex-end;justify-content:center;padding-top:6px;margin-bottom:14px">';
-  order.forEach(function(i){var u=studs[i];if(!u){top+='<div style="flex:1"></div>';return;}
-    var first=i===0;
-    var boxBg=first?'linear-gradient(165deg,#37B79A,#2A9179)':'var(--card)';
-    var boxBorder=first?'transparent':'var(--border-light)';
-    var boxSh=first?'0 8px 20px rgba(42,145,121,.28)':'0 2px 10px rgba(45,106,85,.06)';
-    var txtCol=first?'#fff':'var(--text)';
-    var ptCol=first?'#fff':'var(--primary-dark)';
-    var av=first?'👑':(i===1?'🥈':'🥉');
-    top+='<div style="flex:1;text-align:center">'
-      +'<div style="font-size:12px;font-weight:900;color:'+(first?'#E7A93B':'var(--text-light)')+';margin-bottom:5px">'+(i+1)+'위</div>'
-      +'<div style="background:'+boxBg+';border:1px solid '+boxBorder+';border-radius:16px;padding:'+(first?'18px 6px':'14px 6px')+';box-shadow:'+boxSh+';display:flex;flex-direction:column;align-items:center">'
-      +'<div style="width:'+(first?46:42)+'px;height:'+(first?46:42)+'px;border-radius:50%;background:'+(first?'rgba(255,255,255,.9)':'var(--mint-light)')+';display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:8px">'+av+'</div>'
+  /* 본인(학생)이 누구인지 먼저 파악 */
+  var mine=-1;for(var k=0;k<studs.length;k++){if(studs[k].id===G.id){mine=k;break;}}
+  var meObj=(mine>=0?studs[mine]:null);
+  var personalize=(G.role!=='teacher'&&meObj&&(meObj._mp||0)>0&&meObj._rank<=3);
+  /* 단상 슬롯 구성: 좌 / 중앙(1등 자리) / 우 */
+  var slots={left:null,center:null,right:null};
+  if(personalize){
+    var R=meObj._rank,used={};
+    var mark=function(u){if(u)used[u.id]=1;return u;};
+    var nextFill=function(){for(var i=0;i<ranked.length;i++){if(!used[ranked[i].id])return ranked[i];}return null;};
+    if(R===1){
+      slots.center=mark(meObj);
+      var sib1=byRank(1).filter(function(u){return u.id!==meObj.id;});
+      slots.left=mark(sib1[0]||nextFill());
+      slots.right=mark(sib1[1]||nextFill());
+    }else if(R===2){
+      slots.center=mark(ranked[0]);
+      slots.left=mark(meObj);
+      var sib2=byRank(2).filter(function(u){return !used[u.id];});
+      slots.right=mark(sib2[0]||nextFill());
+    }else{
+      slots.center=mark(ranked[0]);
+      var sib3=byRank(2).filter(function(u){return !used[u.id];});
+      slots.left=mark(sib3[0]||nextFill());
+      slots.right=mark(meObj);
+    }
+  }else{
+    slots.center=ranked[0]||null;slots.left=ranked[1]||null;slots.right=ranked[2]||null;
+  }
+  var meId=(personalize?meObj.id:null);
+  var _pSlot=function(u,isCenter){
+    if(!u)return '<div style="flex:1"></div>';
+    var isMe=(u.id===meId);
+    var boxBg=isCenter?'linear-gradient(165deg,#37B79A,#2A9179)':'var(--card)';
+    var boxBorder=isCenter?'transparent':'var(--border-light)';
+    var boxSh=isCenter?'0 8px 20px rgba(42,145,121,.28)':'0 2px 10px rgba(45,106,85,.06)';
+    var txtCol=isCenter?'#fff':'var(--text)';
+    var ptCol=isCenter?'#fff':'var(--primary-dark)';
+    var rkCol=isCenter?'#E7A93B':'var(--text-light)';
+    var meCss=isMe?';outline:3px solid #FFC94D;outline-offset:2px':'';
+    var badge=isMe?'<div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:#FFC94D;color:#5a4200;font-size:10px;font-weight:900;padding:2px 9px;border-radius:20px;white-space:nowrap;box-shadow:0 2px 5px rgba(0,0,0,.12)">⭐ 나</div>':'';
+    return '<div style="flex:1;text-align:center">'
+      +'<div style="font-size:12px;font-weight:900;color:'+rkCol+';margin-bottom:5px">'+rankLabel(u._rank)+'</div>'
+      +'<div style="position:relative;background:'+boxBg+';border:1px solid '+boxBorder+';border-radius:16px;padding:'+(isCenter?'18px 6px':'14px 6px')+';box-shadow:'+boxSh+';display:flex;flex-direction:column;align-items:center'+meCss+'">'+badge
+      +'<div style="width:'+(isCenter?46:42)+'px;height:'+(isCenter?46:42)+'px;border-radius:50%;background:'+(isCenter?'rgba(255,255,255,.9)':'var(--mint-light)')+';display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:8px">'+medal(u._rank)+'</div>'
       +'<div style="font-size:12.5px;font-weight:800;line-height:1.2;word-break:keep-all;color:'+txtCol+'">'+_esc(u.name||'')+'</div>'
       +'<div style="font-size:15px;font-weight:900;margin-top:4px;color:'+ptCol+'">'+(u._mp||0).toLocaleString()+'P</div>'
       +'</div></div>';
-  });
-  top+='</div>';
+  };
+  var top;
+  if(!ranked.length){
+    top='<div style="text-align:center;padding:30px 10px 26px"><div style="font-size:34px;margin-bottom:8px">🏅</div><div style="font-size:13px;font-weight:800;color:var(--text-sub)">아직 '+mlabel+' 포인트가 없어요</div><div style="font-size:11.5px;color:var(--text-light);margin-top:4px">출석하고 포인트를 모아보세요</div></div>';
+  }else{
+    top='<div style="display:flex;gap:9px;align-items:flex-end;justify-content:center;padding-top:16px;margin-bottom:14px">'
+      +_pSlot(slots.left,false)+_pSlot(slots.center,true)+_pSlot(slots.right,false)
+      +'</div>';
+  }
   var body='';
   if(G.role==='teacher'){
-    body='<div style="font-size:11px;color:var(--text-light);margin:2px 2px 6px">전체 순위 (교사 전용)</div>'+studs.map(function(u,i){return '<div class="student-row"><div class="student-avatar" style="background:'+(i<3?'var(--mint)':'var(--border-light)')+';color:'+(i<3?'#fff':'var(--text-light)')+';font-size:13px;font-weight:800">'+(i+1)+'</div><div class="student-info"><div class="student-name">'+_esc(u.name||'')+' '+_esc(u.baptism||'')+'</div><div class="student-detail">'+_esc(u.gradeLabel||'')+' · '+mlabel+' '+(u._mp||0).toLocaleString()+'P</div></div></div>';}).join('');
+    body='<div style="font-size:11px;color:var(--text-light);margin:2px 2px 6px">전체 순위 (교사 전용)</div>'+studs.map(function(u){var inR=(u._mp||0)>0,r=u._rank;return '<div class="student-row"><div class="student-avatar" style="background:'+(inR&&r<=3?'var(--mint)':'var(--border-light)')+';color:'+(inR&&r<=3?'#fff':'var(--text-light)')+';font-size:13px;font-weight:800">'+(inR?r:'–')+'</div><div class="student-info"><div class="student-name">'+_esc(u.name||'')+' '+_esc(u.baptism||'')+'</div><div class="student-detail">'+(inR?rankLabel(r):'순위 외')+' · '+_esc(u.gradeLabel||'')+' · '+mlabel+' '+(u._mp||0).toLocaleString()+'P</div></div></div>';}).join('');
     el.innerHTML=head+top+body;return;
   }
-  var mine=-1;for(var k=0;k<studs.length;k++){if(studs[k].id===G.id){mine=k;break;}}
   if(mine<0){el.innerHTML=head+top+'<div class="empty" style="padding:24px"><div class="empty-title" style="font-size:13px">아직 순위에 없어요</div></div>';return;}
-  var myMp=(studs[mine]._mp)||0;
+  var myMp=(meObj._mp)||0;
+  var meR=meObj._rank,meInR=myMp>0,meTie=meInR&&tieCount(meR)>1;
+  var meBig=meInR?((meTie?'공동 ':'')+meR):'–';
   // 나의 순위 (그라데이션 카드)
   body+='<div style="background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:18px;padding:16px 18px;color:#fff;box-shadow:0 8px 22px rgba(31,122,100,.28)">'
     +'<div style="font-size:12px;font-weight:700;opacity:.85">나의 '+mlabel+' 순위</div>'
     +'<div style="display:flex;align-items:center;gap:14px;margin-top:8px">'
-    +'<div><div style="font-size:38px;font-weight:900;line-height:1">'+(mine+1)+'<span style="font-size:16px;font-weight:800;margin-left:2px">위</span></div>'
+    +'<div><div style="font-size:'+(meTie?'28':'38')+'px;font-weight:900;line-height:1">'+meBig+(meInR?'<span style="font-size:16px;font-weight:800;margin-left:2px">위</span>':'')+'</div>'
     +'<div style="font-size:12px;font-weight:600;opacity:.9;margin-top:4px">전체 '+studs.length+'명 중 · '+mlabel+' '+myMp.toLocaleString()+'P 획득</div></div>'
-    +'<div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;margin-left:auto">'+(mine===0?'👑':'🙂')+'</div>'
+    +'<div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;margin-left:auto">'+(meInR&&meR===1?'🥇':'🙂')+'</div>'
     +'</div></div>';
   // 타일 4개
   var mAtt=monthAttendCount(G),mTgt=_monthSats().length||4;
