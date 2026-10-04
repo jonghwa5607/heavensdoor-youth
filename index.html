@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="하늘의문 중고등부">
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(e){console.warn('SW register failed',e);});});}</script>
-<link rel="stylesheet" href="./styles.css?v=20260924b">
+<link rel="stylesheet" href="./styles.css?v=20260924d">
 <style>
 /* 회의록: 플레이스홀더는 커서가 있는 빈 줄에만 표시 */
 #minutes-viewer-content .mb-txt[data-ph]::before,#minutes-viewer-content .mb-txt[data-ph]:empty:focus::before{content:none!important;display:none!important}
@@ -2538,13 +2538,9 @@
       </label>
       <div id="ev-game-body" style="display:none;margin-top:12px;border:1.5px dashed var(--mint);border-radius:12px;padding:12px;background:var(--bg)">
         <label class="form-label">게임 종류</label>
-        <div style="display:flex;gap:7px;margin-bottom:11px">
-          <div id="ev-ty-quiz" onclick="setEvGameType('quiz')" style="flex:1;border:1.5px solid var(--primary);background:var(--primary-light);border-radius:11px;padding:10px 6px;text-align:center;cursor:pointer;font-size:12px;font-weight:800;color:var(--primary-dark)">❓ 퀴즈/OX</div>
-          <div style="flex:1;border:1.5px solid var(--border-light);border-radius:11px;padding:10px 6px;text-align:center;font-size:11.5px;font-weight:700;color:var(--text-light)">🔡 십자말<br><span style="font-size:9px">곧 추가</span></div>
-          <div style="flex:1;border:1.5px solid var(--border-light);border-radius:11px;padding:10px 6px;text-align:center;font-size:11.5px;font-weight:700;color:var(--text-light)">🖼️ 다른그림<br><span style="font-size:9px">곧 추가</span></div>
-        </div>
+        <div id="ev-game-types" style="display:flex;gap:7px;margin-bottom:11px"></div>
         <div class="form-group" style="margin-bottom:8px"><label class="form-label">완료 포인트</label><input class="form-input" type="number" id="ev-game-points" value="30" min="1"></div>
-        <div id="ev-quiz-auth"></div>
+        <div id="ev-game-auth"></div>
       </div>
     </div>
     <button class="btn btn-primary" style="margin-top:10px" onclick="submitEventPost()" id="event-submit-btn">등록하기</button>
@@ -2778,7 +2774,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="./assets.js"></script>
-<script src="./app.js?v=20260924b"></script>
+<script src="./app.js?v=20260924d"></script>
 
 <div id="theme-preview-bar" style="display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:88px;z-index:600;background:rgba(26,35,64,0.95);color:white;padding:10px 12px 10px 16px;border-radius:14px;box-shadow:var(--shadow-lg);align-items:center;gap:10px;max-width:410px;width:calc(100% - 32px);backdrop-filter:blur(4px)">
   <span id="theme-preview-label" style="font-size:13px;font-weight:700;flex:1">🎨 미리보기</span>
@@ -2802,7 +2798,7 @@
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-messaging-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-auth-compat.js"></script>
-<script src="./app-sync.js?v=20260924b"></script>
+<script src="./app-sync.js?v=20260924d"></script>
 
 </body>
 </html>

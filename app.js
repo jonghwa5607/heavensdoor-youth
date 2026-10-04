@@ -1840,19 +1840,24 @@ function submitEventPost(){const modal=document.getElementById('event-write-moda
     if(ev){ev.title=title;ev.deadline=deadline;ev.image=img||'';ev.youtube=yt;ev.game=_g||null;}delete modal.dataset.editId;document.getElementById('event-modal-title').textContent='🎉 이벤트 게시';document.getElementById('event-submit-btn').textContent='등록하기';showToast('이벤트가 수정되었습니다');}else{const now=new Date();const date=now.getFullYear()+'.'+(now.getMonth()+1).toString().padStart(2,'0')+'.'+now.getDate().toString().padStart(2,'0');const evId='ev'+Date.now();posts.unshift({id:'p'+Date.now(),ts:Date.now(),pushed:false,title,content,cat:'event',target:'all',grade:'all',deadline,date,authorId:G.id,authorName:G.displayName,comments:[],edited:false,image:img,youtube:yt,eventId:evId});if(img)posts[0].images=[{src:img}];eventsData.unshift({id:evId,title,image:img,youtube:yt,deadline,target:'student',game:_g||null});showToast('이벤트가 등록되었습니다!');}closeModal('event-write-modal');document.getElementById('event-title').value='';document.getElementById('event-content').value='';document.getElementById('event-deadline').value='';var _yi=document.getElementById('event-youtube');if(_yi)_yi.value='';resetAttachBuf('event');document.getElementById('event-img-input').value='';if(G.role==='teacher')selTeacherCat('event',document.querySelector('#board-teacher-top .tab-btn.active')||document.querySelector('#board-teacher-top .tab-btn'));renderEventBanner();}
 function getDday(deadline){const diff=Math.ceil((new Date(deadline)-new Date())/(1000*60*60*24));return diff>=0?diff:null;}
 /* ===== 이벤트 게임 (Phase 1: 퀴즈) ===== */
-var _evGameDraft={on:false,type:'quiz',points:30,questions:[]};
+var _evGameDraft={on:false,type:'quiz',points:30,questions:[],words:[],spot:{src1:'',src2:'',id1:'',id2:'',dirty1:false,dirty2:false,diffs:[]}};
 var _evPlay=null;
+var _EV_TYPES=[['quiz','❓ 퀴즈/OX',true],['cross','🔡 십자말',true],['spot','🖼️ 다른그림',true]];
 function resetEvGame(game){
-  _evGameDraft={on:!!(game&&game.type),type:(game&&game.type)||'quiz',points:(game&&game.points)||30,questions:(game&&game.data&&game.data.questions)?JSON.parse(JSON.stringify(game.data.questions)):[]};
+  var _s1=(game&&game.data&&game.data.img1)||'',_s2=(game&&game.data&&game.data.img2)||'';
+  _evGameDraft={on:!!(game&&game.type),type:(game&&game.type)||'quiz',points:(game&&game.points)||30,questions:(game&&game.data&&game.data.questions)?JSON.parse(JSON.stringify(game.data.questions)):[],words:(game&&game.data&&game.data.words)?JSON.parse(JSON.stringify(game.data.words)):[],spot:{src1:'',src2:'',id1:_s1,id2:_s2,dirty1:false,dirty2:false,diffs:(game&&game.data&&game.data.diffs)?JSON.parse(JSON.stringify(game.data.diffs)):[]}};
+  if(_s1||_s2)_evPreloadSpot();
   var chk=document.getElementById('ev-game-on');if(chk)chk.checked=_evGameDraft.on;
   var body=document.getElementById('ev-game-body');if(body)body.style.display=_evGameDraft.on?'block':'none';
   var pt=document.getElementById('ev-game-points');if(pt)pt.value=_evGameDraft.points;
-  try{renderEvQuizList();}catch(e){}
+  try{renderEvGameTypes();renderEvGameAuth();}catch(e){}
 }
-function toggleEvGame(){var chk=document.getElementById('ev-game-on');_evGameDraft.on=!!(chk&&chk.checked);var body=document.getElementById('ev-game-body');if(body)body.style.display=_evGameDraft.on?'block':'none';if(_evGameDraft.on)renderEvQuizList();}
-function setEvGameType(t){_evGameDraft.type=t;}
+function toggleEvGame(){var chk=document.getElementById('ev-game-on');_evGameDraft.on=!!(chk&&chk.checked);var body=document.getElementById('ev-game-body');if(body)body.style.display=_evGameDraft.on?'block':'none';if(_evGameDraft.on){renderEvGameTypes();renderEvGameAuth();}}
+function renderEvGameTypes(){var el=document.getElementById('ev-game-types');if(!el)return;el.innerHTML=_EV_TYPES.map(function(t){var on=_evGameDraft.type===t[0];var ready=t[2];return '<div onclick="'+(ready?"setEvGameType('"+t[0]+"')":'')+'" style="flex:1;border:1.5px solid '+(on?'var(--primary)':'var(--border-light)')+';background:'+(on?'var(--primary-light)':'transparent')+';border-radius:11px;padding:10px 5px;text-align:center;cursor:'+(ready?'pointer':'default')+';font-size:11.5px;font-weight:'+(on?'800':'700')+';color:'+(on?'var(--primary-dark)':(ready?'var(--text-sub)':'var(--text-light)'))+'">'+t[1]+(ready?'':'<br><span style="font-size:9px">곧 추가</span>')+'</div>';}).join('');}
+function renderEvGameAuth(){if(_evGameDraft.type==='cross')renderEvCrossList();else if(_evGameDraft.type==='spot')renderEvSpotList();else renderEvQuizList();}
+function setEvGameType(t){_evGameDraft.type=t;renderEvGameTypes();renderEvGameAuth();}
 function renderEvQuizList(){
-  var el=document.getElementById('ev-quiz-auth');if(!el)return;
+  var el=document.getElementById('ev-game-auth');if(!el)return;
   var h='<label class="form-label">문제 ('+_evGameDraft.questions.length+'개)</label>';
   _evGameDraft.questions.forEach(function(q,i){h+='<div style="background:var(--card);border:1px solid var(--border-light);border-radius:10px;padding:9px 11px;margin-bottom:7px;font-size:12px"><b style="font-weight:800">Q'+(i+1)+'. '+_esc(q.q)+'</b>'+q.opts.map(function(o,j){return '<div style="font-size:11.5px;margin-top:3px;color:'+(j===q.ans?'var(--primary-dark)':'var(--text-sub)')+';font-weight:'+(j===q.ans?'800':'400')+'">'+(j===q.ans?'● 정답 ':'○ ')+_esc(o)+'</div>';}).join('')+'<button onclick="evDelQuestion('+i+')" style="background:none;border:none;color:var(--coral);font-size:11px;cursor:pointer;margin-top:4px;padding:0">삭제</button></div>';});
   h+='<div style="background:var(--card);border:1px solid var(--border-light);border-radius:10px;padding:10px"><input class="form-input" id="evq-q" placeholder="문제" style="margin-bottom:6px"><div style="display:flex;gap:6px;margin-bottom:6px"><input class="form-input" id="evq-o0" placeholder="보기① (정답)"><input class="form-input" id="evq-o1" placeholder="보기②"></div><div style="display:flex;gap:6px;margin-bottom:7px"><input class="form-input" id="evq-o2" placeholder="보기③"><input class="form-input" id="evq-o3" placeholder="보기④"></div><div style="font-size:10.5px;color:var(--text-light);margin-bottom:7px">첫 번째 보기가 정답으로 저장돼요</div><button class="btn btn-outline btn-sm" style="width:100%" onclick="evAddQuestion()">+ 문제 추가</button></div>';
@@ -1860,15 +1865,74 @@ function renderEvQuizList(){
 }
 function evAddQuestion(){var q=(document.getElementById('evq-q').value||'').trim();var opts=[0,1,2,3].map(function(i){return (document.getElementById('evq-o'+i).value||'').trim();}).filter(Boolean);if(!q||opts.length<2){showToast('문제와 보기 2개 이상을 입력하세요');return;}_evGameDraft.questions.push({q:q,opts:opts,ans:0});renderEvQuizList();showToast('문제를 추가했어요');}
 function evDelQuestion(i){_evGameDraft.questions.splice(i,1);renderEvQuizList();}
-function _evReadGame(){if(!_evGameDraft.on)return null;var pt=document.getElementById('ev-game-points');var points=pt?(parseInt(pt.value,10)||0):30;if(points<1)points=1;if(_evGameDraft.type==='quiz'){if(!_evGameDraft.questions.length)return {error:'게임 문제를 1개 이상 추가하세요'};return {type:'quiz',points:points,data:{questions:_evGameDraft.questions}};}return null;}
+/* 십자말 작성 */
+function renderEvCrossList(){
+  var el=document.getElementById('ev-game-auth');if(!el)return;
+  var h='<label class="form-label">단어 + 힌트 ('+_evGameDraft.words.length+'개)</label>';
+  _evGameDraft.words.forEach(function(w,i){h+='<div style="background:var(--card);border:1px solid var(--border-light);border-radius:10px;padding:9px 11px;margin-bottom:7px;font-size:12px"><b style="font-weight:800">'+_esc(w.word)+'</b> <span style="color:var(--text-sub)">— '+_esc(w.clue)+'</span> <button onclick="evDelWord('+i+')" style="background:none;border:none;color:var(--coral);font-size:11px;cursor:pointer;float:right">삭제</button></div>';});
+  if(_evGameDraft.words.length>=2){try{h+='<div style="background:var(--card);border:1px solid var(--border-light);border-radius:10px;padding:10px;text-align:center;margin-bottom:7px"><div style="font-size:10.5px;color:var(--text-light);margin-bottom:6px">격자 자동 배치 미리보기</div>'+_evRenderCW(_evBuildCW(_evGameDraft.words),false)+'</div>';}catch(e){}}
+  h+='<div style="background:var(--card);border:1px solid var(--border-light);border-radius:10px;padding:10px"><div style="display:flex;gap:6px;margin-bottom:7px"><input class="form-input" id="evw-w" placeholder="단어 (예: 성경)" style="padding:10px 12px"><input class="form-input" id="evw-c" placeholder="힌트" style="padding:10px 12px"></div><div style="font-size:10.5px;color:var(--text-light);margin-bottom:7px">공통 글자를 찾아 격자에 자동으로 엮어요</div><button class="btn btn-outline btn-sm" style="width:100%" onclick="evAddWord()">+ 단어 추가</button></div>';
+  el.innerHTML=h;
+}
+function evAddWord(){var w=(document.getElementById('evw-w').value||'').trim();var c=(document.getElementById('evw-c').value||'').trim();if(w.length<2||!c){showToast('두 글자 이상 단어와 힌트를 입력하세요');return;}_evGameDraft.words.push({word:w,clue:c});renderEvCrossList();showToast('단어를 추가했어요');}
+function evDelWord(i){_evGameDraft.words.splice(i,1);renderEvCrossList();}
+/* 다른그림찾기 작성 */
+function _evSaveImg(b64){var nid='img'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);try{IMGC[nid]=b64;}catch(e){}try{if(window.FB&&FB.enabled())FB.save('images',nid,{id:nid,d:b64});}catch(e){}return nid;}
+function _evDelImg(id){if(!id)return;try{if(window.FB&&FB.enabled())FB.remove('images',id);}catch(e){}try{delete IMGC[id];}catch(e){}}
+function _evPreloadSpot(){var sp=_evGameDraft&&_evGameDraft.spot;if(!sp)return;if(sp.id1)imgGet(sp.id1);if(sp.id2)imgGet(sp.id2);}
+function _evWaitImgs(ids,cb){var tries=0;(function poll(){tries++;ids.forEach(function(id){if(IMGC[id]===undefined)imgGet(id);});var ok=ids.every(function(id){var v=IMGC[id];return v!==undefined&&v!==''&&v!==IMG_BLANK;});if(ok||tries>30){cb();return;}setTimeout(poll,200);})();}
+function _evSpotSrc(n){var sp=_evGameDraft.spot;if(n===1)return sp.dirty1?sp.src1:(sp.id1?imgGet(sp.id1):'');return sp.dirty2?sp.src2:(sp.id2?imgGet(sp.id2):'');}
+function renderEvSpotList(){
+  var el=document.getElementById('ev-game-auth');if(!el)return;
+  var sp=_evGameDraft.spot,s1=_evSpotSrc(1),s2=_evSpotSrc(2);
+  var h='<label class="form-label">사진 2장</label>';
+  h+='<div style="display:flex;gap:8px;margin-bottom:10px">';
+  [1,2].forEach(function(n){var src=n===1?s1:s2;var has=src&&src!==IMG_BLANK;h+='<div style="flex:1"><div style="font-size:11px;font-weight:700;color:var(--text-sub);margin-bottom:4px">사진 '+n+(n===2?' (틀린 곳 표시)':'')+'</div><label style="display:block;position:relative;border:1.5px dashed var(--border);border-radius:11px;overflow:hidden;cursor:pointer;background:var(--bg);aspect-ratio:1">'+(has?'<img src="'+src+'" style="width:100%;height:100%;object-fit:cover;display:block">':'<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11.5px;color:var(--text-light)">＋ 사진</span>')+'<input type="file" accept="image/*" onchange="onEvSpotPick(this,'+n+')" style="display:none"></label></div>';});
+  h+='</div>';
+  var ok1=s1&&s1!==IMG_BLANK,ok2=s2&&s2!==IMG_BLANK;
+  if(ok1&&ok2){
+    h+='<div style="font-size:11px;color:var(--text-light);margin-bottom:6px">아래 <b>사진 2</b>에서 틀린 곳을 탭해 표시하세요 (현재 '+sp.diffs.length+'곳)</div>';
+    h+='<div id="ev-spot-auth-wrap" style="position:relative;border:1px solid var(--border-light);border-radius:11px;overflow:hidden;max-width:300px;margin:0 auto 8px" onclick="onEvSpotTapAuth(event,this)"><img src="'+s2+'" style="width:100%;display:block;pointer-events:none">';
+    sp.diffs.forEach(function(d,i){h+='<div style="position:absolute;left:'+(d.x*100)+'%;top:'+(d.y*100)+'%;width:26px;height:26px;margin:-13px 0 0 -13px;border:2.5px solid var(--coral);border-radius:50%;background:rgba(239,100,97,.18);box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:var(--coral);pointer-events:none">'+(i+1)+'</div>';});
+    h+='</div>';
+    if(sp.diffs.length)h+='<button class="btn btn-outline btn-sm" style="width:100%" onclick="evSpotClearDiffs()">표시 모두 지우기</button>';
+    h+='<div style="font-size:10.5px;color:var(--text-light);margin-top:6px">표시된 곳을 다시 탭하면 지워져요</div>';
+  }
+  el.innerHTML=h;
+}
+function onEvSpotPick(input,n){if(!input.files||!input.files[0])return;compressImg(input.files[0],1000,0.72).then(function(src){if(!src){showToast('이미지를 불러오지 못했어요');return;}var sp=_evGameDraft.spot;if(n===1){sp.src1=src;sp.dirty1=true;}else{sp.src2=src;sp.dirty2=true;}renderEvSpotList();});input.value='';}
+function onEvSpotTapAuth(ev,node){var r=node.getBoundingClientRect();if(!r.width||!r.height)return;var x=(ev.clientX-r.left)/r.width,y=(ev.clientY-r.top)/r.height;if(x<0||x>1||y<0||y>1)return;var sp=_evGameDraft.spot;for(var i=0;i<sp.diffs.length;i++){var d=sp.diffs[i];if(Math.abs(d.x-x)<0.045&&Math.abs(d.y-y)<0.045){sp.diffs.splice(i,1);renderEvSpotList();return;}}sp.diffs.push({x:Math.round(x*1000)/1000,y:Math.round(y*1000)/1000});renderEvSpotList();}
+function evSpotClearDiffs(){_evGameDraft.spot.diffs=[];renderEvSpotList();}
+/* 십자말 격자 생성 (공통 글자 교차) */
+function _evBuildCW(words){var grid={},placed=[];
+  function place(w,r,c,dir){for(var i=0;i<w.length;i++){var rr=dir==='a'?r:r+i,cc=dir==='a'?c+i:c;grid[rr+','+cc]=w[i];}placed.push({w:w,r:r,c:c,dir:dir});}
+  function can(w,r,c,dir){var touch=false;for(var i=0;i<w.length;i++){var rr=dir==='a'?r:r+i,cc=dir==='a'?c+i:c,k=rr+','+cc;if(grid[k]){if(grid[k]!==w[i])return false;touch=true;}}return touch||placed.length===0;}
+  place(words[0].word,0,0,'a');
+  for(var wi=1;wi<words.length;wi++){var w=words[wi].word,done=false;
+    for(var pi=0;pi<placed.length&&!done;pi++){var p=placed[pi];for(var i=0;i<p.w.length&&!done;i++){for(var j=0;j<w.length&&!done;j++){if(p.w[i]===w[j]){var pr=p.dir==='a'?p.r:p.r+i,pc=p.dir==='a'?p.c+i:p.c,dir=p.dir==='a'?'d':'a',r=dir==='a'?pr:pr-j,c=dir==='a'?pc-j:pc;if(can(w,r,c,dir)){place(w,r,c,dir);done=true;}}}}}
+    if(!done){var mr=0;Object.keys(grid).forEach(function(k){mr=Math.max(mr,+k.split(',')[0]);});place(w,mr+2,0,'a');}}
+  var minr=9e9,minc=9e9,maxr=-9e9,maxc=-9e9;Object.keys(grid).forEach(function(k){var a=k.split(','),r=+a[0],c=+a[1];minr=Math.min(minr,r);minc=Math.min(minc,c);maxr=Math.max(maxr,r);maxc=Math.max(maxc,c);});
+  var cells={};Object.keys(grid).forEach(function(k){var a=k.split(','),r=+a[0]-minr,c=+a[1]-minc;cells[r+','+c]=grid[k];});
+  var clues=[],num={},n=0;placed.forEach(function(p){var r=p.r-minr,c=p.c-minc,key=r+','+c;if(!num[key])num[key]=++n;clues.push({n:num[key],dir:p.dir,word:p.w,clue:(words.find(function(x){return x.word===p.w;})||{}).clue||'',r:r,c:c});});
+  return {cells:cells,rows:maxr-minr+1,cols:maxc-minc+1,clues:clues,num:num};
+}
+function _evRenderCW(cw,play){
+  var cell='width:40px;height:40px;position:relative';
+  var inp='width:100%;height:100%;text-align:center;font-size:17px;font-weight:800;border:2px solid var(--primary-dark);border-radius:7px;padding:0;background:#fff;color:var(--text);box-sizing:border-box';
+  var h='<div style="display:grid;gap:3px;justify-content:center;margin:4px 0;grid-template-columns:repeat('+cw.cols+',40px)">';
+  for(var r=0;r<cw.rows;r++)for(var c=0;c<cw.cols;c++){var k=r+','+c;if(cw.cells[k]!==undefined){var nn=cw.num[k];h+='<div style="'+cell+'">'+(nn?'<span style="position:absolute;top:1px;left:3px;font-size:8px;font-weight:800;color:var(--text-light);z-index:2">'+nn+'</span>':'')+(play?'<input class="evcw-in" maxlength="1" data-ans="'+cw.cells[k]+'" style="'+inp+'">':'<input value="'+cw.cells[k]+'" disabled style="'+inp+'">')+'</div>';}else h+='<div style="width:40px;height:40px;visibility:hidden"></div>';}
+  h+='</div>';return h;
+}
+function _evReadGame(){if(!_evGameDraft.on)return null;var pt=document.getElementById('ev-game-points');var points=pt?(parseInt(pt.value,10)||0):30;if(points<1)points=1;if(_evGameDraft.type==='quiz'){if(!_evGameDraft.questions.length)return {error:'게임 문제를 1개 이상 추가하세요'};return {type:'quiz',points:points,data:{questions:_evGameDraft.questions}};}if(_evGameDraft.type==='cross'){if(_evGameDraft.words.length<2)return {error:'십자말 단어를 2개 이상 추가하세요'};return {type:'cross',points:points,data:{words:_evGameDraft.words}};}if(_evGameDraft.type==='spot'){var sp=_evGameDraft.spot;var has1=sp.dirty1?!!sp.src1:!!sp.id1,has2=sp.dirty2?!!sp.src2:!!sp.id2;if(!has1||!has2)return {error:'사진 2장을 모두 올려주세요'};if(!sp.diffs||sp.diffs.length<1)return {error:'틀린 곳을 1곳 이상 표시하세요 (오른쪽 사진을 탭)'};var id1=sp.id1,id2=sp.id2;if(sp.dirty1){if(sp.id1)_evDelImg(sp.id1);id1=_evSaveImg(sp.src1);sp.id1=id1;sp.dirty1=false;sp.src1='';}if(sp.dirty2){if(sp.id2)_evDelImg(sp.id2);id2=_evSaveImg(sp.src2);sp.id2=id2;sp.dirty2=false;sp.src2='';}return {type:'spot',points:points,data:{img1:id1,img2:id2,diffs:JSON.parse(JSON.stringify(sp.diffs))}};}return null;}
 function _evDone(id){return _mHas('event-'+id);}
 /* 학생이 이벤트 게임 참여 */
 function openEventGame(id){
   var ev=(eventsData||[]).find(function(x){return x.id===id;});if(!ev||!ev.game){showToast('게임 정보를 찾을 수 없어요');return;}
   if(G.role!=='student'){showToast('학생만 참여할 수 있어요');return;}
   if(_evDone(id)){showToast('이미 참여를 완료했어요');return;}
-  _evPlay={id:id,answers:[],result:null};
+  _evPlay={id:id,answers:[],found:[],result:null};
   var t=document.getElementById('evgame-title');if(t)t.textContent=ev.title||'퀴즈';
+  if(ev.game.type==='spot'&&ev.game.data){var ids=[ev.game.data.img1,ev.game.data.img2].filter(Boolean);openModal('event-game-modal');var bd=document.getElementById('evgame-body');if(bd)bd.innerHTML='<div style="text-align:center;padding:34px 10px;color:var(--text-light);font-size:12.5px">사진을 불러오는 중…</div>';_evWaitImgs(ids,function(){renderEventGame();});return;}
   renderEventGame();openModal('event-game-modal');
 }
 function renderEventGame(){
@@ -1878,17 +1942,38 @@ function renderEventGame(){
       ?'<div style="text-align:center;padding:18px 10px"><div style="font-size:42px">🎉</div><div style="font-size:19px;font-weight:900;margin-top:6px">완료! +'+ev.game.points+'P</div><div style="font-size:12.5px;color:var(--text-light);margin-top:5px">'+r.detail+' · 포인트가 지급됐어요</div><button class="btn btn-primary" style="width:100%;margin-top:18px" onclick="closeModal(\'event-game-modal\');renderEventBanner();try{openEventDetail(\''+ev.id+'\')}catch(e){}">확인</button></div>'
       :'<div style="text-align:center;padding:18px 10px"><div style="font-size:42px">🙂</div><div style="font-size:19px;font-weight:900;margin-top:6px">아쉬워요</div><div style="font-size:12.5px;color:var(--text-light);margin-top:5px">'+r.detail+' · 다시 도전해보세요</div><div style="display:flex;gap:8px;margin-top:18px"><button class="btn btn-outline" style="flex:1" onclick="_evPlay.result=null;_evPlay.answers=[];renderEventGame()">다시 풀기</button><button class="btn btn-primary" style="flex:1" onclick="closeModal(\'event-game-modal\')">닫기</button></div></div>';
     return;}
-  var qs=ev.game.data.questions;
-  var h='<div style="font-size:12px;color:var(--text-light);margin-bottom:12px">문제를 풀고 60% 이상 맞히면 완료돼요 · 완료 시 +'+ev.game.points+'P</div>';
-  qs.forEach(function(q,i){var sel=_evPlay.answers[i];h+='<div style="background:var(--card);border:1px solid var(--border-light);border-radius:14px;padding:14px;margin-bottom:11px"><div style="font-size:14.5px;font-weight:800;margin-bottom:10px;line-height:1.4">Q'+(i+1)+'. '+_esc(q.q)+'</div>'+q.opts.map(function(o,j){return '<button onclick="evPickAns('+i+','+j+')" style="display:block;width:100%;text-align:left;border:1.5px solid '+(sel===j?'var(--primary)':'var(--border-light)')+';background:'+(sel===j?'var(--primary-light)':'var(--bg)')+';border-radius:11px;padding:11px 13px;font-family:inherit;font-size:13.5px;font-weight:'+(sel===j?'800':'600')+';margin-bottom:7px;cursor:pointer;color:var(--text)">'+_esc(o)+'</button>';}).join('')+'</div>';});
-  h+='<button class="btn btn-primary" style="width:100%" onclick="submitEventGame()">제출하기</button>';
+  var g=ev.game,h='';
+  if(g.type==='spot'){
+    if(g.data._cleaned){el.innerHTML='<div style="text-align:center;padding:24px 10px;color:var(--text-light);font-size:13px">이벤트가 종료되어 사진이 삭제되었어요</div>';return;}
+    var sd1=IMGC[g.data.img1]||IMG_BLANK,sd2=IMGC[g.data.img2]||IMG_BLANK;
+    var diffs=g.data.diffs||[],fn=_evPlay.found.length,total=diffs.length;
+    h='<div style="font-size:12px;color:var(--text-light);margin-bottom:8px">두 사진을 비교해 다른 곳을 찾아 탭하세요 · <b style="color:var(--primary-dark)">'+fn+'/'+total+'</b> · 완료 시 +'+g.points+'P</div>';
+    [[1,sd1],[2,sd2]].forEach(function(pair){h+='<div class="ev-sd" data-n="'+pair[0]+'" style="position:relative;border:1px solid var(--border-light);border-radius:11px;overflow:hidden;margin-bottom:9px;cursor:crosshair"><img src="'+pair[1]+'" style="width:100%;display:block;pointer-events:none">';_evPlay.found.forEach(function(fi){var d=diffs[fi];if(!d)return;h+='<div style="position:absolute;left:'+(d.x*100)+'%;top:'+(d.y*100)+'%;width:30px;height:30px;margin:-15px 0 0 -15px;border:3px solid var(--primary);border-radius:50%;background:rgba(47,165,149,.18);box-sizing:border-box;pointer-events:none"></div>';});h+='</div>';});
+    h+='<div style="font-size:11px;color:var(--text-light);text-align:center">남은 곳: '+(total-fn)+'곳</div>';
+    el.innerHTML=h;
+    try{el.querySelectorAll('.ev-sd').forEach(function(nd){nd.addEventListener('click',function(e){evSpotTap(e,nd);});});}catch(e){}
+    return;
+  }
+  if(g.type==='cross'){
+    var cw=_evBuildCW(g.data.words);
+    h='<div style="font-size:12px;color:var(--text-light);margin-bottom:6px">힌트를 보고 모든 칸을 채우세요 · 완료 시 +'+g.points+'P</div>'+_evRenderCW(cw,true)+'<div style="margin-top:10px">';
+    ['a','d'].forEach(function(dir){var cl=cw.clues.filter(function(c){return c.dir===dir;});if(cl.length){h+='<div style="font-size:12px;font-weight:800;color:var(--text-sub);margin:8px 0 3px">'+(dir==='a'?'가로':'세로')+'</div>';cl.forEach(function(c){h+='<div style="font-size:12.5px;margin:3px 0;color:var(--text-sub)"><b style="color:var(--primary-dark)">'+c.n+'.</b> '+_esc(c.clue)+'</div>';});}});
+    h+='</div><button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="submitEventGameCross()">정답 확인</button>';
+  }else{
+    var qs=g.data.questions;
+    h='<div style="font-size:12px;color:var(--text-light);margin-bottom:12px">문제를 풀고 60% 이상 맞히면 완료돼요 · 완료 시 +'+g.points+'P</div>';
+    qs.forEach(function(q,i){var sel=_evPlay.answers[i];h+='<div style="background:var(--card);border:1px solid var(--border-light);border-radius:14px;padding:14px;margin-bottom:11px"><div style="font-size:14.5px;font-weight:800;margin-bottom:10px;line-height:1.4">Q'+(i+1)+'. '+_esc(q.q)+'</div>'+q.opts.map(function(o,j){return '<button onclick="evPickAns('+i+','+j+')" style="display:block;width:100%;text-align:left;border:1.5px solid '+(sel===j?'var(--primary)':'var(--border-light)')+';background:'+(sel===j?'var(--primary-light)':'var(--bg)')+';border-radius:11px;padding:11px 13px;font-family:inherit;font-size:13.5px;font-weight:'+(sel===j?'800':'600')+';margin-bottom:7px;cursor:pointer;color:var(--text)">'+_esc(o)+'</button>';}).join('')+'</div>';});
+    h+='<button class="btn btn-primary" style="width:100%" onclick="submitEventGame()">제출하기</button>';
+  }
   el.innerHTML=h;
 }
+function submitEventGameCross(){var ev=(eventsData||[]).find(function(x){return x.id===_evPlay.id;});if(!ev||!ev.game)return;var inputs=document.querySelectorAll('#evgame-body .evcw-in');var all=true,filled=true;inputs.forEach(function(inp){if(!inp.value)filled=false;if((inp.value||'')!==inp.dataset.ans){all=false;inp.style.background='var(--coral-light)';inp.style.borderColor='var(--coral)';}else{inp.style.background='#fff';inp.style.borderColor='var(--primary-dark)';}});if(!filled){showToast('빈 칸을 모두 채워주세요');return;}if(all){_mAward('event-'+ev.id,ev.game.points,'이벤트 게임 · '+(ev.title||''));try{renderHomePoints();}catch(e){}_evPlay.result={pass:true,detail:'모두 정답!'};renderEventGame();}else{showToast('틀린 칸이 있어요 · 빨간 칸을 확인하세요');}}
 function evPickAns(qi,oi){_evPlay.answers[qi]=oi;renderEventGame();}
 function submitEventGame(){var ev=(eventsData||[]).find(function(x){return x.id===_evPlay.id;});if(!ev||!ev.game)return;var qs=ev.game.data.questions;if(_evPlay.answers.filter(function(x){return x!=null;}).length<qs.length){showToast('모든 문제에 답해주세요');return;}var ok=0;qs.forEach(function(q,i){if(_evPlay.answers[i]===q.ans)ok++;});var pass=ok/qs.length>=0.6;
   if(pass){_mAward('event-'+ev.id,ev.game.points,'이벤트 게임 · '+(ev.title||''));try{renderHomePoints();}catch(e){}}
   _evPlay.result={pass:pass,detail:'정답 '+ok+'/'+qs.length};renderEventGame();
 }
+function evSpotTap(ev,node){var evd=(eventsData||[]).find(function(x){return x.id===_evPlay.id;});if(!evd||!evd.game||evd.game.type!=='spot')return;var g=evd.game,diffs=g.data.diffs||[];var r=node.getBoundingClientRect();if(!r.width||!r.height)return;var x=(ev.clientX-r.left)/r.width,y=(ev.clientY-r.top)/r.height;var hit=-1;for(var i=0;i<diffs.length;i++){if(_evPlay.found.indexOf(i)>=0)continue;var d=diffs[i];if(Math.abs(d.x-x)<0.07&&Math.abs(d.y-y)<0.07){hit=i;break;}}if(hit<0)return;_evPlay.found.push(hit);if(_evPlay.found.length>=diffs.length){_mAward('event-'+evd.id,g.points,'이벤트 게임 · '+(evd.title||''));try{renderHomePoints();}catch(e){}_evPlay.result={pass:true,detail:'모두 찾았어요! ('+diffs.length+'곳)'};}renderEventGame();}
 let eventActiveList=[];
 const EP_THEMES=[
   ['#F09E54','#E0663F'],['#5AA9D6','#3D6FB4'],['#7FC29B','#3E8E7E'],
@@ -1993,7 +2078,9 @@ function scrollToEventCard(wrap,domIdx,smooth){const cards=wrap.querySelectorAll
 function getEventCenteredDomIdx(wrap){const cards=wrap.querySelectorAll('.event-slide');const center=wrap.scrollLeft+wrap.clientWidth/2;let closest=0,minDist=Infinity;cards.forEach((c,i)=>{const cCenter=c.offsetLeft+c.clientWidth/2;const dist=Math.abs(cCenter-center);if(dist<minDist){minDist=dist;closest=i;}});return closest;}
 function onEventScrollSettled(wrap){const n=eventActiveList.length;if(n<2)return;const domIdx=getEventCenteredDomIdx(wrap);if(domIdx===0){scrollToEventCard(wrap,n,false);eventSlideIdx=n-1;}else if(domIdx===n+1){scrollToEventCard(wrap,1,false);eventSlideIdx=0;}else{eventSlideIdx=domIdx-1;}document.querySelectorAll('#event-dots .bday-dot').forEach((d,i)=>d.classList.toggle('active',i===eventSlideIdx));}
 function advanceEventSlide(wrap){const domIdx=eventSlideIdx+2;scrollToEventCard(wrap,domIdx,true);}
+function _evCleanupSpotImages(){var now=Date.now();(eventsData||[]).forEach(function(e){if(!e||!e.game||e.game.type!=='spot'||!e.game.data)return;var dd=e.game.data;if(dd._cleaned)return;if(!e.deadline)return;if(now-new Date(e.deadline).getTime()<=0)return;if(dd.img1)_evDelImg(dd.img1);if(dd.img2)_evDelImg(dd.img2);dd.img1='';dd.img2='';dd._cleaned=true;try{if(typeof flushSync==='function')flushSync();}catch(x){}});}
 function renderEventBanner(){
+  try{_evCleanupSpotImages();}catch(e){}
   try{
     var ab=document.getElementById('event-archive-btn');
     if(ab){var has=(eventsData||[]).some(function(e){return e.archived;});
@@ -2566,7 +2653,7 @@ function onGalleryScroll(pid){const wrap=document.getElementById('pg-'+pid);cons
 function openPostActions(id,canEdit,canDel){currentPostId=id;show('post-edit-btn',canEdit);openModal('post-action-modal');}
 function editPost(){closeModal('post-action-modal');closeModal('post-detail-modal');const p=posts.find(p=>p.id===currentPostId);if(!p)return;if(p.cat==='gallery'){document.getElementById('gallery-title').value=p.title||'';document.getElementById('gallery-content').value=p.content||'';const gt=document.getElementById('gallery-top');if(gt)gt.value=p.target||'all';onGalleryTopChange();const gm=document.getElementById('gallery-mid');if(gm&&p.grade)gm.value=p.grade;loadAttachBuf('gallery',p);document.getElementById('gallery-modal-title').textContent='🖼️ 갤러리 수정';document.getElementById('gallery-submit-btn').textContent='수정하기';document.getElementById('gallery-write-modal').dataset.editId=currentPostId;openModal('gallery-write-modal');return;}if(p.cat==='event'){document.getElementById('event-title').value=p.title||'';document.getElementById('event-content').value=p.content||'';document.getElementById('event-deadline').value=p.deadline||'';var _ey=document.getElementById('event-youtube');if(_ey)_ey.value=p.youtube?('https://youtu.be/'+p.youtube):'';loadAttachBuf('event',p);document.getElementById('event-modal-title').textContent='🎉 이벤트 수정';document.getElementById('event-submit-btn').textContent='수정하기';document.getElementById('event-write-modal').dataset.editId=currentPostId;try{var _evg=(eventsData||[]).find(function(x){return x.id===p.eventId;});resetEvGame(_evg&&_evg.game);}catch(e){}openModal('event-write-modal');return;}if(p.cat==='activity'){openActivityWrite();document.getElementById('aw-title').value=p.title||'';document.getElementById('aw-content').value=p.content||'';document.getElementById('aw-dept').value=p.dept||'choir';document.getElementById('aw-cat').value=p.subcat||'notice';loadAttachBuf('aw',p);document.getElementById('activity-write-modal').dataset.editId=currentPostId;return;}document.getElementById('write-title').value=p.title||'';document.getElementById('write-content').value=p.content||'';const lbl=document.getElementById('write-cat-label');if(lbl)lbl.textContent='카테고리: '+(CAT_LABEL[p.cat]||p.cat);const isT=G.role==='teacher';show('write-teacher-cats',isT);show('write-student-cat',G.role==='student');if(!isT){var _sco2=document.getElementById('write-student-scope');if(_sco2){var _gl2=GRADE_LABEL[G.gradeKey]||G.gradeLabel||'우리 학년';_sco2.options[1].text='우리 학년만 ('+_gl2+')';_sco2.value=(p.grade&&p.grade===G.gradeKey)?'mine':'all-s';}}if(isT){const isFull=G.type==='principal'||G.type==='admin'||G.isAdmin;show('write-push-wrap',G.role==='teacher'&&p.cat==='notice');var _pde=document.getElementById('write-popup-until');if(_pde)_pde.value=(p.popupUntil?_msToDateStr(p.popupUntil):(p.popupDays&&p.ts?_msToDateStr(p.ts+p.popupDays*86400000):_defaultPopupUntil()));show('write-top-wrap',p.cat!=='jabumo');const top=document.getElementById('write-top');if(top){top.value=p.target||'all';onWriteTopChange();}const mid=document.getElementById('write-mid');if(mid&&p.grade)mid.value=p.grade;}document.getElementById('write-modal').dataset.editId=currentPostId;loadAttachBuf('write',p);openModal('write-modal');}
 function deletePost(){if(!currentPostId)return;if(!confirm('이 게시글을 삭제할까요?'))return;closeModal('post-action-modal');closeModal('post-detail-modal');const p=posts.find(x=>x.id===currentPostId);posts=posts.filter(x=>x.id!==currentPostId);if(p&&p.photoId&&typeof photosData!=='undefined'){photosData=photosData.filter(ph=>ph.id!==p.photoId);if(typeof renderStoryRow==='function')renderStoryRow();}
-if(p&&p.eventId&&typeof eventsData!=='undefined'){eventsData=eventsData.filter(e=>e.id!==p.eventId);if(typeof renderEventBanner==='function')renderEventBanner();}
+if(p&&p.eventId&&typeof eventsData!=='undefined'){try{var _dev=(eventsData||[]).find(function(e){return e.id===p.eventId;});if(_dev&&_dev.game&&_dev.game.type==='spot'&&_dev.game.data){if(_dev.game.data.img1)_evDelImg(_dev.game.data.img1);if(_dev.game.data.img2)_evDelImg(_dev.game.data.img2);}}catch(e){}eventsData=eventsData.filter(e=>e.id!==p.eventId);if(typeof renderEventBanner==='function')renderEventBanner();}
 if(p&&p.cat==='activity'){renderDeptPosts('choir');renderDeptPosts('liturgy');}
 else if(G.role==='teacher')applyTeacherFilter();
 else if(G.role==='student')renderBoardList(currentBoardCat,posts.filter(x=>x.cat===currentBoardCat&&(x.target==='all'||(x.target==='student'&&(x.grade==='all-s'||x.grade===G.gradeKey)))));
@@ -4638,7 +4725,7 @@ async function cleanupStorage(){
   n+=nb-notifications.length;
   /* 2) 만료된 이벤트 배너(30일 경과) */
   const oldEv=eventsData.filter(e=>e.deadline&&now-new Date(e.deadline).getTime()>30*D);
-  oldEv.forEach(e=>{posts=posts.filter(p=>p.eventId!==e.id);});
+  oldEv.forEach(e=>{posts=posts.filter(p=>p.eventId!==e.id);if(e.game&&e.game.type==='spot'&&e.game.data){if(e.game.data.img1)_evDelImg(e.game.data.img1);if(e.game.data.img2)_evDelImg(e.game.data.img2);}});
   eventsData=eventsData.filter(e=>!oldEv.includes(e));n+=oldEv.length;
   /* 3) 쿠폰 전체 정리 (포인트제 전환으로 미사용) */
   const cN=(coupons||[]).length;
@@ -4659,6 +4746,7 @@ async function cleanupStorage(){
       var refs={};
       (posts||[]).forEach(function(p){(p.images||[]).forEach(function(im){if(im&&im.i)refs[im.i]=1;});});
       (resources||[]).forEach(function(r){(r.images||[]).forEach(function(im){if(im&&im.i)refs[im.i]=1;});});
+      (eventsData||[]).forEach(function(e){if(e&&e.game&&e.game.type==='spot'&&e.game.data){if(e.game.data.img1)refs[e.game.data.img1]=1;if(e.game.data.img2)refs[e.game.data.img2]=1;}});
       var imgs=await FB.load('images');
       (imgs||[]).forEach(function(x){if(x&&x.id&&!refs[x.id]){try{FB.remove('images',x.id);}catch(e){}delete IMGC[x.id];orphN++;}});
       n+=orphN;
