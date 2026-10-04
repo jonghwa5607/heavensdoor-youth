@@ -983,7 +983,7 @@ function renderAttendRank(){
     var meCss=isMe?';outline:3px solid #FFC94D;outline-offset:2px':'';
     var badge=isMe?'<div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:#FFC94D;color:#5a4200;font-size:10px;font-weight:900;padding:2px 9px;border-radius:20px;white-space:nowrap;box-shadow:0 2px 5px rgba(0,0,0,.12)">⭐ 나</div>':'';
     return '<div style="flex:1;text-align:center">'
-      +'<div style="font-size:12px;font-weight:900;color:'+rkCol+';margin-bottom:5px">'+rankLabel(u._rank)+'</div>'
+      +'<div style="font-size:12px;font-weight:900;color:'+rkCol+';margin-bottom:'+(isMe?'18px':'5px')+'">'+rankLabel(u._rank)+'</div>'
       +'<div style="position:relative;background:'+boxBg+';border:1px solid '+boxBorder+';border-radius:16px;padding:'+(isCenter?'18px 6px':'14px 6px')+';box-shadow:'+boxSh+';display:flex;flex-direction:column;align-items:center'+meCss+'">'+badge
       +'<div style="width:'+(isCenter?46:42)+'px;height:'+(isCenter?46:42)+'px;border-radius:50%;background:'+(isCenter?'rgba(255,255,255,.9)':'var(--mint-light)')+';display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:8px">'+medal(u._rank)+'</div>'
       +'<div style="font-size:12.5px;font-weight:800;line-height:1.2;word-break:keep-all;color:'+txtCol+'">'+_esc(u.name||'')+'</div>'
