@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="하늘의문 중고등부">
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(e){console.warn('SW register failed',e);});});}</script>
-<link rel="stylesheet" href="./styles.css?v=20260923y">
+<link rel="stylesheet" href="./styles.css?v=20260923z">
 <style>
 /* 회의록: 플레이스홀더는 커서가 있는 빈 줄에만 표시 */
 #minutes-viewer-content .mb-txt[data-ph]::before,#minutes-viewer-content .mb-txt[data-ph]:empty:focus::before{content:none!important;display:none!important}
@@ -921,6 +921,8 @@
         <button class="btn btn-outline btn-sm" style="width:100%" onclick="startPreview('parent')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#37B39B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><circle cx="9" cy="8" r="3.2" stroke="#E8709A"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17.5" cy="9" r="2.4" stroke="#5B8DEF"/><path d="M16 13.5a5 5 0 0 1 5.5 4.5" stroke="#5B8DEF"/></svg> 학부모</button>
         <button class="btn btn-outline btn-sm" style="width:100%" onclick="startPreview('teacher')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C6FF0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 2v20" stroke="#7C6FF0"/><path d="M7 8h10" stroke="#EBA23B"/></svg> 교사</button>
       </div>
+      <div style="font-size:10.5px;color:var(--text-light);margin-top:10px;line-height:1.5">미리보기는 실제 학생 데이터(포인트·프로필)에 영향을 주지 않아요.</div>
+      <button class="btn btn-outline btn-sm" style="width:100%;margin-top:9px;border-color:#E8A23B;color:#9a6a12" onclick="cleanupPreviewMission()">🧹 잘못 지급된 미션 포인트 정리 (1회용)</button>
     </div>
   </div>
 </div>
@@ -2753,7 +2755,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="./assets.js"></script>
-<script src="./app.js?v=20260923y"></script>
+<script src="./app.js?v=20260923z"></script>
 
 <div id="theme-preview-bar" style="display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:88px;z-index:600;background:rgba(26,35,64,0.95);color:white;padding:10px 12px 10px 16px;border-radius:14px;box-shadow:var(--shadow-lg);align-items:center;gap:10px;max-width:410px;width:calc(100% - 32px);backdrop-filter:blur(4px)">
   <span id="theme-preview-label" style="font-size:13px;font-weight:700;flex:1">🎨 미리보기</span>
@@ -2777,7 +2779,7 @@
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-messaging-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-auth-compat.js"></script>
-<script src="./app-sync.js?v=20260923y"></script>
+<script src="./app-sync.js?v=20260923z"></script>
 
 </body>
 </html>

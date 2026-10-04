@@ -9,8 +9,8 @@ window.FB=(function(){
   return {
     enabled:function(){return !!db;},
     ready:function(cb){ if(!db){return;} if(authed){cb();} else {waiters.push(cb);} },
-    save:function(col,id,data){return db?db.collection(col).doc(String(id)).set(data):Promise.resolve();},
-    remove:function(col,id){return db?db.collection(col).doc(String(id)).delete():Promise.resolve();},
+    save:function(col,id,data){if(window._previewMode)return Promise.resolve();return db?db.collection(col).doc(String(id)).set(data):Promise.resolve();},
+    remove:function(col,id){if(window._previewMode)return Promise.resolve();return db?db.collection(col).doc(String(id)).delete():Promise.resolve();},
     load:function(col){return db?db.collection(col).get().then(function(s){return s.docs.map(function(d){return d.data();});}):Promise.resolve([]);},
     get:function(col,id){return db?db.collection(col).doc(String(id)).get().then(function(d){return d.exists?d.data():null;}):Promise.resolve(null);},
     watch:function(col,cb){ if(db) db.collection(col).onSnapshot(function(s){cb(s.docs.map(function(d){return d.data();}),!!(s.metadata&&s.metadata.fromCache));},function(err){ try{console.error('[FB] 읽기 실패(규칙 확인 필요):',col,err&&err.code);}catch(e){} try{if(err&&err.code==='permission-denied'&&window._fbWarnDenied)window._fbWarnDenied(col);}catch(e){} }); }
@@ -94,7 +94,7 @@ window._fbWarnDenied=_fbWarnDenied;
   var _DEMO_NAMES=/이도윤|김하늘|박시우|정예은|한지호/;
   function _isDemoCouponCloud(c){ return !!(c&&(c.demo||(c.studentId&&_DEMO_SIDS[c.studentId])||_DEMO_NAMES.test(c.studentName||''))); }
   function saveDoc(c,id,it){try{Promise.resolve(FB.save(c,id,it)).catch(function(e){console.warn('[FB] save fail',c,id,e&&e.code); if(e&&e.code==='permission-denied'){try{if(window._fbWarnDenied)window._fbWarnDenied(c);}catch(_){}}});}catch(e){}}
-  function flush(){ if(!FB.enabled())return; specs.forEach(function(sp){ try{
+  function flush(){ if(!FB.enabled())return; if(window._previewMode)return; specs.forEach(function(sp){ try{
     var arr=sp.g()||[]; var pp=prev[sp.c]||(prev[sp.c]={}); var now={};
     arr.forEach(function(it){ if(it&&it.demo)return; var id=jid(it); if(!id)return; var j; try{j=JSON.stringify(it);}catch(e){return;} now[id]=j; if(pp[id]!==j){ var pay=sp.enc?sp.enc(it):it; try{ if(JSON.stringify(pay).length>950000){ console.warn('[FB] doc too large',sp.c,id); showToast('⚠️ 저장 용량이 너무 커요. 내용을 줄여주세요'); pp[id]=j; return; } }catch(e){} saveDoc(sp.c,id,pay); try{pp[id]=JSON.stringify(it);}catch(e){pp[id]=j;} } });
     Object.keys(pp).forEach(function(id){ if(!(id in now)){ FB.remove(sp.c,id); delete pp[id]; } });
@@ -121,7 +121,7 @@ window._fbWarnDenied=_fbWarnDenied;
   }catch(e){console.error('[FB] sync',sp.c,e);} }); });
   var _cfgPrev=null;window._cfgLoaded=false;
   var _assetPrev=null;
-  function flushCfg(){ if(!FB.enabled())return; if(!window._cfgLoaded)return; try{ if(typeof appConfig==='undefined')return; var j=JSON.stringify(appConfig); if(j===_cfgPrev)return; appConfig._rev=(appConfig._rev||0)+1;
+  function flushCfg(){ if(!FB.enabled())return; if(window._previewMode)return; if(!window._cfgLoaded)return; try{ if(typeof appConfig==='undefined')return; var j=JSON.stringify(appConfig); if(j===_cfgPrev)return; appConfig._rev=(appConfig._rev||0)+1;
     var full=JSON.parse(JSON.stringify(appConfig)); _cfgPrev=JSON.stringify(appConfig);
     var big={id:'app',logo:full.logo||'',seasonImgs:full.seasonImgs||{}}; delete full.logo; delete full.seasonImgs;
     Promise.resolve(FB.save('settings','app',full)).catch(function(e){ console.warn('[FB] settings save fail',e&&e.code); _cfgPrev=null; });

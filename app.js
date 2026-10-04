@@ -37,8 +37,18 @@ let appConfig={title:'하늘의문 중고등부 주일학교',color:'#5B9BD5',ve
   Object.defineProperty(window,'adminVote',{configurable:true,get:function(){return appConfig.adminVote||null;},set:function(v){appConfig.adminVote=v||null;}});
 })();
 let previewMode=false,previewBackupUser=null,currentLoginUser=null;
-function startPreview(role){if(!previewMode){previewBackupUser=currentLoginUser;previewMode=true;}const samples={student:{role:'student',name:'미리보기',baptism:'요셉',id:'preview-student',gradeKey:'m1',gradeLabel:'중1',approved:true,birthMonth:0,birthDay:0,feastMonth:0,feastDay:0,children:[],attendedWeeks:[],halfWeeks:[]},parent:{role:'parent',name:'미리보기',baptism:'안나',id:'preview-parent',children:[{name:'김하늘'}],approved:true,isJabumo:false,birthMonth:0,birthDay:0,feastMonth:0,feastDay:0},teacher:{role:'teacher',name:'미리보기',baptism:'베드로',id:'preview-teacher',teacherType:'m1',gradeLabel:'중1',approved:true,isAdmin:false,birthMonth:0,birthDay:0,feastMonth:0,feastDay:0}};const labels={student:'학생',parent:'학부모',teacher:'교사'};if(role==='student'){const real=pendingList.find(u=>u.approved&&u.role==='student'&&!u.hidden&&!u.graduated);if(real)samples.student=Object.assign({},real);else{try{var _ps=samples.student;var _sw=(typeof getSaturdays==='function')?getSaturdays(2):[];_ps.attendedWeeks=_sw.slice().reverse();_ps.halfWeeks=[];if(typeof recalcMemberPoints==='function')recalcMemberPoints(_ps);_ps.attendTotal=(typeof calcAttendTotal==='function')?calcAttendTotal(_ps):(_ps.attendedWeeks||[]).length;}catch(e){}}}try{startSession(samples[role]);}catch(e){document.getElementById('bottom-nav').style.display='flex';goScreen('home');switchTab('home');showToast('미리보기 화면 전환 중 일부 요소를 불러오지 못했어요');}setPreviewBarVisible(true,'🔍 미리보기 모드: '+labels[role]+' 화면');}
-function exitPreview(){previewMode=false;setPreviewBarVisible(false);if(previewBackupUser){startSession(previewBackupUser);switchTab('admin');showAdminTab('settings');}}
+function startPreview(role){if(!previewMode){previewBackupUser=currentLoginUser;previewMode=true;}window._previewMode=true;const samples={student:{role:'student',name:'미리보기',baptism:'요셉',id:'preview-student',gradeKey:'m1',gradeLabel:'중1',approved:true,birthMonth:0,birthDay:0,feastMonth:0,feastDay:0,children:[],attendedWeeks:[],halfWeeks:[]},parent:{role:'parent',name:'미리보기',baptism:'안나',id:'preview-parent',children:[{name:'김하늘'}],approved:true,isJabumo:false,birthMonth:0,birthDay:0,feastMonth:0,feastDay:0},teacher:{role:'teacher',name:'미리보기',baptism:'베드로',id:'preview-teacher',teacherType:'m1',gradeLabel:'중1',approved:true,isAdmin:false,birthMonth:0,birthDay:0,feastMonth:0,feastDay:0}};const labels={student:'학생',parent:'학부모',teacher:'교사'};if(role==='student'){const real=pendingList.find(u=>u.approved&&u.role==='student'&&!u.hidden&&!u.graduated);if(real){samples.student=Object.assign({},real);samples.student.id='preview-student';['pointHistory','attendedWeeks','halfWeeks','qrScanAt','weekAward','milestonesAwarded','monthPerfect','children','history'].forEach(function(k){try{if(real[k]!=null)samples.student[k]=JSON.parse(JSON.stringify(real[k]));}catch(e){}});window._previewMe=samples.student;}else{try{var _ps=samples.student;var _sw=(typeof getSaturdays==='function')?getSaturdays(2):[];_ps.attendedWeeks=_sw.slice().reverse();_ps.halfWeeks=[];if(typeof recalcMemberPoints==='function')recalcMemberPoints(_ps);_ps.attendTotal=(typeof calcAttendTotal==='function')?calcAttendTotal(_ps):(_ps.attendedWeeks||[]).length;}catch(e){}}}try{startSession(samples[role]);}catch(e){document.getElementById('bottom-nav').style.display='flex';goScreen('home');switchTab('home');showToast('미리보기 화면 전환 중 일부 요소를 불러오지 못했어요');}setPreviewBarVisible(true,'🔍 미리보기 모드: '+labels[role]+' 화면');}
+function exitPreview(){previewMode=false;window._previewMode=false;window._previewMe=null;setPreviewBarVisible(false);if(previewBackupUser){startSession(previewBackupUser);switchTab('admin');showAdminTab('settings');}}
+/* 미리보기로 잘못 지급된 미션 포인트 정리 (1회용) */
+function cleanupPreviewMission(){
+  var isM=function(r){r=String(r||'');return r==='mission-photo'||r==='mission-birth'||r.indexOf('mdiary-')===0||r.indexOf('mcheer-')===0;};
+  appConfirm({icon:'warn',title:'미션 포인트를 정리할까요?',desc:'미리보기로 잘못 지급된 미션 포인트(다이어리·축하·프로필·생일축일)를 모든 학생에게서 제거하고 보유 포인트를 바로잡아요.\n\n※ 미션 기능을 아직 학생에게 정식 배포하지 않았을 때만 사용하세요.',okText:'정리하기'}).then(function(ok){
+    if(!ok)return;var total=0,cnt=0;
+    (pendingList||[]).forEach(function(u){if(!u||!u.pointHistory)return;var rm=u.pointHistory.filter(function(h){return h&&h.type==='earn'&&isM(h.ref);});if(!rm.length)return;var sum=rm.reduce(function(s,h){return s+(h.amount||0);},0);u.currentPoints=Math.max(0,(u.currentPoints||0)-sum);u.pointHistory=u.pointHistory.filter(function(h){return !(h&&h.type==='earn'&&isM(h.ref));});total+=sum;cnt++;try{saveMemberNow(u);}catch(e){}if(u.id===G.id)try{_ptSyncG(u);}catch(e){}});
+    try{if(window.flushSync)window.flushSync();}catch(e){}try{renderMembersList();}catch(e){}try{renderHomePoints();}catch(e){}
+    showToast(cnt?('✅ '+cnt+'명에서 미션 포인트 '+total+'P를 정리했어요'):'정리할 미션 포인트가 없어요');
+  });
+}
 function setPreviewBarVisible(v,text){const bar=document.getElementById('preview-bar');if(bar)bar.style.display=v?'flex':'none';document.querySelectorAll('.app-header').forEach(h=>h.style.marginTop=v?'34px':'0');const t=document.getElementById('preview-bar-text');if(v&&t)t.textContent=text;}
 function loadAppConfigForm(){try{loadThemeGreetInputs();}catch(e){}try{applyLogo();}catch(e){}document.getElementById('cfg-title').value=appConfig.title;document.getElementById('cfg-color').value=appConfig.color;document.getElementById('cfg-verse').value=appConfig.verse;document.getElementById('cfg-verse-ref').value=appConfig.verseRef;document.getElementById('cfg-notion-url').value=appConfig.notionUrl||'';try{renderDriveCfg();}catch(e){}const vm=appConfig.vacMsg||VAC_MSG_DEFAULT;document.getElementById('cfg-vac-edu-title').value=vm.eduTitle;document.getElementById('cfg-vac-edu-body').value=vm.eduBody;document.getElementById('cfg-vac-full-title').value=vm.fullTitle;document.getElementById('cfg-vac-full-body').value=vm.fullBody;document.getElementById('cfg-reward-bday').value=appConfig.bdayReward||BDAY_REWARD_DEFAULT;ATTEND_LEVELS.forEach(L=>{const el=document.getElementById('cfg-reward-'+L.n);if(el)el.value=L.r||'';});}
 /* 오늘의 말씀: 수정 권한이 있으면 눌러서 바로 편집 */
@@ -355,8 +365,8 @@ function _reconcileMonthPerfect(u,sat,by){
 function _phPush(u,type,amount,reason,by,ref){u.pointHistory=u.pointHistory||[];u.pointHistory.push({type:type,amount:amount,reason:reason,createdAt:new Date().toLocaleDateString('ko-KR'),ts:Date.now(),createdBy:by||'시스템',ref:ref||''});if(u.pointHistory.length>500)u.pointHistory.splice(0,u.pointHistory.length-500);}
 function _ptSyncG(u){if(u&&G&&u.id===G.id){G.currentPoints=u.currentPoints||0;G.yearTotalPoints=u.yearTotalPoints||0;G.level=u.level||1;G.pendingStreakRewards=u.pendingStreakRewards||0;}}
 /* growth=true 일 때만 성장점수(레벨) 반영. 생일/축일/교사/이벤트 포인트는 보유 포인트에만 지급 */
-function earnPoints(u,amount,reason,by,ref,growth){if(!u||!amount)return;u.currentPoints=(u.currentPoints||0)+amount;if(growth){u.yearTotalPoints=(u.yearTotalPoints||0)+amount;u.level=levelInfo(u.yearTotalPoints).lv;}_phPush(u,'earn',amount,reason,by,ref);_ptSyncG(u);try{saveMemberNow(u);}catch(e){}}
-function spendPoints(u,amount,reason,ref){if(!u||!amount)return false;if((u.currentPoints||0)<amount)return false;u.currentPoints-=amount;_phPush(u,'spend',-amount,reason,'',ref);_ptSyncG(u);try{saveMemberNow(u);}catch(e){}return true;}
+function earnPoints(u,amount,reason,by,ref,growth){if(window._previewMode)return;if(!u||!amount)return;u.currentPoints=(u.currentPoints||0)+amount;if(growth){u.yearTotalPoints=(u.yearTotalPoints||0)+amount;u.level=levelInfo(u.yearTotalPoints).lv;}_phPush(u,'earn',amount,reason,by,ref);_ptSyncG(u);try{saveMemberNow(u);}catch(e){}}
+function spendPoints(u,amount,reason,ref){if(window._previewMode)return false;if(!u||!amount)return false;if((u.currentPoints||0)<amount)return false;u.currentPoints-=amount;_phPush(u,'spend',-amount,reason,'',ref);_ptSyncG(u);try{saveMemberNow(u);}catch(e){}return true;}
 /* 주(週)단위 출석 포인트 — 상태를 바꿔도 중복지급 없이 재계산 */
 function awardAttendance(u,sat,status,by){
   if(!u||!sat)return {added:0};
@@ -774,11 +784,11 @@ function renderHomePoints(){
 /* ===== 오늘의 미션 ===== */
 function _mToday(){var n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');}
 function _tsDay(ts){try{var d=new Date(ts);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}catch(e){return '';}}
-function _meMember(){return (pendingList||[]).find(function(u){return u&&u.id===G.id;})||null;}
+function _meMember(){if(window._previewMode)return window._previewMe||null;return (pendingList||[]).find(function(u){return u&&u.id===G.id;})||null;}
 function _mHistory(){var me=_meMember();return (me&&me.pointHistory)||[];}
 function _mHas(ref){return _mHistory().some(function(x){return x&&x.ref===ref;});}
 function _mAward(ref,amt,reason){var me=_meMember();if(!me)return false;if(_mHas(ref))return false;try{earnPoints(me,amt,reason,'시스템',ref);}catch(e){return false;}return true;}
-function _mRevoke(uid,ref,amt,reason){var u=(pendingList||[]).find(function(x){return x&&x.id===uid;});if(!u)return;var e=(u.pointHistory||[]).find(function(h){return h&&h.type==='earn'&&h.ref===ref;});if(!e)return;u.currentPoints=Math.max(0,(u.currentPoints||0)-amt);e.type='spend';e.amount=-amt;e.reason=(reason||'미션 포인트 회수');e.createdBy=(G.displayName||'교사');e.ts=Date.now();try{_ptSyncG(u);}catch(e2){}try{saveMemberNow(u);}catch(e2){}}
+function _mRevoke(uid,ref,amt,reason){if(window._previewMode)return;var u=(pendingList||[]).find(function(x){return x&&x.id===uid;});if(!u)return;var e=(u.pointHistory||[]).find(function(h){return h&&h.type==='earn'&&h.ref===ref;});if(!e)return;u.currentPoints=Math.max(0,(u.currentPoints||0)-amt);e.type='spend';e.amount=-amt;e.reason=(reason||'미션 포인트 회수');e.createdBy=(G.displayName||'교사');e.ts=Date.now();try{_ptSyncG(u);}catch(e2){}try{saveMemberNow(u);}catch(e2){}}
 function _mEarnedToday(){var t=_mToday(),s=0;_mHistory().forEach(function(x){if(x&&x.type==='earn'&&x.amount>0){var r=String(x.ref||'');if((r.indexOf('mdiary-')===0||r.indexOf('mcheer-')===0||r==='mission-photo'||r==='mission-birth')&&_tsDay(x.ts)===t)s+=x.amount;}});return s;}
 function _mCheerTargets(){try{var n=new Date(),m=n.getMonth()+1,d=n.getDate(),arr=[];(pendingList||[]).forEach(function(u){if(!u||!u.approved||u.hidden||u.id===G.id)return;if(+u.birthMonth===m&&+u.birthDay===d)arr.push({id:u.id,name:(u.name||'').trim(),kind:'birth'});else if(+u.feastMonth===m&&+u.feastDay===d)arr.push({id:u.id,name:(u.name||'').trim(),kind:'feast'});});return arr;}catch(e){return [];}}
 function _mCheerCount(){var t=_mToday(),c=0;_mCheerTargets().forEach(function(x){if(_mHas('mcheer-'+x.id+'-'+t))c++;});return c;}
@@ -1553,8 +1563,8 @@ function copyTempPw(){
   try{navigator.clipboard.writeText(_tempPw);showToast('📋 복사했어요');}
   catch(e){showToast('임시 비밀번호: '+_tempPw);}
 }
-function _forceKickedLogout(msg){try{previewMode=false;setPreviewBarVisible(false);}catch(e){}try{localStorage.removeItem('hd-session-id');localStorage.removeItem('hd-last-tab');}catch(e){}try{currentLoginUser=null;}catch(e){}try{G.id='';G.role='';}catch(e){}try{var nav=document.getElementById('bottom-nav');if(nav)nav.style.display='none';}catch(e){}try{clearBdaySlide();}catch(e){}try{goScreen('intro');}catch(e){}try{showToast(msg||'로그아웃 되었습니다');}catch(e){}}
-function doLogout(){previewMode=false;setPreviewBarVisible(false);try{localStorage.removeItem('hd-session-id');localStorage.removeItem('hd-last-tab');}catch(e){}document.getElementById('bottom-nav').style.display='none';clearBdaySlide();goScreen('intro');showToast('로그아웃 되었습니다');}
+function _forceKickedLogout(msg){try{previewMode=false;window._previewMode=false;window._previewMe=null;setPreviewBarVisible(false);}catch(e){}try{localStorage.removeItem('hd-session-id');localStorage.removeItem('hd-last-tab');}catch(e){}try{currentLoginUser=null;}catch(e){}try{G.id='';G.role='';}catch(e){}try{var nav=document.getElementById('bottom-nav');if(nav)nav.style.display='none';}catch(e){}try{clearBdaySlide();}catch(e){}try{goScreen('intro');}catch(e){}try{showToast(msg||'로그아웃 되었습니다');}catch(e){}}
+function doLogout(){previewMode=false;window._previewMode=false;window._previewMe=null;setPreviewBarVisible(false);try{localStorage.removeItem('hd-session-id');localStorage.removeItem('hd-last-tab');}catch(e){}document.getElementById('bottom-nav').style.display='none';clearBdaySlide();goScreen('intro');showToast('로그아웃 되었습니다');}
 
 function stampPage(d){var _v=function(w){return isVacationDate(w)||isEduVacation(w);};var n=(G.attendedWeeks||[]).filter(function(w){return !_v(w);}).length;var pages=Math.max(1,Math.ceil(n/10));var p=(window._stampPage||pages)+d;if(p<1)p=1;if(p>pages)p=pages;window._stampPage=p;initStamps();}
 function initStamps(){const t=G.attendTotal||0;var _nx=null;for(const L of ATTEND_LEVELS){if(t<L.n){_nx=L;break;}}var _pv=0;ATTEND_LEVELS.forEach(L=>{if(t>=L.n)_pv=L.n;});var _vacS=function(w){return isVacationDate(w)||isEduVacation(w);};
@@ -3943,6 +3953,7 @@ function openProfileEdit(){
   openModal('profile-edit-modal');
 }
 async function submitProfileEdit(){
+  if(window._previewMode){try{closeModal('profile-edit-modal');}catch(e){}try{showToast('미리보기에서는 저장되지 않아요');}catch(e){}return;}
   var me=_meRec();
   if(!me){ /* 관리자 등 회원문서가 아직 없으면 G 기준으로 생성 */
     me=Object.assign({},G,{id:G.id,name:G.name,baptism:G.baptism,role:G.role,approved:true});
@@ -4401,6 +4412,7 @@ function refreshAfterVacChange(){_fcfg();pendingList.filter(u=>u.approved&&u.rol
 function attendStatus(u,d){return (u.halfWeeks||[]).includes(d)?'half':(u.attendedWeeks||[]).includes(d)?'full':'absent';}
 /* 회원 정보를 클라우드에 즉시 저장 — 동기화가 옛 값으로 되돌리는 것을 막는다 */
 function saveMemberNow(u){
+  if(window._previewMode)return;
   try{
     if(!u||!u.id)return;
     if(!(window.FB&&FB.enabled()&&FB.save))return;
