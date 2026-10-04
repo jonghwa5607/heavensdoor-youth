@@ -5320,8 +5320,22 @@ function makeLitImage(){
   if(!sats.length){showToast('이 달에는 토요일이 없어요');return;}
   var cv=document.getElementById('lit-canvas'),ctx=cv.getContext('2d');
   var S=2,F="'Noto Sans KR',-apple-system,sans-serif";
-  var W=560,PAD=24,HEAD=54,BLK=112,GAP=10;
-  var H=HEAD+sats.length*(BLK+GAP)+PAD;
+  var W=560,PAD=24,HEAD=54,GAP=10;
+  var SERVE=(typeof LIT_SERVE!=='undefined')?LIT_SERVE:[];
+  /* 각 토요일 블록의 내용과 높이를 먼저 계산 (담당학생 배정 줄 수에 맞춰 가변 높이) */
+  var blocks=sats.map(function(ds){
+    var h=litFor(ds)||{};
+    var roles=h.roles||{};
+    var assigns=SERVE.filter(function(x){return roles[x[0]];}).map(function(x){return {label:x[1],name:_litStuName(roles[x[0]])};});
+    var hasR=LIT_ROWS.some(function(r){return h[r[0]];});
+    var rows=hasR?LIT_ROWS.length:0;
+    var hh=40;
+    if(rows)hh+=rows*24+4; else hh+=8;
+    if(assigns.length)hh+=20+Math.ceil(assigns.length/2)*20+6;
+    if(h.note)hh+=22;
+    return {ds:ds,h:h,assigns:assigns,hasR:hasR,BH:Math.max(hh,72)};
+  });
+  var H=HEAD+PAD;blocks.forEach(function(b){H+=b.BH+GAP;});
   cv.width=W*S;cv.height=H*S;ctx.setTransform(S,0,0,S,0,0);
   ctx.fillStyle='#FFFFFF';ctx.fillRect(0,0,W,H);
   ctx.textBaseline='middle';ctx.textAlign='center';
@@ -5331,30 +5345,42 @@ function makeLitImage(){
   ctx.beginPath();ctx.moveTo(W/2-46,PAD+32);ctx.lineTo(W/2+46,PAD+32);ctx.stroke();
   var clip=function(t,max){t=String(t||'');if(ctx.measureText(t).width<=max)return t;
     while(t.length>1&&ctx.measureText(t+'…').width>max)t=t.slice(0,-1);return t+'…';};
-  sats.forEach(function(ds,i){
-    var h=litFor(ds)||{},d=ds.split('-');
-    var y=HEAD+i*(BLK+GAP), x=PAD;
-    ctx.fillStyle='#F7FAFF';ctx.fillRect(x,y,W-PAD*2,BLK);
-    ctx.strokeStyle='#DDE5F5';ctx.lineWidth=1;ctx.strokeRect(x+0.5,y+0.5,W-PAD*2,BLK);
-    ctx.fillStyle='#2FA595';ctx.fillRect(x,y,4,BLK);
+  var y=HEAD;
+  blocks.forEach(function(b){
+    var h=b.h,d=b.ds.split('-'),x=PAD,BH=b.BH;
+    ctx.fillStyle='#F7FAFF';ctx.fillRect(x,y,W-PAD*2,BH);
+    ctx.strokeStyle='#DDE5F5';ctx.lineWidth=1;ctx.strokeRect(x+0.5,y+0.5,W-PAD*2,BH);
+    ctx.fillStyle='#2FA595';ctx.fillRect(x,y,4,BH);
     ctx.textAlign='left';
     ctx.fillStyle='#1A2340';ctx.font='bold 14px '+F;
     ctx.fillText((+d[1])+'월 '+(+d[2])+'일', x+18, y+21);
     if(h.label){ctx.fillStyle='#1E7D70';ctx.font='13px '+F;ctx.fillText(h.label, x+96, y+21);}
-    var hasAny=LIT_ROWS.some(function(r){return h[r[0]];});
-    if(hasAny){
-      LIT_ROWS.forEach(function(r,ri){
-        var ly=y+46+ri*24;
+    var ly=y+46;
+    if(b.hasR){
+      LIT_ROWS.forEach(function(r){
         ctx.fillStyle='#8A97B5';ctx.font='11px '+F;ctx.fillText(r[1], x+18, ly);
-        ctx.fillStyle='#1A2340';ctx.font='13px '+F;
-        ctx.fillText(clip(h[r[0]]||'-', W-PAD*2-96), x+80, ly);
+        ctx.fillStyle='#1A2340';ctx.font='13px '+F;ctx.fillText(clip(h[r[0]]||'-', W-PAD*2-96), x+80, ly);
+        ly+=24;
       });
+      ly+=4;
+    } else { ly+=4; }
+    if(b.assigns.length){
+      ctx.fillStyle='#4B5DB6';ctx.font='bold 11px '+F;ctx.fillText('전례 봉사 배정', x+18, ly);
+      ly+=18;
+      var colW=(W-PAD*2-36)/2;
+      b.assigns.forEach(function(a,ai){
+        var col=ai%2,rw=Math.floor(ai/2);
+        var ax=x+18+col*colW, ay=ly+rw*20;
+        ctx.fillStyle='#8A97B5';ctx.font='11px '+F;
+        var lbl=a.label+' ';ctx.fillText(lbl, ax, ay);
+        var lw=ctx.measureText(lbl).width;
+        ctx.fillStyle='#1A2340';ctx.font='bold 12px '+F;
+        ctx.fillText(clip(a.name||'-', colW-lw-10), ax+lw, ay);
+      });
+      ly+=Math.ceil(b.assigns.length/2)*20+6;
     }
-    if(h.note){
-      ctx.fillStyle='#D95F50';ctx.font='bold 14px '+F;
-      if(hasAny)ctx.fillText(h.note, x+18, y+BLK-13);
-      else{ctx.textAlign='center';ctx.fillText(h.note, W/2, y+BLK/2+8);ctx.textAlign='left';}
-    }
+    if(h.note){ctx.fillStyle='#D95F50';ctx.font='bold 13px '+F;ctx.fillText(h.note, x+18, ly);}
+    y+=BH+GAP;
   });
   try{ showImgPreview(cv, litYear+'년 '+(litMonth+1)+'월 전례', litYear+'년_'+(litMonth+1)+'월_전례.png'); }
   catch(e){showToast('이미지를 만들지 못했어요');}
