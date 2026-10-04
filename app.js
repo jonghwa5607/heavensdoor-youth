@@ -4725,7 +4725,8 @@ var cc=document.getElementById('choir-week-card');if(cc){var crows=[['입당',c.
 var _lw=(typeof appConfig!=='undefined'&&appConfig.liturgyWeek)||{};
 var _lm=(typeof litFor==='function'&&_sat)?litFor(_sat):null;
 var l=_lm?{title:_lm.label,reading1:_lm.reading1,reading2:_lm.reading2,gospel:_lm.gospel,note:_lm.note,roles:_lm.roles}:_lw;
-var _litRoles=l.roles||{};var _litRoleKeys=(typeof LIT_SERVE!=='undefined'?LIT_SERVE:[]).filter(function(x){return _litRoles[x[0]];});
+/* 담당학생(전례 봉사 배정)은 litData/버퍼에서 직접 가져온다 — 독서를 간단편집(appConfig)으로 넣어 roles가 비어도 배정이 사라지지 않도록 */
+var _litRoles=((typeof _litRolesOf==='function'?_litRolesOf(_sat):null)||l.roles||{});var _litRoleKeys=(typeof LIT_SERVE!=='undefined'?LIT_SERVE:[]).filter(function(x){return _litRoles[x[0]];});
 var lc=document.getElementById('liturgy-week-card');if(lc){var lrows=[['제1독서',l.reading1,l.r1],['제2독서',l.reading2,l.r2],['복음',l.gospel,l.rg]].filter(function(r){return r[1];});var lEmpty=!lrows.length&&!l.note&&!l.team&&!_litRoleKeys.length;
   var h2='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px"><div style="min-width:0"><div style="font-size:10.5px;letter-spacing:.5px;color:#4B5DB6;font-weight:700">WEEKLY LITURGY</div><div style="font-size:16px;font-weight:800;color:var(--text);margin-top:1px">이번 주 전례</div>'+(_wkSub?'<div style="font-size:12.5px;color:var(--text-sub);margin-top:3px;font-weight:600">'+E(_wkSub)+'</div>':'')+'</div>'+(canEdit?'<button onclick="openLitPage()" style="background:var(--bg);border:1px solid var(--border-light);border-radius:8px;padding:4px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--text-sub)">✏️ 편집</button>':'')+'</div>';
   if(lEmpty){h2+='<div style="font-size:12px;color:var(--text-light);padding:4px 0">아직 등록된 독서가 없어요'+(canEdit?' · 편집을 눌러 입력하세요':'')+'</div>';}
@@ -5984,6 +5985,36 @@ function renderHomeReminders(){const el=document.getElementById('home-reminder-l
 
 let qrState={week:'',code:'',resetUsed:false};
 function qrImgUrl(size){return 'https://api.qrserver.com/v1/create-qr-code/?size='+size+'x'+size+'&margin=10&data='+encodeURIComponent('HD-ATTEND-'+qrState.week+'-'+qrState.code);}
+/* 출석 QR + 인증번호를 A4 한 장에 꽉 차게 인쇄 (PDF 저장도 가능) */
+function printQRSheet(){
+  if(!qrState.code){showToast('먼저 QR을 생성해주세요');return;}
+  var sat=(typeof currentSaturday==='function')?currentSaturday():(qrState.week||'');
+  var imgBig=qrImgUrl(1000);
+  var geoOn=false;try{geoOn=!!(_geoCfg&&_geoCfg().enabled&&typeof _geoCfg().lat==='number');}catch(e){}
+  var hint=geoOn?'<div class="hint">※ 성당 근처에서만 출석이 인정됩니다</div>':'';
+  var html='<!doctype html><html><head><meta charset="utf-8"><title>출석 QR</title>'
+    +'<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">'
+    +'<style>@page{size:A4 portrait;margin:0}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}html,body{margin:0;padding:0}'
+    +'.sheet{width:210mm;min-height:297mm;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16mm;font-family:\'Noto Sans KR\',sans-serif;text-align:center}'
+    +'.brand{font-size:19pt;font-weight:700;color:#2E9E8F;margin-bottom:3mm}'
+    +'.title{font-size:32pt;font-weight:900;margin:0 0 2mm}'
+    +'.sub{font-size:13pt;color:#555;margin-bottom:10mm}'
+    +'.qr{width:150mm;height:150mm;border:2mm solid #2E9E8F;border-radius:8mm;padding:6mm;background:#fff}'
+    +'.qr img{width:100%;height:100%;display:block}'
+    +'.codelbl{font-size:13pt;color:#777;margin-top:12mm}'
+    +'.code{font-size:50pt;font-weight:900;letter-spacing:10px;color:#1b7f72;margin-top:1mm}'
+    +'.valid{font-size:13pt;color:#888;margin-top:8mm}.hint{font-size:12pt;color:#b23;margin-top:3mm;font-weight:700}'
+    +'</style></head><body><div class="sheet">'
+    +'<div class="brand">하늘의문 중고등부</div><div class="title">출석 체크</div>'
+    +'<div class="sub">아래 QR을 스캔하거나 인증번호를 입력하세요</div>'
+    +'<div class="qr"><img src="'+imgBig+'" alt="출석 QR"></div>'
+    +'<div class="codelbl">인증번호</div><div class="code">'+qrState.code+'</div>'
+    +'<div class="valid">유효기간: '+sat+' (토) 당일</div>'+hint
+    +'</div><script>window.onload=function(){var im=document.images[0];function go(){setTimeout(function(){window.focus();window.print();},350);}if(im&&!im.complete){im.onload=go;im.onerror=go;}else{go();}};<\/script></body></html>';
+  var w=window.open('','_blank');
+  if(!w){showToast('팝업이 차단되었어요. 팝업 허용 후 다시 시도해주세요');return;}
+  w.document.write(html);w.document.close();
+}
 function syncQRUI(){const sat=currentSaturday();if(qrState.week&&qrState.week!==sat)qrState={week:'',code:'',resetUsed:false};const isFull=G.type==='principal'||G.type==='admin'||G.isAdmin;const has=!!qrState.code;show('qr-code-display',has);show('qr-view-btn',has);const gb=document.getElementById('qr-generate-btn');if(gb)gb.style.display=(isFull&&!has)?'':'none';show('qr-reset-btn',isFull);const rb=document.getElementById('qr-reset-btn');if(rb){rb.style.opacity=(has&&!qrState.resetUsed)?'1':'.45';}const st=document.getElementById('qr-status-text');if(st)st.textContent=has?(isFull?'이번 주 QR이 생성되었습니다 · 모든 선생님과 공유 중':'교감·교무 선생님이 생성한 이번 주 QR이에요'):(isFull?'금요일~토요일에 QR을 생성할 수 있어요':'아직 이번 주 QR이 없어요. 교감·교무 선생님이 생성하면 여기에 공유됩니다');if(has){const img=document.getElementById('qr-img');if(img)img.src=qrImgUrl(300);const tx=document.getElementById('qr-code-text');if(tx)tx.textContent=qrState.code;const i2=document.getElementById('qr-img-full');if(i2)i2.src=qrImgUrl(480);const t2=document.getElementById('qr-code-text-full');if(t2)t2.textContent=qrState.code;const vd=document.getElementById('qr-valid-date');if(vd)vd.textContent='유효기간: '+sat+' (토) 당일';}}
 function generateQR(){const isFull=G.type==='principal'||G.type==='admin'||G.isAdmin;if(!isFull){showToast('QR 생성은 교감·교무·관리자만 할 수 있어요');return;}if(isVacationDate(currentSaturday())){showToast('이번 주는 방학(미사없음)이라 출석 QR을 생성하지 않아요');return;}const dow=new Date().getDay();if(dow!==5&&dow!==6){showToast('금요일~토요일에만 QR을 생성할 수 있어요');return;}if(qrState.code){showToast('이미 이번 주 QR이 생성되었어요');return;}qrState.week=currentSaturday();qrState.code=String(Math.floor(100000+Math.random()*900000));try{appConfig.qr={week:qrState.week,code:qrState.code,resetUsed:!!qrState.resetUsed};}catch(e){}try{if(window.flushCfg)window.flushCfg();}catch(e){}syncQRUI();showToast('QR이 생성되었습니다! 모든 교사와 공유됩니다');}
 function resetQR(){const isFull=G.type==='principal'||G.type==='admin'||G.isAdmin;if(!isFull){showToast('교감·교무·관리자만 초기화할 수 있어요');return;}if(!qrState.code){showToast('초기화할 QR이 없어요. 먼저 QR을 생성해주세요');return;}if(qrState.resetUsed){showToast('이번 주 초기화를 이미 사용했어요');return;}openModal('qr-reset-confirm-modal');}
