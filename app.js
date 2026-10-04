@@ -5321,19 +5321,20 @@ function makeLitImage(){
   var cv=document.getElementById('lit-canvas'),ctx=cv.getContext('2d');
   var S=2,F="'Noto Sans KR',-apple-system,sans-serif";
   var W=560,PAD=24,HEAD=54,GAP=10;
-  var SERVE=(typeof LIT_SERVE!=='undefined')?LIT_SERVE:[];
-  /* 각 토요일 블록의 내용과 높이를 먼저 계산 (담당학생 배정 줄 수에 맞춰 가변 높이) */
+  var ROWH=25;
+  /* 각 토요일: 해설/독서1·2/복음/보편지향기도를 한 줄씩 통합 (이름=가운데, 구절=오른쪽 정렬) */
   var blocks=sats.map(function(ds){
-    var h=litFor(ds)||{};
-    var roles=h.roles||{};
-    var assigns=SERVE.filter(function(x){return roles[x[0]];}).map(function(x){return {label:x[1],name:_litStuName(roles[x[0]])};});
-    var hasR=LIT_ROWS.some(function(r){return h[r[0]];});
-    var rows=hasR?LIT_ROWS.length:0;
-    var hh=40;
-    if(rows)hh+=rows*24+4; else hh+=8;
-    if(assigns.length)hh+=20+Math.ceil(assigns.length/2)*20+6;
-    if(h.note)hh+=22;
-    return {ds:ds,h:h,assigns:assigns,hasR:hasR,BH:Math.max(hh,72)};
+    var h=litFor(ds)||{};var roles=h.roles||{};
+    var nm=function(k){return roles[k]?_litStuName(roles[k]):'';};
+    var prays=['pray1','pray2','pray3','pray4'].map(nm).filter(Boolean);
+    var lines=[];var c=nm('comment');
+    if(c)lines.push(['해설',c,'']);
+    if(nm('read1')||h.reading1)lines.push(['독서1',nm('read1'),h.reading1||'']);
+    if(nm('read2')||h.reading2)lines.push(['독서2',nm('read2'),h.reading2||'']);
+    if(h.gospel)lines.push(['복음','',h.gospel]);
+    if(prays.length)lines.push(['보편지향기도',prays.join(', '),'']);
+    var hh=44+lines.length*ROWH+(h.note?22:0)+12;
+    return {ds:ds,h:h,lines:lines,BH:Math.max(hh,54)};
   });
   var H=HEAD+PAD;blocks.forEach(function(b){H+=b.BH+GAP;});
   cv.width=W*S;cv.height=H*S;ctx.setTransform(S,0,0,S,0,0);
@@ -5345,41 +5346,31 @@ function makeLitImage(){
   ctx.beginPath();ctx.moveTo(W/2-46,PAD+32);ctx.lineTo(W/2+46,PAD+32);ctx.stroke();
   var clip=function(t,max){t=String(t||'');if(ctx.measureText(t).width<=max)return t;
     while(t.length>1&&ctx.measureText(t+'…').width>max)t=t.slice(0,-1);return t+'…';};
+  var IW=W-PAD*2;           /* 블록 내부 너비 */
+  var NAMEX=108;            /* 이름 열 시작 */
+  var REFX=IW-12;           /* 구절 오른쪽 끝(우측정렬) */
   var y=HEAD;
   blocks.forEach(function(b){
     var h=b.h,d=b.ds.split('-'),x=PAD,BH=b.BH;
-    ctx.fillStyle='#F7FAFF';ctx.fillRect(x,y,W-PAD*2,BH);
-    ctx.strokeStyle='#DDE5F5';ctx.lineWidth=1;ctx.strokeRect(x+0.5,y+0.5,W-PAD*2,BH);
+    ctx.fillStyle='#F7FAFF';ctx.fillRect(x,y,IW,BH);
+    ctx.strokeStyle='#DDE5F5';ctx.lineWidth=1;ctx.strokeRect(x+0.5,y+0.5,IW,BH);
     ctx.fillStyle='#2FA595';ctx.fillRect(x,y,4,BH);
     ctx.textAlign='left';
     ctx.fillStyle='#1A2340';ctx.font='bold 14px '+F;
     ctx.fillText((+d[1])+'월 '+(+d[2])+'일', x+18, y+21);
-    if(h.label){ctx.fillStyle='#1E7D70';ctx.font='13px '+F;ctx.fillText(h.label, x+96, y+21);}
+    if(h.label){ctx.fillStyle='#1E7D70';ctx.font='13px '+F;ctx.fillText(clip(h.label,IW-110), x+100, y+21);}
     var ly=y+46;
-    if(b.hasR){
-      LIT_ROWS.forEach(function(r){
-        ctx.fillStyle='#8A97B5';ctx.font='11px '+F;ctx.fillText(r[1], x+18, ly);
-        ctx.fillStyle='#1A2340';ctx.font='13px '+F;ctx.fillText(clip(h[r[0]]||'-', W-PAD*2-96), x+80, ly);
-        ly+=24;
-      });
-      ly+=4;
-    } else { ly+=4; }
-    if(b.assigns.length){
-      ctx.fillStyle='#4B5DB6';ctx.font='bold 11px '+F;ctx.fillText('전례 봉사 배정', x+18, ly);
-      ly+=18;
-      var colW=(W-PAD*2-36)/2;
-      b.assigns.forEach(function(a,ai){
-        var col=ai%2,rw=Math.floor(ai/2);
-        var ax=x+18+col*colW, ay=ly+rw*20;
-        ctx.fillStyle='#8A97B5';ctx.font='11px '+F;
-        var lbl=a.label+' ';ctx.fillText(lbl, ax, ay);
-        var lw=ctx.measureText(lbl).width;
-        ctx.fillStyle='#1A2340';ctx.font='bold 12px '+F;
-        ctx.fillText(clip(a.name||'-', colW-lw-10), ax+lw, ay);
-      });
-      ly+=Math.ceil(b.assigns.length/2)*20+6;
-    }
-    if(h.note){ctx.fillStyle='#D95F50';ctx.font='bold 13px '+F;ctx.fillText(h.note, x+18, ly);}
+    b.lines.forEach(function(L){
+      var label=L[0],name=L[1],ref=L[2];
+      ctx.textAlign='left';ctx.fillStyle='#8A97B5';ctx.font='12px '+F;
+      ctx.fillText(name?(label+' :'):label, x+18, ly);
+      if(name){ctx.fillStyle='#1A2340';ctx.font='bold 13px '+F;
+        ctx.fillText(clip(name, ref?185:(IW-NAMEX-16)), x+NAMEX, ly);}
+      if(ref){ctx.fillStyle='#2B3550';ctx.font='13px '+F;ctx.textAlign='right';
+        ctx.fillText(clip(ref,180), x+REFX, ly);ctx.textAlign='left';}
+      ly+=ROWH;
+    });
+    if(h.note){ctx.fillStyle='#D95F50';ctx.font='bold 13px '+F;ctx.textAlign='left';ctx.fillText(clip(h.note,IW-36), x+18, ly+2);}
     y+=BH+GAP;
   });
   try{ showImgPreview(cv, litYear+'년 '+(litMonth+1)+'월 전례', litYear+'년_'+(litMonth+1)+'월_전례.png'); }
