@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="하늘의문 중고등부">
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(e){console.warn('SW register failed',e);});});}</script>
-<link rel="stylesheet" href="./styles.css?v=20260924n">
+<link rel="stylesheet" href="./styles.css?v=20260924q">
 <style>
 /* 회의록: 플레이스홀더는 커서가 있는 빈 줄에만 표시 */
 #minutes-viewer-content .mb-txt[data-ph]::before,#minutes-viewer-content .mb-txt[data-ph]:empty:focus::before{content:none!important;display:none!important}
@@ -914,14 +914,23 @@
       </div>
     </div>
     <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border-light)">
-      <div style="font-size:13px;font-weight:800;margin-bottom:4px">🔍 화면 미리보기</div>
+      <div style="font-size:13px;font-weight:800;margin-bottom:4px">🧪 테스트 모드 (화면 미리보기)</div>
       <div style="font-size:11px;color:var(--text-light);margin-bottom:12px">학생·학부모·교사 화면을 그대로 체험해볼 수 있어요</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span style="font-size:11px;color:var(--text-sub);font-weight:700;white-space:nowrap">테스트 학생 학년</span>
+        <select id="preview-grade" style="flex:1;font-size:12px;padding:8px 9px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--card);color:var(--text)">
+          <option value="m1">중1</option>
+          <option value="m2">중2</option>
+          <option value="m3">중3</option>
+          <option value="h">고등</option>
+        </select>
+      </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
         <button class="btn btn-outline btn-sm" style="width:100%" onclick="startPreview('student')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2E9E8F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-5"/><path d="M22 10v5" stroke="#EBA23B"/></svg> 학생</button>
         <button class="btn btn-outline btn-sm" style="width:100%" onclick="startPreview('parent')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#37B39B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><circle cx="9" cy="8" r="3.2" stroke="#E8709A"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17.5" cy="9" r="2.4" stroke="#5B8DEF"/><path d="M16 13.5a5 5 0 0 1 5.5 4.5" stroke="#5B8DEF"/></svg> 학부모</button>
         <button class="btn btn-outline btn-sm" style="width:100%" onclick="startPreview('teacher')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C6FF0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 2v20" stroke="#7C6FF0"/><path d="M7 8h10" stroke="#EBA23B"/></svg> 교사</button>
       </div>
-      <div style="font-size:10.5px;color:var(--text-light);margin-top:10px;line-height:1.5">미리보기는 실제 학생 데이터(포인트·프로필)에 영향을 주지 않아요.</div>
+      <div style="font-size:10.5px;color:var(--text-light);margin-top:10px;line-height:1.55">🧪 <b>가짜(테스트) 계정</b>으로 열려요. 포인트·출석·미션·글쓰기 등 무엇을 눌러도 <b>실제에 저장되지 않고</b> 다른 사람에게도 안 보여요. 테스트용 가짜 학생도 함께 보이고, <b>종료하면 모두 초기화</b>됩니다.</div>
     </div>
   </div>
 </div>
@@ -2774,7 +2783,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="./assets.js"></script>
-<script src="./app.js?v=20260924n"></script>
+<script src="./app.js?v=20260924q"></script>
 
 <div id="theme-preview-bar" style="display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:88px;z-index:600;background:rgba(26,35,64,0.95);color:white;padding:10px 12px 10px 16px;border-radius:14px;box-shadow:var(--shadow-lg);align-items:center;gap:10px;max-width:410px;width:calc(100% - 32px);backdrop-filter:blur(4px)">
   <span id="theme-preview-label" style="font-size:13px;font-weight:700;flex:1">🎨 미리보기</span>
@@ -2798,7 +2807,7 @@
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-messaging-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-auth-compat.js"></script>
-<script src="./app-sync.js?v=20260924n"></script>
+<script src="./app-sync.js?v=20260924q"></script>
 
 </body>
 </html>

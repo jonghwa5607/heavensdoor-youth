@@ -37,8 +37,42 @@ let appConfig={title:'하늘의문 중고등부 주일학교',color:'#5B9BD5',ve
   Object.defineProperty(window,'adminVote',{configurable:true,get:function(){return appConfig.adminVote||null;},set:function(v){appConfig.adminVote=v||null;}});
 })();
 let previewMode=false,previewBackupUser=null,currentLoginUser=null;
-function startPreview(role){if(!previewMode){previewBackupUser=currentLoginUser;previewMode=true;}window._previewMode=true;const samples={student:{role:'student',name:'미리보기',baptism:'요셉',id:'preview-student',gradeKey:'m1',gradeLabel:'중1',approved:true,birthMonth:0,birthDay:0,feastMonth:0,feastDay:0,children:[],attendedWeeks:[],halfWeeks:[]},parent:{role:'parent',name:'미리보기',baptism:'안나',id:'preview-parent',children:[{name:'김하늘'}],approved:true,isJabumo:false,birthMonth:0,birthDay:0,feastMonth:0,feastDay:0},teacher:{role:'teacher',name:'미리보기',baptism:'베드로',id:'preview-teacher',teacherType:'m1',gradeLabel:'중1',approved:true,isAdmin:false,birthMonth:0,birthDay:0,feastMonth:0,feastDay:0}};const labels={student:'학생',parent:'학부모',teacher:'교사'};if(role==='student'){const real=pendingList.find(u=>u.approved&&u.role==='student'&&!u.hidden&&!u.graduated);if(real){samples.student=Object.assign({},real);samples.student.id='preview-student';['pointHistory','attendedWeeks','halfWeeks','qrScanAt','weekAward','milestonesAwarded','monthPerfect','children','history'].forEach(function(k){try{if(real[k]!=null)samples.student[k]=JSON.parse(JSON.stringify(real[k]));}catch(e){}});window._previewMe=samples.student;}else{try{var _ps=samples.student;var _sw=(typeof getSaturdays==='function')?getSaturdays(2):[];_ps.attendedWeeks=_sw.slice().reverse();_ps.halfWeeks=[];if(typeof recalcMemberPoints==='function')recalcMemberPoints(_ps);_ps.attendTotal=(typeof calcAttendTotal==='function')?calcAttendTotal(_ps):(_ps.attendedWeeks||[]).length;}catch(e){}}}try{startSession(samples[role]);}catch(e){document.getElementById('bottom-nav').style.display='flex';goScreen('home');switchTab('home');showToast('미리보기 화면 전환 중 일부 요소를 불러오지 못했어요');}setPreviewBarVisible(true,'🔍 미리보기 모드: '+labels[role]+' 화면');}
-function exitPreview(){previewMode=false;window._previewMode=false;window._previewMe=null;setPreviewBarVisible(false);if(previewBackupUser){startSession(previewBackupUser);switchTab('admin');showAdminTab('settings');}}
+function _mkTestStudent(o){var sw=[];try{sw=(typeof getSaturdays==='function')?getSaturdays(5):[];}catch(e){}var u={role:'student',name:o.name,baptism:o.baptism,id:o.id,gradeKey:o.gradeKey||'m1',gradeLabel:({m1:'중1',m2:'중2',m3:'중3',h:'고등'})[o.gradeKey||'m1'],approved:true,_test:true,hidden:false,graduated:false,birthMonth:o.bm||0,birthDay:o.bd||0,feastMonth:o.fm||0,feastDay:o.fd||0,children:[],attendedWeeks:(o.att?sw.slice(0,o.att):[]),halfWeeks:[],pointHistory:[],currentPoints:o.pts||0,yearTotalPoints:o.pts||0,qrScanAt:{},milestonesAwarded:[],weekAward:{},monthPerfect:{},history:[],avatar:o.avatar||'',statusMsg:o.status||''};try{if(typeof recalcMemberPoints==='function')recalcMemberPoints(u);}catch(e){}try{u.attendTotal=(typeof calcAttendTotal==='function')?calcAttendTotal(u):(u.attendedWeeks||[]).length;}catch(e){u.attendTotal=(u.attendedWeeks||[]).length;}try{if(typeof computeStreak==='function')u.streak=computeStreak(u);}catch(e){}return u;}
+function _seedTestData(active){
+  try{ if(!Array.isArray(pendingList))return;
+    // 미리보기 학생 본인 + 가짜 반 친구들 (순위·교사 테스트용)
+    var seeds=[active];
+    if(active.role==='student'){
+      seeds.push(_mkTestStudent({name:'테스트 가온',baptism:'미카엘',id:'preview-cls-1',gradeKey:(active&&active.gradeKey)||'m1',pts:180,att:3}));
+      seeds.push(_mkTestStudent({name:'테스트 나름',baptism:'루치아',id:'preview-cls-2',gradeKey:(active&&active.gradeKey)||'m1',pts:90,att:1}));
+      seeds.push(_mkTestStudent({name:'테스트 다온',baptism:'스텔라',id:'preview-cls-3',gradeKey:(active&&active.gradeKey)||'m1',pts:240,att:4}));
+    } else {
+      // 교사·학부모 테스트: 볼 학생들
+      seeds.push(_mkTestStudent({name:'테스트 가온',baptism:'미카엘',id:'preview-cls-1',gradeKey:(active&&active.gradeKey)||'m1',pts:180,att:3}));
+      seeds.push(_mkTestStudent({name:'테스트 나름',baptism:'루치아',id:'preview-cls-2',gradeKey:(active&&active.gradeKey)||'m1',pts:90,att:1}));
+      seeds.push(_mkTestStudent({name:'테스트 다온',baptism:'스텔라',id:'preview-cls-3',gradeKey:(active&&active.gradeKey)||'m1',pts:240,att:4}));
+    }
+    seeds.forEach(function(u){ if(u&&!pendingList.some(function(x){return x&&x.id===u.id;})) pendingList.push(u); });
+  }catch(e){}
+}
+function _clearTestData(){ try{ if(Array.isArray(pendingList)) pendingList=pendingList.filter(function(u){return !(u&&u._test);}); }catch(e){} }
+function startPreview(role){
+  if(!previewMode){previewBackupUser=currentLoginUser;previewMode=true;}
+  window._previewMode=true;
+  var _pg='m1';try{var _ps=document.getElementById('preview-grade');if(_ps&&_ps.value)_pg=_ps.value;}catch(e){}
+  var stu=_mkTestStudent({name:'테스트 학생',baptism:'요셉',id:'preview-student',gradeKey:_pg,pts:120,att:2});
+  var tea={role:'teacher',name:'테스트 교사',baptism:'베드로',id:'preview-teacher',teacherType:'principal',gradeLabel:'교감',approved:true,_test:true,isAdmin:true,birthMonth:0,birthDay:0,feastMonth:0,feastDay:0};
+  var par={role:'parent',name:'테스트 학부모',baptism:'안나',id:'preview-parent',children:[{name:'테스트 학생'}],approved:true,_test:true,isJabumo:false,birthMonth:0,birthDay:0,feastMonth:0,feastDay:0};
+  var samples={student:stu,parent:par,teacher:tea};
+  var active=samples[role]||stu;
+  window._previewMe=active;
+  try{ _seedTestData(stu); if(active.role!=='student'&&!pendingList.some(function(u){return u&&u.id===active.id;})) pendingList.push(active); }catch(e){}
+  var _gl=({m1:'중1',m2:'중2',m3:'중3',h:'고등'})[_pg]||'';
+  var labels={student:'학생'+(_gl?'('+_gl+')':''),parent:'학부모',teacher:'교사'};
+  try{startSession(active);}catch(e){document.getElementById('bottom-nav').style.display='flex';goScreen('home');switchTab('home');showToast('미리보기 화면 전환 중 일부 요소를 불러오지 못했어요');}
+  setPreviewBarVisible(true,'🧪 테스트 모드: '+labels[role]+' 화면 · 저장 안 됨');
+}
+function exitPreview(){/* _previewMode는 reload 직전까지 true로 유지해 자동 flush가 테스트 데이터를 저장하지 못하게 함 */try{localStorage.setItem('hd-last-tab','admin');}catch(e){}try{var _pt=document.getElementById('preview-bar-text');if(_pt)_pt.textContent='🧪 테스트 종료 · 초기화 중…';}catch(e){}try{showToast('테스트 종료 · 초기화 중…');}catch(e){}setTimeout(function(){try{location.reload();}catch(e){try{previewMode=false;window._previewMode=false;window._previewMe=null;_clearTestData();setPreviewBarVisible(false);if(previewBackupUser){startSession(previewBackupUser);switchTab('admin');showAdminTab('settings');}}catch(_){}}},300);}
 function setPreviewBarVisible(v,text){const bar=document.getElementById('preview-bar');if(bar)bar.style.display=v?'flex':'none';document.querySelectorAll('.app-header').forEach(h=>h.style.marginTop=v?'34px':'0');const t=document.getElementById('preview-bar-text');if(v&&t)t.textContent=text;}
 function loadAppConfigForm(){try{loadThemeGreetInputs();}catch(e){}try{applyLogo();}catch(e){}document.getElementById('cfg-title').value=appConfig.title;document.getElementById('cfg-color').value=appConfig.color;document.getElementById('cfg-verse').value=appConfig.verse;document.getElementById('cfg-verse-ref').value=appConfig.verseRef;document.getElementById('cfg-notion-url').value=appConfig.notionUrl||'';try{renderDriveCfg();}catch(e){}const vm=appConfig.vacMsg||VAC_MSG_DEFAULT;document.getElementById('cfg-vac-edu-title').value=vm.eduTitle;document.getElementById('cfg-vac-edu-body').value=vm.eduBody;document.getElementById('cfg-vac-full-title').value=vm.fullTitle;document.getElementById('cfg-vac-full-body').value=vm.fullBody;document.getElementById('cfg-reward-bday').value=appConfig.bdayReward||BDAY_REWARD_DEFAULT;ATTEND_LEVELS.forEach(L=>{const el=document.getElementById('cfg-reward-'+L.n);if(el)el.value=L.r||'';});}
 /* 오늘의 말씀: 수정 권한이 있으면 눌러서 바로 편집 */
@@ -355,8 +389,8 @@ function _reconcileMonthPerfect(u,sat,by){
 function _phPush(u,type,amount,reason,by,ref){u.pointHistory=u.pointHistory||[];u.pointHistory.push({type:type,amount:amount,reason:reason,createdAt:new Date().toLocaleDateString('ko-KR'),ts:Date.now(),createdBy:by||'시스템',ref:ref||''});if(u.pointHistory.length>500)u.pointHistory.splice(0,u.pointHistory.length-500);}
 function _ptSyncG(u){if(u&&G&&u.id===G.id){G.currentPoints=u.currentPoints||0;G.yearTotalPoints=u.yearTotalPoints||0;G.level=u.level||1;G.pendingStreakRewards=u.pendingStreakRewards||0;}}
 /* growth=true 일 때만 성장점수(레벨) 반영. 생일/축일/교사/이벤트 포인트는 보유 포인트에만 지급 */
-function earnPoints(u,amount,reason,by,ref,growth){if(window._previewMode)return;if(!u||!amount)return;u.currentPoints=(u.currentPoints||0)+amount;if(growth){u.yearTotalPoints=(u.yearTotalPoints||0)+amount;u.level=levelInfo(u.yearTotalPoints).lv;}_phPush(u,'earn',amount,reason,by,ref);_ptSyncG(u);try{saveMemberNow(u);}catch(e){}}
-function spendPoints(u,amount,reason,ref){if(window._previewMode)return false;if(!u||!amount)return false;if((u.currentPoints||0)<amount)return false;u.currentPoints-=amount;_phPush(u,'spend',-amount,reason,'',ref);_ptSyncG(u);try{saveMemberNow(u);}catch(e){}return true;}
+function earnPoints(u,amount,reason,by,ref,growth){if(window._previewMode&&!(u&&(u._test||u===window._previewMe)))return;if(!u||!amount)return;u.currentPoints=(u.currentPoints||0)+amount;if(growth){u.yearTotalPoints=(u.yearTotalPoints||0)+amount;u.level=levelInfo(u.yearTotalPoints).lv;}_phPush(u,'earn',amount,reason,by,ref);_ptSyncG(u);try{saveMemberNow(u);}catch(e){}}
+function spendPoints(u,amount,reason,ref){if(window._previewMode&&!(u&&(u._test||u===window._previewMe)))return false;if(!u||!amount)return false;if((u.currentPoints||0)<amount)return false;u.currentPoints-=amount;_phPush(u,'spend',-amount,reason,'',ref);_ptSyncG(u);try{saveMemberNow(u);}catch(e){}return true;}
 /* 주(週)단위 출석 포인트 — 상태를 바꿔도 중복지급 없이 재계산 */
 function awardAttendance(u,sat,status,by){
   if(!u||!sat)return {added:0};
@@ -1558,8 +1592,8 @@ function copyTempPw(){
   try{navigator.clipboard.writeText(_tempPw);showToast('📋 복사했어요');}
   catch(e){showToast('임시 비밀번호: '+_tempPw);}
 }
-function _forceKickedLogout(msg){try{previewMode=false;window._previewMode=false;window._previewMe=null;setPreviewBarVisible(false);}catch(e){}try{localStorage.removeItem('hd-session-id');localStorage.removeItem('hd-last-tab');}catch(e){}try{currentLoginUser=null;}catch(e){}try{G.id='';G.role='';}catch(e){}try{var nav=document.getElementById('bottom-nav');if(nav)nav.style.display='none';}catch(e){}try{clearBdaySlide();}catch(e){}try{goScreen('intro');}catch(e){}try{showToast(msg||'로그아웃 되었습니다');}catch(e){}}
-function doLogout(){previewMode=false;window._previewMode=false;window._previewMe=null;setPreviewBarVisible(false);try{localStorage.removeItem('hd-session-id');localStorage.removeItem('hd-last-tab');}catch(e){}document.getElementById('bottom-nav').style.display='none';clearBdaySlide();goScreen('intro');showToast('로그아웃 되었습니다');}
+function _forceKickedLogout(msg){if(window._previewMode){try{localStorage.removeItem('hd-session-id');localStorage.removeItem('hd-session-pwv');}catch(e){}try{location.reload();}catch(e){}return;}try{previewMode=false;window._previewMode=false;window._previewMe=null;_clearTestData();setPreviewBarVisible(false);}catch(e){}try{localStorage.removeItem('hd-session-id');localStorage.removeItem('hd-last-tab');}catch(e){}try{currentLoginUser=null;}catch(e){}try{G.id='';G.role='';}catch(e){}try{var nav=document.getElementById('bottom-nav');if(nav)nav.style.display='none';}catch(e){}try{clearBdaySlide();}catch(e){}try{goScreen('intro');}catch(e){}try{showToast(msg||'로그아웃 되었습니다');}catch(e){}}
+function doLogout(){if(window._previewMode){try{localStorage.removeItem('hd-session-id');localStorage.removeItem('hd-last-tab');}catch(e){}try{location.reload();}catch(e){}return;}previewMode=false;window._previewMode=false;window._previewMe=null;try{_clearTestData();}catch(e){}setPreviewBarVisible(false);try{localStorage.removeItem('hd-session-id');localStorage.removeItem('hd-last-tab');}catch(e){}document.getElementById('bottom-nav').style.display='none';clearBdaySlide();goScreen('intro');showToast('로그아웃 되었습니다');}
 
 function stampPage(d){var _v=function(w){return isVacationDate(w)||isEduVacation(w);};var n=(G.attendedWeeks||[]).filter(function(w){return !_v(w);}).length;var pages=Math.max(1,Math.ceil(n/10));var p=(window._stampPage||pages)+d;if(p<1)p=1;if(p>pages)p=pages;window._stampPage=p;initStamps();}
 function initStamps(){const t=G.attendTotal||0;var _nx=null;for(const L of ATTEND_LEVELS){if(t<L.n){_nx=L;break;}}var _pv=0;ATTEND_LEVELS.forEach(L=>{if(t>=L.n)_pv=L.n;});var _vacS=function(w){return isVacationDate(w)||isEduVacation(w);};
@@ -2952,7 +2986,7 @@ function _dedupMinutes(){
 function _minRealBody(r){try{if(!r)return '';var c=r.content||'';c=_minWithAgenda(c,'');var ag=(r.agendaText||'')||((litFor(r.mdate)||{}).agenda||'');if(ag){var ob=ag.split(/[,·;\n]/).map(function(x){return x.trim();}).filter(Boolean).map(function(x){return '## '+x;}).join('\n').trim();if(c.trim()===ob)c='';}return c.trim();}catch(e){return (r&&r.content||'').trim();}}
 function _backupMinutes(){try{if(!window.localStorage)return;var mins=(resources||[]).filter(function(r){return r&&r.cat==='minutes'&&!r.deleted&&((r.content||'').trim()||(r.agendaText||'').trim());}).map(function(r){return {id:r.id,mdate:r.mdate,title:r.title,content:r.content||'',agendaText:r.agendaText||'',published:!!r.published,year:r.year||''};});var prev=[];try{prev=(JSON.parse(localStorage.getItem('hd_min_backup')||'{}').minutes)||[];}catch(e){}
   /* 백업은 '내용 있는 회의록 수'가 줄지 않을 때만 갱신 → 사고로 비워진 상태가 좋은 백업을 덮어쓰지 않음 */
-  if(mins.length>=prev.length){localStorage.setItem('hd_min_backup',JSON.stringify({ts:Date.now(),minutes:mins}));}
+  if(!window._previewMode&&mins.length>=prev.length){localStorage.setItem('hd_min_backup',JSON.stringify({ts:Date.now(),minutes:mins}));}
 }catch(e){}}
 function _applyMinutesBackup(mins){var n=0;(mins||[]).forEach(function(b){var r=(resources||[]).find(function(x){return x.id===b.id;});if(r){if(!(r.content||'').trim()&&(b.content||'').trim()){r.content=b.content;n++;}if(!(r.agendaText||'').trim()&&(b.agendaText||'').trim())r.agendaText=b.agendaText;if(r.deleted&&((b.content||'').trim()||(b.agendaText||'').trim())){r.deleted=false;}}else{resources.unshift({id:b.id,cat:'minutes',mdate:b.mdate,title:b.title||'회의록',content:b.content||'',agendaText:b.agendaText||'',published:!!b.published,year:b.year||String((b.mdate||'').slice(0,4)),authorId:G.id,authorName:G.displayName,date:_minDateStr(),updatedAt:_minDateStr(),updatedBy:G.displayName});n++;}});if(n){try{if(typeof flushSync==='function')flushSync();}catch(e){}try{renderMinutesHub();}catch(e){}try{renderResourceList();}catch(e){}}return n;}
 function restoreMinutesBackup(){try{var bk={};try{bk=JSON.parse(localStorage.getItem('hd_min_backup')||'{}');}catch(e){}var mins=bk.minutes||[];if(!mins.length){showToast('기기 백업이 없어요');return;}var n=_applyMinutesBackup(mins);showToast(n?('기기 백업에서 '+n+'건 복원했어요'):'복원할 내용이 없어요(이미 최신)');}catch(e){showToast('복원 실패');}}
@@ -3923,7 +3957,7 @@ function renderPushNudgeBar(){
   bar.style.display=show?'block':'none';
 }
 function openPushNudge(){ _resetOptinText(); openModal('push-optin-modal'); }
-function dismissPushNudge(){ try{localStorage.setItem('hd-nudge-hide',String(Date.now()+3*86400000));}catch(e){} var b=document.getElementById('push-nudge-bar'); if(b)b.style.display='none'; }
+function dismissPushNudge(){ try{if(!window._previewMode)localStorage.setItem('hd-nudge-hide',String(Date.now()+3*86400000));}catch(e){} var b=document.getElementById('push-nudge-bar'); if(b)b.style.display='none'; }
 /* 공지 종류 구분 — 주간공지 / 방학 / 일반 */
 function noticeKind(p){
   var id=String(p&&p.id||'');
@@ -4062,7 +4096,7 @@ function setNotifMode(mode){
   if(vb)vb.classList.toggle('active',mode==='vibrate');
   if(sl)sl.classList.toggle('active',mode==='silent');
   var lbl=document.getElementById('notif-setting-label');if(lbl)lbl.textContent=mode==='vibrate'?'진동':'무음';
-  try{localStorage.setItem('hd-notif-mode',mode);}catch(e){}
+  try{if(!window._previewMode)localStorage.setItem('hd-notif-mode',mode);}catch(e){}
   try{_saveNotifModeIDB(mode);}catch(e){}
   if(mode==='vibrate'){
     var ok=false;try{if(navigator.vibrate)ok=navigator.vibrate([0,120,60,120]);}catch(e){}
@@ -4105,7 +4139,6 @@ function openProfileEdit(){
   openModal('profile-edit-modal');
 }
 async function submitProfileEdit(){
-  if(window._previewMode){try{closeModal('profile-edit-modal');}catch(e){}try{showToast('미리보기에서는 저장되지 않아요');}catch(e){}return;}
   var me=_meRec();
   if(!me){ /* 관리자 등 회원문서가 아직 없으면 G 기준으로 생성 */
     me=Object.assign({},G,{id:G.id,name:G.name,baptism:G.baptism,role:G.role,approved:true});
@@ -4120,7 +4153,7 @@ async function submitProfileEdit(){
   const cur=(document.getElementById('pe-pw-cur').value||'').trim();
   const n1=(document.getElementById('pe-pw-new').value||'').trim();
   const n2=(document.getElementById('pe-pw-confirm').value||'').trim();
-  if(n1||n2||cur){
+  if(!window._previewMode&&(n1||n2||cur)){
     if(!cur){showToast('현재 비밀번호를 입력해주세요');return;}
     const hc=await hashPw(G.id,cur);
     const ok=(me.pwh&&me.pwh===hc)||(!me.pwh&&me.pw&&me.pw===cur);
@@ -4140,7 +4173,7 @@ async function submitProfileEdit(){
   try{if(G.role==='student'){var _g1=(me.avatar&&(me.statusMsg||'').trim())&&_mAward('mission-photo',10,'프로필 꾸미기 미션');var _g2=(+me.birthMonth&&+me.birthDay&&+me.feastMonth&&+me.feastDay)&&_mAward('mission-birth',10,'생일·축일 입력 미션');if(_g1||_g2)showToast('🎯 미션 완료 +'+((_g1?10:0)+(_g2?10:0))+'P');try{renderHomePoints();}catch(e){}try{renderHomeMission();}catch(e){}}}catch(e){}
   _peAvatar=null;
   closeModal('profile-edit-modal');
-  showToast('저장되었어요')
+  showToast(window._previewMode?'테스트 적용됨 · 저장 안 됨':'저장되었어요')
 }
 
 function adminRec(){return pendingList.find(function(x){return x.id===ADMIN.id;})||null;}
@@ -4417,7 +4450,7 @@ function initPush(){
   setTimeout(function(){ maybeAskPush(); }, 1500);
 }
 function maybeAskPush(){
-  try{ localStorage.setItem('hd-push-asked','1'); localStorage.removeItem('hd-push-snooze'); }catch(e){}
+  try{ if(!window._previewMode){localStorage.setItem('hd-push-asked','1'); localStorage.removeItem('hd-push-snooze');} }catch(e){}
   var m=document.getElementById('push-optin-modal');
   if(m){ openModal('push-optin-modal'); }
   else { enablePush().catch(function(){}); }
@@ -4428,7 +4461,7 @@ async function acceptPushOptin(){
   try{ await enablePush(); }catch(e){}
 }
 function _resetOptinText(){var t=document.getElementById('push-optin-title'),d=document.getElementById('push-optin-desc');if(t)t.textContent='알림을 놓치지 마세요!';if(d)d.innerHTML='알림을 켜지 않으면 <b>쿠폰·공지·생일 축하</b>를<br>제때 받지 못해요. 앱을 닫아둬도 바로 알려드릴게요 🎁';}
-function declinePushOptin(){ closeModal('push-optin-modal'); _resetOptinText(); try{localStorage.setItem('hd-push-snooze',String(Date.now()+3*86400000));}catch(e){} }
+function declinePushOptin(){ closeModal('push-optin-modal'); _resetOptinText(); try{if(!window._previewMode)localStorage.setItem('hd-push-snooze',String(Date.now()+3*86400000));}catch(e){} }
 /* 안드로이드 크롬은 new Notification() 을 막는다 → 서비스워커로 띄워야 함 */
 function pushLocalNotif(title,body){
   if(G.notifMode==='silent')return;
@@ -4578,6 +4611,7 @@ function calcAttendTotal(u){var _vac=function(w){return isVacationDate(w)||isEdu
 /* 지난 날짜의 출석을 고칠 때 사용 (학생카드에서 칸 탭) */
 function setAttendOn(uid,dateStr,st){
   const u=pendingList.find(u=>u.id===uid);if(!u)return;
+  if(window._previewMode&&!(u._test||u===window._previewMe)){showToast('테스트 모드에서는 가짜(테스트) 학생만 수정할 수 있어요');return;}
   u.attendedWeeks=(u.attendedWeeks||[]).filter(d=>d!==dateStr);
   u.halfWeeks=(u.halfWeeks||[]).filter(d=>d!==dateStr);
   if(st==='full')u.attendedWeeks.push(dateStr);
@@ -4639,7 +4673,7 @@ function pickAttend(dateStr,st){
   closeModal('attend-pick-modal');
   renderDetailAttend();
 }
-function setAttendStatus(uid,st){const sat=attendSat();if(isVacationDate(sat)){showToast('이번 주는 방학이라 출석을 진행하지 않아요');return;}const u=pendingList.find(u=>u.id===uid);if(!u)return;u.attendedWeeks=(u.attendedWeeks||[]).filter(d=>d!==sat);u.halfWeeks=(u.halfWeeks||[]).filter(d=>d!==sat);if(st==='full')u.attendedWeeks.push(sat);else if(st==='half'){u.attendedWeeks.push(sat);u.halfWeeks.push(sat);}u.attendTotal=calcAttendTotal(u);if(st!=='absent'){u.absentAckBy=null;}u.streak=computeStreak(u);try{awardAttendance(u,sat,st,G.displayName);}catch(e){}if(computeAbsentStreak(u)<3){notifications=notifications.filter(n=>n.absentUid!==u.id);}if(G.id===u.id){G.attendTotal=u.attendTotal;G.streak=u.streak;G.attendedWeeks=u.attendedWeeks;G.halfWeeks=u.halfWeeks;}saveMemberNow(u);checkAbsentNotifications();window._lastAttendUid=uid;renderAttendList();window._lastAttendUid=null;renderAbsentAlerts();renderAttendStats();renderAdminGrid(G.type==='principal'||G.type==='admin'||G.isAdmin);showToast(st==='full'?'✅ 출석 처리':st==='half'?'🌗 반일출석 처리':'결석 처리');}
+function setAttendStatus(uid,st){const sat=attendSat();if(isVacationDate(sat)){showToast('이번 주는 방학이라 출석을 진행하지 않아요');return;}const u=pendingList.find(u=>u.id===uid);if(!u)return;if(window._previewMode&&!(u._test||u===window._previewMe)){showToast('테스트 모드에서는 가짜(테스트) 학생만 수정할 수 있어요');return;}u.attendedWeeks=(u.attendedWeeks||[]).filter(d=>d!==sat);u.halfWeeks=(u.halfWeeks||[]).filter(d=>d!==sat);if(st==='full')u.attendedWeeks.push(sat);else if(st==='half'){u.attendedWeeks.push(sat);u.halfWeeks.push(sat);}u.attendTotal=calcAttendTotal(u);if(st!=='absent'){u.absentAckBy=null;}u.streak=computeStreak(u);try{awardAttendance(u,sat,st,G.displayName);}catch(e){}if(computeAbsentStreak(u)<3){notifications=notifications.filter(n=>n.absentUid!==u.id);}if(G.id===u.id){G.attendTotal=u.attendTotal;G.streak=u.streak;G.attendedWeeks=u.attendedWeeks;G.halfWeeks=u.halfWeeks;}saveMemberNow(u);checkAbsentNotifications();window._lastAttendUid=uid;renderAttendList();window._lastAttendUid=null;renderAbsentAlerts();renderAttendStats();renderAdminGrid(G.type==='principal'||G.type==='admin'||G.isAdmin);showToast(st==='full'?'✅ 출석 처리':st==='half'?'🌗 반일출석 처리':'결석 처리');}
 function generateCoupon(u,level){const code=String(Math.floor(100000+Math.random()*900000));const coupon={id:'cp'+Date.now()+Math.random().toString(36).slice(2,4),studentId:u.id,studentName:u.name+' '+u.baptism,badgeLabel:level.l,reward:level.r||'',code,used:false,createdAt:new Date().toLocaleDateString('ko-KR')};coupons.push(coupon);notifications.unshift({pushed:false,id:'nt'+Date.now()+'t',text:`🎟️ ${u.name} ${u.baptism} 학생이 [${level.l}] 등급을 달성했어요! 인증번호: ${code}`,time:'방금',ts:Date.now(),readBy:[],forTeacher:true,tap:{type:'coupon-admin'}});notifications.unshift({pushed:false,id:'nt'+Date.now()+'s',text:`🎉 축하해요! <b>[${level.l}]</b> 등급 달성으로 <b>${level.r||'보상'}</b> 쿠폰이 발급되었어요. 선생님께 확인받고 사용하세요!`,time:'방금',ts:Date.now(),readBy:[],forStudentId:u.id,tap:{type:'coupon'}});if(u.manualReg)notifications.unshift({pushed:false,id:'nt'+Date.now()+'mr',text:'📵 '+u.name+' '+u.baptism+' 학생(수동등록)에게 새 쿠폰이 발급됐어요. 학생카드에서 확인 후 직접 전달해주세요!',time:'방금',ts:Date.now(),readBy:[],forRole:'teacher-grade-'+u.gradeKey,tap:{type:'diary-shared',sid:u.id}});updateNotifDot();showToast('🎉 '+level.l+' 달성! 쿠폰 인증번호가 선생님께 전송되었습니다');renderNotifList();}
 function nRead(n){return !!(n&&(n.readBy||[]).indexOf(G.id)>=0);}
 /* 알림 문구의 장식용 아이콘 제거 — 중요/경고/긴급 표시(🚨 🆘)만 남긴다.
@@ -6293,7 +6327,7 @@ function printQRSheet(){
 function syncQRUI(){const sat=currentSaturday();if(qrState.week&&qrState.week!==sat)qrState={week:'',code:'',resetUsed:false};const isFull=G.type==='principal'||G.type==='admin'||G.isAdmin;const has=!!qrState.code;show('qr-code-display',has);show('qr-view-btn',has);
 try{var _atg=document.getElementById('attend-check-toggle'),_awp=document.getElementById('attend-check-wrap');if(_atg){if(has){_atg.disabled=false;_atg.style.opacity='';_atg.style.cursor='';if(!_awp||_awp.style.display==='none')_atg.textContent='✅ 이번 주 출석 체크하기';}else{if(_awp)_awp.style.display='none';_atg.disabled=true;_atg.style.opacity='.5';_atg.style.cursor='default';_atg.textContent='🔒 QR 생성 후 출석 체크 가능';}}}catch(e){}
 const gb=document.getElementById('qr-generate-btn');if(gb)gb.style.display=(isFull&&!has)?'':'none';show('qr-reset-btn',isFull);const rb=document.getElementById('qr-reset-btn');if(rb){rb.style.opacity=(has&&!qrState.resetUsed)?'1':'.45';}const st=document.getElementById('qr-status-text');if(st)st.textContent=has?(isFull?'이번 주 QR이 생성되었습니다 · 모든 선생님과 공유 중':'교감·교무 선생님이 생성한 이번 주 QR이에요'):(isFull?'금요일~토요일에 QR을 생성할 수 있어요':'아직 이번 주 QR이 없어요. 교감·교무 선생님이 생성하면 여기에 공유됩니다');if(has){const img=document.getElementById('qr-img');if(img)img.src=qrImgUrl(300);const tx=document.getElementById('qr-code-text');if(tx)tx.textContent=qrState.code;const i2=document.getElementById('qr-img-full');if(i2)i2.src=qrImgUrl(480);const t2=document.getElementById('qr-code-text-full');if(t2)t2.textContent=qrState.code;const vd=document.getElementById('qr-valid-date');if(vd)vd.textContent='유효기간: '+sat+' (토) 당일';}}
-function generateQR(){const isFull=G.type==='principal'||G.type==='admin'||G.isAdmin;if(!isFull){showToast('QR 생성은 교감·교무·관리자만 할 수 있어요');return;}if(isVacationDate(currentSaturday())){showToast('이번 주는 방학(미사없음)이라 출석 QR을 생성하지 않아요');return;}const dow=new Date().getDay();if(dow!==5&&dow!==6){showToast('금요일~토요일에만 QR을 생성할 수 있어요');return;}if(qrState.code){showToast('이미 이번 주 QR이 생성되었어요');return;}qrState.week=currentSaturday();qrState.code=String(Math.floor(100000+Math.random()*900000));try{appConfig.qr={week:qrState.week,code:qrState.code,resetUsed:!!qrState.resetUsed};}catch(e){}try{if(window.flushCfg)window.flushCfg();}catch(e){}syncQRUI();try{openAttendCheck();}catch(e){}showToast('QR이 생성되었습니다! 모든 교사와 공유됩니다');}
+function generateQR(){const isFull=G.type==='principal'||G.type==='admin'||G.isAdmin;if(!isFull){showToast('QR 생성은 교감·교무·관리자만 할 수 있어요');return;}if(!window._previewMode&&isVacationDate(currentSaturday())){showToast('이번 주는 방학(미사없음)이라 출석 QR을 생성하지 않아요');return;}if(!window._previewMode){const dow=new Date().getDay();if(dow!==5&&dow!==6){showToast('금요일~토요일에만 QR을 생성할 수 있어요');return;}}if(qrState.code){showToast('이미 이번 주 QR이 생성되었어요');return;}qrState.week=currentSaturday();qrState.code=String(Math.floor(100000+Math.random()*900000));try{appConfig.qr={week:qrState.week,code:qrState.code,resetUsed:!!qrState.resetUsed};}catch(e){}try{if(window.flushCfg)window.flushCfg();}catch(e){}syncQRUI();try{openAttendCheck();}catch(e){}showToast('QR이 생성되었습니다! 모든 교사와 공유됩니다');}
 function resetQR(){const isFull=G.type==='principal'||G.type==='admin'||G.isAdmin;if(!isFull){showToast('교감·교무·관리자만 초기화할 수 있어요');return;}if(!qrState.code){showToast('초기화할 QR이 없어요. 먼저 QR을 생성해주세요');return;}if(qrState.resetUsed){showToast('이번 주 초기화를 이미 사용했어요');return;}openModal('qr-reset-confirm-modal');}
 function confirmResetQR(){closeModal('qr-reset-confirm-modal');qrState.code='';qrState.resetUsed=true;try{appConfig.qr={week:qrState.week||currentSaturday(),code:'',resetUsed:true};}catch(e){}try{if(window.flushCfg)window.flushCfg();}catch(e){}syncQRUI();showToast('QR이 초기화되었습니다. 새 QR을 생성할 수 있어요');}
 
