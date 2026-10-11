@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="하늘의문 중고등부">
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(e){console.warn('SW register failed',e);});});}</script>
-<link rel="stylesheet" href="./styles.css?v=20260924q">
+<link rel="stylesheet" href="./styles.css?v=20260924u">
 <style>
 /* 회의록: 플레이스홀더는 커서가 있는 빈 줄에만 표시 */
 #minutes-viewer-content .mb-txt[data-ph]::before,#minutes-viewer-content .mb-txt[data-ph]:empty:focus::before{content:none!important;display:none!important}
@@ -752,27 +752,36 @@
     <div id="admin-shop-list"></div>
   </div>
   <div id="admin-stats-tab" style="display:none;padding:14px">
-    <div style="font-size:14px;font-weight:800;margin-bottom:12px">📊 출석 통계 <span id="stats-vac-badge" style="display:none;font-size:10px;font-weight:700;background:var(--yellow-light);color:#9A6A00;padding:2px 8px;border-radius:8px;vertical-align:2px">🏖️ 이번 주 방학</span></div>
-    <div class="admin-grid" style="padding:0;margin-bottom:12px">
-      <div class="card" style="text-align:center;cursor:pointer" onclick="showGradeStatDetail('m1')">
-        <div style="font-size:22px;font-weight:800;color:var(--primary)" id="stat-m1-rate">-</div>
-        <div style="font-size:11px;color:var(--text-light);margin-top:4px">중1 누적 평균</div>
-      </div>
-      <div class="card" style="text-align:center;cursor:pointer" onclick="showGradeStatDetail('m2')">
-        <div style="font-size:22px;font-weight:800;color:var(--mint)" id="stat-m2-rate">-</div>
-        <div style="font-size:11px;color:var(--text-light);margin-top:4px">중2 누적 평균</div>
-      </div>
-      <div class="card" style="text-align:center;cursor:pointer" onclick="showGradeStatDetail('m3')">
-        <div style="font-size:22px;font-weight:800;color:var(--yellow)" id="stat-m3-rate">-</div>
-        <div style="font-size:11px;color:var(--text-light);margin-top:4px">중3 누적 평균</div>
-      </div>
-      <div class="card" style="text-align:center;cursor:pointer" onclick="showGradeStatDetail('h')">
-        <div style="font-size:22px;font-weight:800;color:var(--lavender)" id="stat-h-rate">-</div>
-        <div style="font-size:11px;color:var(--text-light);margin-top:4px">고등 누적 평균</div>
-      </div>
+    <div style="display:flex;gap:7px;margin-bottom:14px">
+      <button id="stats-cat-btn-stats" onclick="showStatsCat('stats')" style="flex:1;font-size:12.5px;font-weight:700;padding:9px 10px;border-radius:12px;border:1.5px solid var(--primary);background:var(--primary-light);color:var(--primary-dark);cursor:pointer;font-family:inherit">📊 통계</button>
+      <button id="stats-cat-btn-rank" onclick="showStatsCat('rank')" style="flex:1;font-size:12.5px;font-weight:700;padding:9px 10px;border-radius:12px;border:1.5px solid var(--border-light);background:transparent;color:var(--text-sub);cursor:pointer;font-family:inherit">🏆 출석 순위</button>
     </div>
-    <div style="font-size:13px;font-weight:800;margin:16px 0 10px">🔔 연속 결석 알림</div>
-    <div id="absent-alert-list"></div>
+    <div id="stats-cat-stats">
+      <div style="font-size:14px;font-weight:800;margin-bottom:12px">📊 출석 통계 <span id="stats-vac-badge" style="display:none;font-size:10px;font-weight:700;background:var(--yellow-light);color:#9A6A00;padding:2px 8px;border-radius:8px;vertical-align:2px">🏖️ 이번 주 방학</span></div>
+      <div class="admin-grid" style="padding:0;margin-bottom:12px">
+        <div class="card" style="text-align:center;cursor:pointer" onclick="showGradeStatDetail('m1')">
+          <div style="font-size:22px;font-weight:800;color:var(--primary)" id="stat-m1-rate">-</div>
+          <div style="font-size:11px;color:var(--text-light);margin-top:4px">중1 누적 평균</div>
+        </div>
+        <div class="card" style="text-align:center;cursor:pointer" onclick="showGradeStatDetail('m2')">
+          <div style="font-size:22px;font-weight:800;color:var(--mint)" id="stat-m2-rate">-</div>
+          <div style="font-size:11px;color:var(--text-light);margin-top:4px">중2 누적 평균</div>
+        </div>
+        <div class="card" style="text-align:center;cursor:pointer" onclick="showGradeStatDetail('m3')">
+          <div style="font-size:22px;font-weight:800;color:var(--yellow)" id="stat-m3-rate">-</div>
+          <div style="font-size:11px;color:var(--text-light);margin-top:4px">중3 누적 평균</div>
+        </div>
+        <div class="card" style="text-align:center;cursor:pointer" onclick="showGradeStatDetail('h')">
+          <div style="font-size:22px;font-weight:800;color:var(--lavender)" id="stat-h-rate">-</div>
+          <div style="font-size:11px;color:var(--text-light);margin-top:4px">고등 누적 평균</div>
+        </div>
+      </div>
+      <div style="font-size:13px;font-weight:800;margin:16px 0 10px">🔔 연속 결석 알림</div>
+      <div id="absent-alert-list"></div>
+    </div>
+    <div id="stats-cat-rank" style="display:none">
+      <div id="teacher-rank-list"></div>
+    </div>
   </div>
   <!-- 앱 설정 (관리자 전용) -->
   <div id="admin-settings-tab" style="display:none;padding:14px">
@@ -2783,7 +2792,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="./assets.js"></script>
-<script src="./app.js?v=20260924q"></script>
+<script src="./app.js?v=20260924u"></script>
 
 <div id="theme-preview-bar" style="display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:88px;z-index:600;background:rgba(26,35,64,0.95);color:white;padding:10px 12px 10px 16px;border-radius:14px;box-shadow:var(--shadow-lg);align-items:center;gap:10px;max-width:410px;width:calc(100% - 32px);backdrop-filter:blur(4px)">
   <span id="theme-preview-label" style="font-size:13px;font-weight:700;flex:1">🎨 미리보기</span>
@@ -2807,7 +2816,7 @@
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-messaging-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-auth-compat.js"></script>
-<script src="./app-sync.js?v=20260924q"></script>
+<script src="./app-sync.js?v=20260924u"></script>
 
 </body>
 </html>
