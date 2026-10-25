@@ -1475,7 +1475,7 @@ async function doLogin(){
 
 /* ===== 기기 등록(1계정=1기기) ===== */
 function _deviceId(){try{var k='hd-device-id';var v=localStorage.getItem(k);if(!v){v=Date.now().toString(36)+Math.random().toString(36).slice(2,10);localStorage.setItem(k,v);}return v;}catch(e){return 'nodev';}}
-function requestDeviceChange(){var u=pendingList.find(function(x){return x.id===G.id;});if(!u){showToast('학생 계정에서만 요청할 수 있어요');return;}u.deviceChangeReq={deviceId:_deviceId(),ts:Date.now()};try{saveMemberNow(u);}catch(e){}try{notifications.unshift({pushed:false,id:'nt'+Date.now()+'dc'+u.id,text:'📱 <b>'+u.name+' '+u.baptism+'</b> 학생이 기기 변경을 요청했어요. 회원 관리에서 승인해주세요.',time:'방금',ts:Date.now(),readBy:[],forAdmin:true,tap:{type:'members'}});updateNotifDot();}catch(e){}try{_renderDeviceBanner();}catch(e){}showToast('기기 변경을 요청했어요. 선생님 승인 후 이 기기에서 출석할 수 있어요');}
+function requestDeviceChange(){var u=pendingList.find(function(x){return x.id===G.id;});if(!u){showToast('학생 계정에서만 요청할 수 있어요');return;}u.deviceChangeReq={deviceId:_deviceId(),ts:Date.now()};try{saveMemberNow(u);}catch(e){}try{var _adm=(typeof adminHolder==='function'&&adminHolder())||null;var _admId=(_adm&&_adm.id)||ADMIN.id;notifications.unshift({pushed:false,id:'nt'+Date.now()+'dc'+u.id,text:'📱 <b>'+u.name+' '+u.baptism+'</b> 학생이 기기 변경을 요청했어요. 회원 관리에서 승인해주세요.',time:'방금',ts:Date.now(),readBy:[],forTeacherId:_admId,tap:{type:'members'}});updateNotifDot();}catch(e){}try{_renderDeviceBanner();}catch(e){}showToast('기기 변경을 요청했어요. 선생님 승인 후 이 기기에서 출석할 수 있어요');}
 function _renderDeviceBanner(){var el=document.getElementById('attend-device-warn');if(!el)return;if(G.deviceMismatch){var reqPending=false;try{var u=pendingList.find(function(x){return x.id===G.id;});reqPending=!!(u&&u.deviceChangeReq&&u.deviceChangeReq.deviceId===_deviceId());}catch(e){}el.style.display='';el.innerHTML='<div style="background:#FBEAE6;border:1px solid var(--coral);border-radius:12px;padding:13px 14px;text-align:left"><div style="font-size:12.5px;font-weight:800;color:#C0392B;margin-bottom:4px">📱 등록되지 않은 기기예요</div><div style="font-size:11.5px;color:var(--text-sub);line-height:1.5;margin-bottom:'+(reqPending?'0':'10px')+'">'+(reqPending?'기기 변경 요청을 보냈어요. 선생님 승인 후 이 기기에서 출석할 수 있어요.':'출석은 본인이 등록한 기기에서만 가능해요. 이 기기로 바꾸려면 아래에서 변경을 요청하세요.')+'</div>'+(reqPending?'':'<button class="btn btn-sm" style="background:var(--coral);color:#fff;padding:7px 14px;font-size:12px" onclick="requestDeviceChange()">이 기기로 변경 요청</button>')+'</div>';}else{el.style.display='none';el.innerHTML='';}}
 function startSession(u){
   if(!previewMode&&(u.id==='jonghwa'||u===ADMIN))purgeDemoData();
@@ -3140,7 +3140,13 @@ function _unackedMinutes(){
 }
 function publishMinutes(){
   var r=resources.find(function(x){return x.id===currentMinutesId;});if(!r)return;
-  if(_minEditing){showToast('편집을 끝낸 뒤 발행해주세요');return;}
+  /* 발행 전, 편집 중이든 아니든 에디터의 현재 내용을 먼저 확실히 r.content에 반영한다(미저장분 날아감 방지). */
+  try{
+    window._minComposing=false;
+    var _ed0=document.getElementById('minutes-viewer-content');
+    if(_ed0){var _v0=_minSerialize();if(_v0&&_v0!==r.content){r.content=_v0;r.updatedAt=_minDateStr();r.updatedBy=G.displayName;r.updatedById=G.id;try{if(typeof flushSync==='function')flushSync();}catch(e){}try{_backupMinutes();}catch(e){}}}
+    if(_minEditing){_minEditing=false;try{clearTimeout(_minSaveTimer);}catch(e){}try{_releaseLock();}catch(e){}try{setMinutesEditing(false);}catch(e){}}
+  }catch(e){}
   if(!(r.content||'').trim()&&!_minAgendaText(r)){showToast('내용이 비어 있어요');return;}
   var _n=_teacherRoster().length;if(!confirm('📣 푸시 알림을 보냅니다\n\n대상: 교사 전체 '+_n+'명\n내용: '+r.title+'\n\n발행할까요?'))return;
   r.published=true;r.publishedAt=_minDateStr();r.publishedBy=((G.name||'')+' '+(G.baptism||'')).trim();
@@ -3788,11 +3794,17 @@ function _minViewSync(){
     var r=resources.find(function(x){return x.id===currentMinutesId;});
     if(!r)return;
     var ed=document.getElementById('minutes-viewer-content');
-    if(ed&&_minSerialize()!==_minWithAgenda(r.content,'')){
-      var sc=ed.scrollTop;
-      _minRender(_minParse(_minWithAgenda(r.content,'')),false);
-      ed.scrollTop=sc;
-      _renderMinutesMeta(r);
+    if(ed){
+      var _domv=_minSerialize();
+      var _rv=_minWithAgenda(r.content,'');
+      /* r.content가 비었는데 화면엔 아직 저장 안 된 내용이 있으면 절대 덮어쓰지 않음(날아감 방지) */
+      var _wipe=(_rv.trim()===''&&_domv.trim()!=='');
+      if(_domv!==_rv&&!_wipe){
+        var sc=ed.scrollTop;
+        _minRender(_minParse(_rv),false);
+        ed.scrollTop=sc;
+        _renderMinutesMeta(r);
+      }
     }
     _renderMinAgenda(r);
     var ti=document.getElementById('minutes-viewer-title');
